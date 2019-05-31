@@ -1,4 +1,4 @@
-## Welcome to GitHub Pages
+## Welcome to Forest Park Explorer
 
 Link to legacy [Forest Park Explorer](https://richardjy.github.io/FPE/test_map_leaf-TEST.html)
 
