@@ -1,7 +1,7 @@
-Welcome to Forest Park Explorer
+## Welcome to Forest Park Explorer
 
-Link to legacy Forest Park Explorer
+Link to [Forest Park Explorer](https://richardjy.github.io/FPE/test_map_leaf-TEST.html)
 
-You can use the editor on GitHub to maintain and preview the content for your website in Markdown files.
+Add more details later
 
-Whenever you commit to this repository, GitHub Pages will run Jekyll to rebuild the pages in your site, from the content in your Markdown files.
+
