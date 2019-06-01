@@ -9,12 +9,9 @@
 			<link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css"
 				integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
 				crossorigin=""/>
-			<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
-
 			<script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"
 				integrity="sha512-QVftwZFqvtRNi0ZyCtsznlKSWOStnDORoefr1enyq5mVL4tmKB3S/EnC3rRJcxCPavG10IcrVGSmPh6Qw5lwrg=="
 				crossorigin=""></script>
-			<script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 
 			<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css">
 			<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
@@ -1087,46 +1084,25 @@
 				icon: 'fa fa-file fa-lg',
 				title: 'Copy visible geojson data',
 				onClick: function(btn, map){
+					// Create an empty GeoJSON collection
+					var collection = {
+						"type": "FeatureCollection",
+						"features": []
+					};
 
-					// wildcherry -122.73019, 45.53811	-122.72621, 45.54054
-				//	L.Routing.osrmv1({profile: 'walking'});
-					let options = { profile: 'mapbox/walking'};
-					//let accessToken = { config.mapBoxKey };
-					var rControl = L.Routing.control({
-						// 45.546289, -122.728529
-						waypoints: [
-							L.latLng(45.53811, -122.73019),
-							L.latLng(45.5405, -122.72621),
-							L.latLng(45.54629, -122.72853)
-						],
-						router: L.Routing.mapbox(config.mapBoxKey, options),
-						show: false,
-						draggableWaypoints: false,
-						addWaypoints: false
+					// Iterate the layers of the map - only those visible
+					// future - export just the route
+					mymap.eachLayer(function (layer) {
+						// Check if layer is a marker or a line (don't save finish marker
+						if ((layer instanceof L.Marker && layer.hasOwnProperty('feature')) || layer instanceof L.Polyline) {
+							// Create GeoJSON object from marker
+							var geojson = layer.toGeoJSON();
+							// Push GeoJSON object to collection
+							collection.features.push(geojson);
+						}
 					});
-					rControl.addTo(mymap);
-					//L.Routing.errorControl(rControl).addTo(mymap);
-					//mymap.fitBounds(geojsondata.getBounds());
-					//rControl.hide(); // makes a box
-					// // Create an empty GeoJSON collection
-					// var collection = {
-					// 	"type": "FeatureCollection",
-					// 	"features": []
-					// };
-					//
-					// // Iterate the layers of the map - only those visible
-					// // future - export just the route
-					// mymap.eachLayer(function (layer) {
-					// 	// Check if layer is a marker or a line (don't save finish marker
-					// 	if ((layer instanceof L.Marker && layer.hasOwnProperty('feature')) || layer instanceof L.Polyline) {
-					// 		// Create GeoJSON object from marker
-					// 		var geojson = layer.toGeoJSON();
-					// 		// Push GeoJSON object to collection
-					// 		collection.features.push(geojson);
-					// 	}
-					// });
-					// var jsonData = JSON.stringify(collection);
-					// window.prompt("Copy to clipboard: Ctrl+C, Enter", jsonData);
+					var jsonData = JSON.stringify(collection);
+					window.prompt("Copy to clipboard: Ctrl+C, Enter", jsonData);
 				}
 			}]  })
 
