@@ -1,4 +1,4 @@
-
+<!DOCTYPE html>
 		<html>
 		<head>
 			<title>Forest Park Explorer</title>
@@ -11,13 +11,13 @@
 				crossorigin=""/>
 			<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
 			<link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
-			
+
 			<script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"
 				integrity="sha512-QVftwZFqvtRNi0ZyCtsznlKSWOStnDORoefr1enyq5mVL4tmKB3S/EnC3rRJcxCPavG10IcrVGSmPh6Qw5lwrg=="
 				crossorigin=""></script>
 			<script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 			<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
-			
+
 			<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css">
 			<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 			<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
@@ -984,7 +984,7 @@
 								}
 								// find point approx half way in extra line
 								var halfpt = ptAtDist(minPtGPXindex, -minPtGPXdist/2);
-								console.log(halfpt);
+								//console.log(halfpt);
 
 
 								// add line to display - get dummy data
@@ -1010,8 +1010,8 @@
 										"label": "Extra",
 										"distance": eval(gpxRoute[gpxLegs][4].toFixed(2)),
 										"ascent": eval(asc),"descent": eval(des),"trail": "", "color": ""}};
-								console.log(lcoords);
-								console.log(gline);
+								//console.log(lcoords);
+								//console.log(gline);
 								var geoline = L.geoJSON(gline,
 									{
 										onEachFeature: onEachFeature
@@ -1104,12 +1104,13 @@
 						],
 						router: L.Routing.mapbox(config.mapBoxKey, options),
 						//geocoder: L.Control.Geocoder.nominatim(),
-						autoRoute: false,
+						//autoRoute: false,
 						show: false,
 						draggableWaypoints: false,
 						addWaypoints: false
 					});
-					rControl.addTo(mymap);
+					console.log(rControl);  //testing
+					//rControl.addTo(mymap);
 					//L.Routing.errorControl(rControl).addTo(mymap);
 					//mymap.fitBounds(geojsondata.getBounds());
 					//rControl.hide(); // makes a box
