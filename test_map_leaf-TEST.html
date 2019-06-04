@@ -9,15 +9,17 @@
 			<link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css"
 				integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
 				crossorigin=""/>
+<!--
 			<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
 			<link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
-
+-->
 			<script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"
 				integrity="sha512-QVftwZFqvtRNi0ZyCtsznlKSWOStnDORoefr1enyq5mVL4tmKB3S/EnC3rRJcxCPavG10IcrVGSmPh6Qw5lwrg=="
 				crossorigin=""></script>
+<!--
 			<script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 			<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
-
+-->
 			<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css">
 			<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 			<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
@@ -30,8 +32,10 @@
 			<script src="https://www.gstatic.com/charts/loader.js"></script>
 			<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.4.0/gpx.min.js"></script>
 			<script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-omnivore/v0.2.0/leaflet-omnivore.min.js'></script>
-			<script src="./src/config.js"></script>
-			<script src="./src/config_local.js"></script>
+
+			<script src='/src/togpx.js'></script>
+			<script src="/src/config.js"></script>
+			<script src="/src/config_local.js"></script>
 
 			<style>
 				.info { padding: 6px 8px; font: 12px/14px Arial, Helvetica, sans-serif; background: white; background: rgba(255,255,255,0.8); box-shadow: 0 0 15px rgba(0,0,0,0.2); border-radius: 5px; } .info h4 { margin: 0 0 5px; color: #777; }
@@ -1087,87 +1091,49 @@
 			}]  })
 
 			var copyButton = L.easyButton({ states: [{
-				stateName: 'copy',
+				stateName: 'makegpx',
 				icon: 'fa fa-file fa-lg',
-				title: 'Copy visible geojson data',
+				title: 'Create and export GPX route',
 				onClick: function(btn, map){
+					// build route string
+					// original data '-122.73019,45.53811;-122.72621,45.5405;-122.72853,45.54629'
+					// start with random gpxPoints
+					// future - use actual max number of Junctions
+					var pos1 = Math.round(Math.random()*150);
+					var routeStr = getptlatlng(pos1).lng + "," + getptlatlng(pos1).lat + ";";
+					var pos2 = Math.round(Math.random()*150);
+					routeStr += getptlatlng(pos2).lng + "," + getptlatlng(pos2).lat + ";";
+					var pos3 = Math.round(Math.random()*150);
+					routeStr += getptlatlng(pos3).lng + "," + getptlatlng(pos3).lat;
+					console.log(routeStr);
+					// use overview=full to get full gps route - check other options
+					var url = 'https://api.mapbox.com/directions/v5/mapbox/walking/' + routeStr +
+							'?geometries=geojson&overview=full&access_token=' + config.mapBoxKey;
+					var req = new XMLHttpRequest();
+					var jsonResponse;
+					req.responseType = 'json';
+          req.open('GET', url, true);
+          req.onload = function () {
+	          	jsonResponse = req.response;
+	            var distance = jsonResponse.routes[0].distance;
+	            //console.log('Distance between ' + distance);
+							//console.log(jsonResponse);
+							L.geoJSON(jsonResponse.routes[0].geometry).bindTooltip('Random route: ' +
+									(distance/1000).toFixed(2) + 'km', {sticky: true}).addTo(gpxdata);
+							mymap.fitBounds(L.geoJSON(jsonResponse.routes[0].geometry).getBounds());
 
-					// wildcherry -122.73019, 45.53811	-122.72621, 45.54054
-				//	L.Routing.osrmv1({profile: 'walking'});
-					// let options = { profile: 'mapbox/walking'};
-					// //let accessToken = { config.mapBoxKey };
-					// var rControl = L.Routing.control({
-					// 	// 45.546289, -122.728529
-					// 	waypoints: [
-					// 		L.latLng(45.53811, -122.73019),
-					// 		L.latLng(45.5405, -122.72621),
-					// 		L.latLng(45.54629, -122.72853)
-					// 	],
-					// 	router: L.Routing.mapbox(config.mapBoxKey, options),
-					// 	//geocoder: L.Control.Geocoder.nominatim(),
-					// 	//autoRoute: false,
-					// 	show: false,
-					// 	draggableWaypoints: false,
-					// 	addWaypoints: false
-					// });
-
-
-					// var url = 'https://api.mapbox.com/directions/v5/{profile}/{coordinates}?geometries=geojson&access_token={accessToken}', {
-					// 	coordinates: [
-					// 		L.latLng(45.53811, -122.73019),
-					// 		L.latLng(45.5405, -122.72621),
-					// 		L.latLng(45.54629, -122.72853)
-					// 	],
-					// 	profile: 'mapbox/walking',
-					// 	accessToken: config.mapBoxKey
-					// };
-									var url = 'https://api.mapbox.com/directions/v5/mapbox/walking/-122.73019,45.53811;-122.72621,45.5405;-122.72853,45.54629?geometries=geojson&overview=full&access_token=' + config.mapBoxKey;
-									//var url = 'https://api.mapbox.com/directions/v5/mapbox/walking/-122.73019,45.53811;-122.72621,45.5405;-122.72853,45.54629?access_token=' + config.mapBoxKey;
-									 var req = new XMLHttpRequest();
-									 var jsonResponse;
-									 req.responseType = 'json';
-	                 req.open('GET', url, true);
-
-	                 req.onload = function () {
-	                     jsonResponse = req.response;
-	                     var distance = jsonResponse.routes[0].distance;
-	                     console.log('Distance between ' + distance);
-											 console.log(jsonResponse);
-											 L.geoJSON(jsonResponse.routes[0].geometry).addTo(mymap);
-											 // try add to GPX and recreate route
-											 //L.polygon(jsonResponse.routes[0].geometry).addTo(mymap);
-	                 };
-	                 req.send();
-
-
-
-
-					//rControl.addTo(mymap);
-					//var rRoute = rControl.route();
-					//console.log(rRoute);  //testing
-
-					//L.Routing.errorControl(rControl).addTo(mymap);
-					//mymap.fitBounds(geojsondata.getBounds());
-					//rControl.hide(); // makes a box
-					// // Create an empty GeoJSON collection
-					// var collection = {
-					// 	"type": "FeatureCollection",
-					// 	"features": []
-					// };
-					//
-					// // Iterate the layers of the map - only those visible
-					// // future - export just the route
-					// mymap.eachLayer(function (layer) {
-					// 	// Check if layer is a marker or a line (don't save finish marker
-					// 	if ((layer instanceof L.Marker && layer.hasOwnProperty('feature')) || layer instanceof L.Polyline) {
-					// 		// Create GeoJSON object from marker
-					// 		var geojson = layer.toGeoJSON();
-					// 		// Push GeoJSON object to collection
-					// 		collection.features.push(geojson);
-					// 	}
-					// });
-					// var jsonData = JSON.stringify(collection);
-					// window.prompt("Copy to clipboard: Ctrl+C, Enter", jsonData);
+							var gpxData = togpx(jsonResponse.routes[0].geometry, {creator: "Forest Park Explorer", metadata: {name:"FPE-export"}});
+							//console.log(jsonResponse.routes[0].geometry);
+							// export gpx
+							var element = document.createElement('a');
+			        element.href = 'data:application/gpx+xml;charset=utf-8,' + encodeURIComponent(gpxData);
+			        element.download = 'export.gpx';
+			        element.style.display = 'none';
+			        document.body.appendChild(element);
+			        element.click();
+							document.body.removeChild(element);
+          };
+          req.send();
 				}
 			}]  })
 
@@ -1309,46 +1275,6 @@
 			  chart.draw(data, options);
 			}
 		};
-
-		//download(jsonData, 'test.geojson', 'text/plain');
-
-				//var blob = new Blob([dataStr], {type: "application/json"});
-				//var url  = URL.createObjectURL(blob);
-				//var a = document.createElement('a');
-				//a.download    = "backup.json";
-				//a.href        = url;
-				//a.textContent = "Download backup.json";
-				//window.alert(url);
-				//a.click();
-				//window.alert(dataStr);
-
-				//document.getElementById('content').appendChild(a);
-
-				//helloPopup.setLatLng(map.getCenter()).openOn(map);
-
-			//let dataStr = JSON.stringify(geojson);
-			//let dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-			//window.alert(dataUri);
-
-			//var blob = new Blob([dataStr], {type: "application/json"});
-			//var url  = URL.createObjectURL(blob);
-
-			//var a = document.createElement('a');
-			//a.download    = "backup.json";
-			//a.href        = url;
-			//a.textContent = "Download backup.json";
-			//a.click();
-			//window.alert(dataStr);
-
-			//document.getElementById('content').appendChild(a);
-
-		   // let exportFileDefaultName = 'c:\data.json';
-
-		   // let linkElement = document.createElement('a');
-		   // linkElement.setAttribute('href', dataUri);
-		   // linkElement.setAttribute('download', exportFileDefaultName);
-		   // linkElement.click();
-			//window.alert(11);
 
 		</script>
 		</body>
