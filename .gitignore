@@ -4,3 +4,4 @@ _site/
 .jekyll-metadata
 config.js
 config_local.js
+node_modules/
