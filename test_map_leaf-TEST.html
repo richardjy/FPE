@@ -734,12 +734,23 @@
 				onClick: function(btn, map){
 					// toggle GPX
 
-					var gpxPrompt = window.prompt("Paste GPX data or Cancel for test data");
+					var gpxPrompt = window.prompt("Paste GPX data or Cancel for test Strava");
 					var gpxFile = '';
 
 					if (gpxPrompt == '' || gpxPrompt == null) {
 						// loaded default data
-						gpxFile = 'https://gist.githubusercontent.com/richardjy/fe9e3a189e47e4c75aa5e083a00f4740/raw';
+						//gpxFile = 'https://gist.githubusercontent.com/richardjy/fe9e3a189e47e4c75aa5e083a00f4740/raw';
+						// try and link to Strava
+						var datastrava = [];
+						var status;
+						newcode = $.post ('https://www.strava.com/oauth/token?client_id=31392&client_secret=62b8199e3a3b620dd6e76e790d3476fb3932edd5&code=5809bbe402e112a0b6b064d4189ace97e33bbc23&grant_type=authorization_code');
+						console.log(newcode);
+						//console.log(newcode.responseJSON.access_token);
+
+						//$.get(`https://www.strava.com/api/v3/athletes/5872599/activities?access_token=5809bbe402e112a0b6b064d4189ace97e33bbc23/`, function(datastrava, status) {
+  					//	console.log(datastrava[0].name);
+						//	}, 'json');
+
 					} else {
 						// use input data
 						gpxFile = gpxPrompt;
