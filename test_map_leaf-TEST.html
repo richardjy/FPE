@@ -387,7 +387,7 @@
 			//var endmarker = L.marker();
 			var endmarker = L.marker([45.553, -122.750],{icon: L.icon.glyph({prefix: 'fa', glyph: 'flag-checkered', glyphSize: '15px' })});
 			var geojsondata = L.geoJson();
-			var gpxPoints = L.geoJson();
+			var gpxPoints = L.geoJson(); //
 			var gpxLoaded = false;
 			var gpxRouteName = '';
 			// load GeoJSON from an external file
@@ -603,8 +603,8 @@
 			// find latlng from GPX - otherwise values of lat lng reversed!
 			// assumes that gpdindex is valid
 			function getGPXlatlng(gpxJSON, gpxindex) {
-				var gpxLat = gpxJSON.features[0].geometry.coordinates[gpxindex][1];
-				var gpxLng = gpxJSON.features[0].geometry.coordinates[gpxindex][0];
+				var gpxLat = gpxJSON.geometry.coordinates[gpxindex][1];
+				var gpxLng = gpxJSON.geometry.coordinates[gpxindex][0];
 				var gpxlatlng = [ gpxLat, gpxLng ];
 				return gpxlatlng;
 			};
@@ -671,7 +671,7 @@
 			function ptAtDist(pt1, dist) { //- add generic gpx
 				// find pt that is dist meters further on (or back if distance negative)
 				// unless reach start or end - return at least one pt further on
-				var maxPt = gpxPoints.features[0].geometry.coordinates.length - 1;
+				var maxPt = gpxPoints.geometry.coordinates.length - 1;
 				var ptA = getGPXlatlng(gpxPoints, pt1);
 				var ptB = L.latLng();  // initialize returns lat lng alt
 				var pt = pt1;
@@ -741,22 +741,33 @@
 						// loaded default data
 						//gpxFile = 'https://gist.githubusercontent.com/richardjy/fe9e3a189e47e4c75aa5e083a00f4740/raw';
 						// try and link to Strava
-						//var datastrava = [];
-						//var status;
+						var stravaID = 2933015864;
+
 						$.post('https://www.strava.com/oauth/token?client_id=31392&client_secret=62b8199e3a3b620dd6e76e790d3476fb3932edd5&code=237a3ce1999a7d10cf281bfe40dece96a4873aa1&grant_type=authorization_code',
 							function(data, status){
 								console.log("data: " + data + "\nStatus: " + status);
 								console.log(data);
 								console.log(data.access_token);
-								$.get('https://www.strava.com/api/v3/activities/2933015864/streams?keys=latlng&key_by_type=true&access_token='+data.access_token,
-							//	$.get('https://www.strava.com/api/v3/activities/2933015864?access_token='+data.access_token,
+								var accessT = data.access_token;
+								console.log(accessT);
+								$.get('https://www.strava.com/api/v3/activities/' + stravaID + '/streams?keys=latlng&key_by_type=true&access_token='+accessT,
 									function(data, status){
 										console.log(data);
+										console.log(data.latlng.data);
+										stravaGPX = L.polyline(data.latlng.data).addTo(gpxdata);
+										gpxRouteName = 'Strava: ' + stravaID;
+										stravaGPX.bindTooltip(gpxRouteName, {sticky: true});
+										gpxPoints = stravaGPX.toGeoJSON();
+										mymap.fitBounds(stravaGPX.getBounds());
+										gpxLoaded = true;
+										gpxCalcButton.enable();
 								});
-							});
+						});
 
+							// get activity stream prototype (data.latlng)
 							//get "https://www.strava.com/api/v3/activities/2933015864/streams?keys=&key_by_type=" "Authorization: Bearer [[token]]"
-
+							// activity name - prototype - not used yet (data.name)
+							//http get "https://www.strava.com/api/v3/activities/{id}?include_all_efforts=" "Authorization: Bearer [[token]]"
 
 						//2933015864
 						//console.log(newcode.responseJSON.access_token);
@@ -781,9 +792,10 @@
 						}).on('loaded', function(e) {
 							gpxRouteName = 'GPX: ' + e.target.get_name();
 							e.target.bindTooltip(gpxRouteName, {sticky: true});
-							gpxPoints = e.target.toGeoJSON();
+							gpxPoints = e.target.toGeoJSON().features[0]; // changed so that gxpPoints is not a collection, just one set of data
 							mymap.fitBounds(e.target.getBounds());
 						}).addTo(gpxdata);
+
 						gpxLoaded = true;
 						// need to wait for data to load!
 						//window.alert("Loaded");
@@ -806,7 +818,7 @@
 						var startPtGPXindex = 0;
 						var startPtGPXoffset = 999999.9;
 						//var startPtGPXdistance = 0;
-						var gpxImax = gpxPoints.features[0].geometry.coordinates.length;
+						var gpxImax = gpxPoints.geometry.coordinates.length;
 						var finishGPXlatlng = getGPXlatlng(gpxPoints, gpxImax-1);
 						var finishPtGPXindex = 0;
 						var finishPtGPXoffset = 999999.9;
