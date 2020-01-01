@@ -734,26 +734,29 @@
 				onClick: function(btn, map){
 					// toggle GPX
 
-					var gpxPrompt = window.prompt("Paste GPX data or Cancel for test Strava");
+					var gpxPrompt = window.prompt("Paste GPX data or Strava ActivityID");
 					var gpxFile = '';
 
 					if (gpxPrompt == '' || gpxPrompt == null) {
+						// do nothing if press cancel
+					} else if ($.isNumeric(gpxPrompt)) {
+
 						// loaded default data
 						//gpxFile = 'https://gist.githubusercontent.com/richardjy/fe9e3a189e47e4c75aa5e083a00f4740/raw';
-						// try and link to Strava
-						var stravaID = 2933015864;
+						// try and link to Strava 2933015864
+						var stravaID = Number(gpxPrompt);
 
 						$.post('https://www.strava.com/oauth/token?client_id=31392&client_secret=62b8199e3a3b620dd6e76e790d3476fb3932edd5&code=237a3ce1999a7d10cf281bfe40dece96a4873aa1&grant_type=authorization_code',
 							function(data, status){
-								console.log("data: " + data + "\nStatus: " + status);
-								console.log(data);
-								console.log(data.access_token);
+								//console.log("data: " + data + "\nStatus: " + status);
+								//console.log(data);
+								//console.log(data.access_token);
 								var accessT = data.access_token;
-								console.log(accessT);
+								//console.log(accessT);
 								$.get('https://www.strava.com/api/v3/activities/' + stravaID + '/streams?keys=latlng&key_by_type=true&access_token='+accessT,
 									function(data, status){
-										console.log(data);
-										console.log(data.latlng.data);
+										//console.log(data);
+										//console.log(data.latlng.data);
 										stravaGPX = L.polyline(data.latlng.data).addTo(gpxdata);
 										gpxRouteName = 'Strava: ' + stravaID;
 										stravaGPX.bindTooltip(gpxRouteName, {sticky: true});
