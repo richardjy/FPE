@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 		<html>
 		<head>
-			<title>Forest Park Explorer</title>
+			<title>Forest Park Explorer TEST</title>
 			<meta charset="utf-8" />
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 			<link rel="shortcut icon" type="image/x-icon" href="docs/images/favicon.ico" />
@@ -387,7 +387,7 @@
 			//var endmarker = L.marker();
 			var endmarker = L.marker([45.553, -122.750],{icon: L.icon.glyph({prefix: 'fa', glyph: 'flag-checkered', glyphSize: '15px' })});
 			var geojsondata = L.geoJson();
-			var gpxPoints = L.geoJson();
+			var gpxPoints = L.geoJson(); //
 			var gpxLoaded = false;
 			var gpxRouteName = '';
 			// load GeoJSON from an external file
@@ -603,8 +603,8 @@
 			// find latlng from GPX - otherwise values of lat lng reversed!
 			// assumes that gpdindex is valid
 			function getGPXlatlng(gpxJSON, gpxindex) {
-				var gpxLat = gpxJSON.features[0].geometry.coordinates[gpxindex][1];
-				var gpxLng = gpxJSON.features[0].geometry.coordinates[gpxindex][0];
+				var gpxLat = gpxJSON.geometry.coordinates[gpxindex][1];
+				var gpxLng = gpxJSON.geometry.coordinates[gpxindex][0];
 				var gpxlatlng = [ gpxLat, gpxLng ];
 				return gpxlatlng;
 			};
@@ -671,7 +671,7 @@
 			function ptAtDist(pt1, dist) { //- add generic gpx
 				// find pt that is dist meters further on (or back if distance negative)
 				// unless reach start or end - return at least one pt further on
-				var maxPt = gpxPoints.features[0].geometry.coordinates.length - 1;
+				var maxPt = gpxPoints.geometry.coordinates.length - 1;
 				var ptA = getGPXlatlng(gpxPoints, pt1);
 				var ptB = L.latLng();  // initialize returns lat lng alt
 				var pt = pt1;
@@ -726,7 +726,33 @@
 			// buttons
 			//'fa fa-file fa-lg'
 			// http://fontawesome.io/icon/file/
-			// https://fontawesome.com/v4.7.0/icons/
+			// htt	ps://fontawesome.com/v4.7.0/icons/
+
+			// var linkStrava = L.easyButton({ states: [{
+			// 	stateName: 'Strava',
+			// 	icon: 'fa fa-caret-square-o-up fa-lg',
+			// 	title: 'Link to Strava account',
+			// 	onClick: function(btn, map){
+			// 		// www.strava.com/oauth/authorize?client_id=31392&response_type=code&redirect_uri=http://localhost/exchange_token&approval_prompt=force&scope=read,activity:read
+			// 			$.post('https://www.strava.com/oauth/authorize?client_id=31392&response_type=code&redirect_uri=' +
+			// 				'http://localhost:4000/test_map_leaf-TEST&approval_prompt=auto&scope=read,activity:read')
+			// 					.then(function(response) {
+    	// 						// Once we get the response, extract the access token from
+    	// 						// the response body
+			// 						console.log(response);
+			// 						var accessToken = response.data.access_token;
+			// 						console.log(accessToken);
+			// 						// redirect the user to the welcome page, along with the access token
+    	// 						//res.redirect(`/welcome.html?access_token=${accessToken}`)
+  		// 					})
+			// 					.fail(function(response) {
+  		// 						console.log(response);
+			// 						//console.log(response);
+			// 					});
+			// 				}
+			// }]  })
+
+
 			var gpxToggleButton = L.easyButton({ states: [{
 				stateName: 'gpx',
 				icon: 'fa fa-map-o fa-lg',
@@ -734,35 +760,81 @@
 				onClick: function(btn, map){
 					// toggle GPX
 
-					var gpxPrompt = window.prompt("Paste GPX data or Cancel for test data");
+					var gpxPrompt = window.prompt("Paste GPX data or Strava ActivityID");
 					var gpxFile = '';
 
 					if (gpxPrompt == '' || gpxPrompt == null) {
-						// loaded default data
-						gpxFile = 'https://gist.githubusercontent.com/richardjy/fe9e3a189e47e4c75aa5e083a00f4740/raw';
-					} else {
-						// use input data
-						gpxFile = gpxPrompt;
-					}
+						// do nothing if press cancel
+					} else if ($.isNumeric(gpxPrompt)) {
 
-					// load the data - URL to your GPX file (or the GPX itself)
-					new L.GPX(gpxFile, {
-						async: true,
-						marker_options: {
-							startIconUrl: '', //'http://github.com/mpetazzoni/leaflet-gpx/raw/master/pin-icon-start.png',
-							endIconUrl:   '', //'http://github.com/mpetazzoni/leaflet-gpx/raw/master/pin-icon-end.png',
-							shadowUrl:    '', //'http://github.com/mpetazzoni/leaflet-gpx/raw/master/pin-shadow.png',
-						},
-					}).on('loaded', function(e) {
-						gpxRouteName = 'GPX: ' + e.target.get_name();
-						e.target.bindTooltip(gpxRouteName, {sticky: true});
-						gpxPoints = e.target.toGeoJSON();
-						mymap.fitBounds(e.target.getBounds());
-					}).addTo(gpxdata);
-					gpxLoaded = true;
-					// need to wait for data to load!
-					//window.alert("Loaded");
-					gpxCalcButton.enable();
+						// loaded default data
+						//gpxFile = 'https://gist.githubusercontent.com/richardjy/fe9e3a189e47e4c75aa5e083a00f4740/raw';
+						// Example run - Strava 2933015864
+						if (gpxPrompt == 0) gpxPrompt = 2933015864; // if set to zero then grab default run for Richard
+						var stravaActivityID = Number(gpxPrompt);
+
+						// get access code from browser window
+						var authString = window.location.search;
+						var authArray = {};
+						var pairs = (authString[0] === '?' ? authString.substr(1) : authString).split('&');
+						for (var i = 0; i < pairs.length; i++) {
+							var pair = pairs[i].split('=');
+							authArray[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1] || '');
+						}
+						//console.log(authArray);
+						// expect - scope: "read,activity:read"
+						// code = access token
+						if (typeof authArray.code !== 'undefined' && typeof authArray.scope !== 'undefined' && authArray.scope.includes("activity:read")) {
+							$.post('https://www.strava.com/oauth/token?client_id=31392&client_secret=62b8199e3a3b620dd6e76e790d3476fb3932edd5&' +
+								'code=' + authArray.code + '&grant_type=authorization_code',
+								function(data, status){
+									//console.log("data: " + data + "\nStatus: " + status);
+									var accessT = data.access_token;
+									// get activity name
+ 									$.get('https://www.strava.com/api/v3/activities/' + stravaActivityID + '?include_all_efforts=false&access_token='+accessT,
+									function(data, status){
+										//console.log(data);
+										gpxRouteName = data.name.replace(/[^\x20-\x7E]/g, '').trim(); //get rid of non-printing characters
+										gpxRouteName = 'Strava: ' + stravaActivityID + ' (' + gpxRouteName +')';
+										// get gpx data
+										$.get('https://www.strava.com/api/v3/activities/' + stravaActivityID + '/streams?keys=latlng&key_by_type=true&access_token='+accessT,
+											function(data, status){
+												//console.log(data);
+												//console.log(data.latlng.data);
+												stravaGPX = L.polyline(data.latlng.data, {color: 'blue'}).addTo(gpxdata);
+												stravaGPX.bindTooltip(gpxRouteName, {sticky: true});
+												gpxPoints = stravaGPX.toGeoJSON();
+												mymap.fitBounds(stravaGPX.getBounds());
+												gpxLoaded = true;
+												gpxCalcButton.enable();
+										});
+									});
+							});
+						} else {
+							window.alert("Strava not authorized with enough access.");
+						}
+					} else { // gpx data pasted in by user
+						gpxFile = gpxPrompt;
+						// load the data - URL to your GPX file (or the GPX itself)
+						new L.GPX(gpxFile, {
+							async: true,
+							marker_options: {
+								startIconUrl: '', //'http://github.com/mpetazzoni/leaflet-gpx/raw/master/pin-icon-start.png',
+								endIconUrl:   '', //'http://github.com/mpetazzoni/leaflet-gpx/raw/master/pin-icon-end.png',
+								shadowUrl:    '', //'http://github.com/mpetazzoni/leaflet-gpx/raw/master/pin-shadow.png',
+							},
+						}).on('loaded', function(e) {
+							gpxRouteName = 'GPX: ' + e.target.get_name().replace(/[^\x20-\x7E]/g, ''); //get rid of non-printing characters;
+							e.target.bindTooltip(gpxRouteName, {sticky: true});
+							gpxPoints = e.target.toGeoJSON().features[0]; // changed so that gxpPoints is not a collection, just one set of data
+							mymap.fitBounds(e.target.getBounds());
+						}).addTo(gpxdata);
+
+						gpxLoaded = true;
+						// need to wait for data to load!
+						//window.alert("Loaded");
+						gpxCalcButton.enable();
+					}
 				}
 			}]  })
 
@@ -780,7 +852,7 @@
 						var startPtGPXindex = 0;
 						var startPtGPXoffset = 999999.9;
 						//var startPtGPXdistance = 0;
-						var gpxImax = gpxPoints.features[0].geometry.coordinates.length;
+						var gpxImax = gpxPoints.geometry.coordinates.length;
 						var finishGPXlatlng = getGPXlatlng(gpxPoints, gpxImax-1);
 						var finishPtGPXindex = 0;
 						var finishPtGPXoffset = 999999.9;

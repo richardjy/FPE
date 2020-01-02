@@ -1,6 +1,16 @@
 ## Welcome to Forest Park Explorer
 
-Link to legacy [Forest Park Explorer](https://richardjy.github.io/FPE/test_map_leaf-TEST.html)
+- Go to [Forest Park Explorer](https://richardjy.github.io/FPE/test_map_leaf-TEST.html)
+
+- Go to <a href="https://www.strava.com/oauth/authorize?client_id=31392&response_type=code&redirect_uri=https://richardjy.github.io/FPE/test_map_leaf-TEST.html&approval_prompt=auto&scope=read,activity:read">
+  FPE with Strava Authorization
+</a>
+
+More details to be added later
+
+© Richard Young 2020.
+
+## Github Info:
 
 You can use the [editor on GitHub](https://github.com/richardjy/FPE/edit/master/README.md) to maintain and preview the content for your website in Markdown files.
 
