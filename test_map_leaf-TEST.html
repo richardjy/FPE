@@ -728,35 +728,10 @@
 			// http://fontawesome.io/icon/file/
 			// htt	ps://fontawesome.com/v4.7.0/icons/
 
-			// var linkStrava = L.easyButton({ states: [{
-			// 	stateName: 'Strava',
-			// 	icon: 'fa fa-caret-square-o-up fa-lg',
-			// 	title: 'Link to Strava account',
-			// 	onClick: function(btn, map){
-			// 		// www.strava.com/oauth/authorize?client_id=31392&response_type=code&redirect_uri=http://localhost/exchange_token&approval_prompt=force&scope=read,activity:read
-			// 			$.post('https://www.strava.com/oauth/authorize?client_id=31392&response_type=code&redirect_uri=' +
-			// 				'http://localhost:4000/test_map_leaf-TEST&approval_prompt=auto&scope=read,activity:read')
-			// 					.then(function(response) {
-    	// 						// Once we get the response, extract the access token from
-    	// 						// the response body
-			// 						console.log(response);
-			// 						var accessToken = response.data.access_token;
-			// 						console.log(accessToken);
-			// 						// redirect the user to the welcome page, along with the access token
-    	// 						//res.redirect(`/welcome.html?access_token=${accessToken}`)
-  		// 					})
-			// 					.fail(function(response) {
-  		// 						console.log(response);
-			// 						//console.log(response);
-			// 					});
-			// 				}
-			// }]  })
-
-
 			var gpxToggleButton = L.easyButton({ states: [{
 				stateName: 'gpx',
 				icon: 'fa fa-map-o fa-lg',
-				title: 'Import GPX track',
+				title: 'Import GPX track or Strava Activity',
 				onClick: function(btn, map){
 					// toggle GPX
 
