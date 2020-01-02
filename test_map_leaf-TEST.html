@@ -726,7 +726,33 @@
 			// buttons
 			//'fa fa-file fa-lg'
 			// http://fontawesome.io/icon/file/
-			// https://fontawesome.com/v4.7.0/icons/
+			// htt	ps://fontawesome.com/v4.7.0/icons/
+
+			// var linkStrava = L.easyButton({ states: [{
+			// 	stateName: 'Strava',
+			// 	icon: 'fa fa-caret-square-o-up fa-lg',
+			// 	title: 'Link to Strava account',
+			// 	onClick: function(btn, map){
+			// 		// www.strava.com/oauth/authorize?client_id=31392&response_type=code&redirect_uri=http://localhost/exchange_token&approval_prompt=force&scope=read,activity:read
+			// 			$.post('https://www.strava.com/oauth/authorize?client_id=31392&response_type=code&redirect_uri=' +
+			// 				'http://localhost:4000/test_map_leaf-TEST&approval_prompt=auto&scope=read,activity:read')
+			// 					.then(function(response) {
+    	// 						// Once we get the response, extract the access token from
+    	// 						// the response body
+			// 						console.log(response);
+			// 						var accessToken = response.data.access_token;
+			// 						console.log(accessToken);
+			// 						// redirect the user to the welcome page, along with the access token
+    	// 						//res.redirect(`/welcome.html?access_token=${accessToken}`)
+  		// 					})
+			// 					.fail(function(response) {
+  		// 						console.log(response);
+			// 						//console.log(response);
+			// 					});
+			// 				}
+			// }]  })
+
+
 			var gpxToggleButton = L.easyButton({ states: [{
 				stateName: 'gpx',
 				icon: 'fa fa-map-o fa-lg',
@@ -743,47 +769,52 @@
 
 						// loaded default data
 						//gpxFile = 'https://gist.githubusercontent.com/richardjy/fe9e3a189e47e4c75aa5e083a00f4740/raw';
-						// try and link to Strava 2933015864
-						var stravaID = Number(gpxPrompt);
+						// Example run - Strava 2933015864
+						if (gpxPrompt == 0) gpxPrompt = 2933015864; // if set to zero then grab default run for Richard
+						var stravaActivityID = Number(gpxPrompt);
 
-						$.post('https://www.strava.com/oauth/token?client_id=31392&client_secret=62b8199e3a3b620dd6e76e790d3476fb3932edd5&code=237a3ce1999a7d10cf281bfe40dece96a4873aa1&grant_type=authorization_code',
-							function(data, status){
-								//console.log("data: " + data + "\nStatus: " + status);
-								//console.log(data);
-								//console.log(data.access_token);
-								var accessT = data.access_token;
-								//console.log(accessT);
-								$.get('https://www.strava.com/api/v3/activities/' + stravaID + '/streams?keys=latlng&key_by_type=true&access_token='+accessT,
+						// get access code from browser window
+						var authString = window.location.search;
+						var authArray = {};
+						var pairs = (authString[0] === '?' ? authString.substr(1) : authString).split('&');
+						for (var i = 0; i < pairs.length; i++) {
+							var pair = pairs[i].split('=');
+							authArray[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1] || '');
+						}
+						//console.log(authArray);
+						// expect - scope: "read,activity:read"
+						// code = access token
+						if (typeof authArray.code !== 'undefined' && typeof authArray.scope !== 'undefined' && authArray.scope.includes("activity:read")) {
+							$.post('https://www.strava.com/oauth/token?client_id=31392&client_secret=62b8199e3a3b620dd6e76e790d3476fb3932edd5&' +
+								'code=' + authArray.code + '&grant_type=authorization_code',
+								function(data, status){
+									//console.log("data: " + data + "\nStatus: " + status);
+									var accessT = data.access_token;
+									// get activity name
+ 									$.get('https://www.strava.com/api/v3/activities/' + stravaActivityID + '?include_all_efforts=false&access_token='+accessT,
 									function(data, status){
 										//console.log(data);
-										//console.log(data.latlng.data);
-										stravaGPX = L.polyline(data.latlng.data).addTo(gpxdata);
-										gpxRouteName = 'Strava: ' + stravaID;
-										stravaGPX.bindTooltip(gpxRouteName, {sticky: true});
-										gpxPoints = stravaGPX.toGeoJSON();
-										mymap.fitBounds(stravaGPX.getBounds());
-										gpxLoaded = true;
-										gpxCalcButton.enable();
-								});
-						});
-
-							// get activity stream prototype (data.latlng)
-							//get "https://www.strava.com/api/v3/activities/2933015864/streams?keys=&key_by_type=" "Authorization: Bearer [[token]]"
-							// activity name - prototype - not used yet (data.name)
-							//http get "https://www.strava.com/api/v3/activities/{id}?include_all_efforts=" "Authorization: Bearer [[token]]"
-
-						//2933015864
-						//console.log(newcode.responseJSON.access_token);
-						//browser code
-						// www.strava.com/oauth/authorize?client_id=31392&response_type=code&redirect_uri=http://localhost/exchange_token&approval_prompt=force&scope=read,activity:read
-						//$.get(`https://www.strava.com/api/v3/athletes/5872599/activities?access_token=5809bbe402e112a0b6b064d4189ace97e33bbc23/`, function(datastrava, status) {
-  					//	console.log(datastrava[0].name);
-						//	}, 'json');
-
-					} else {
-						// use input data
+										gpxRouteName = data.name.replace(/[^\x20-\x7E]/g, '').trim(); //get rid of non-printing characters
+										gpxRouteName = 'Strava: ' + stravaActivityID + ' (' + gpxRouteName +')';
+										// get gpx data
+										$.get('https://www.strava.com/api/v3/activities/' + stravaActivityID + '/streams?keys=latlng&key_by_type=true&access_token='+accessT,
+											function(data, status){
+												//console.log(data);
+												//console.log(data.latlng.data);
+												stravaGPX = L.polyline(data.latlng.data, {color: 'blue'}).addTo(gpxdata);
+												stravaGPX.bindTooltip(gpxRouteName, {sticky: true});
+												gpxPoints = stravaGPX.toGeoJSON();
+												mymap.fitBounds(stravaGPX.getBounds());
+												gpxLoaded = true;
+												gpxCalcButton.enable();
+										});
+									});
+							});
+						} else {
+							window.alert("Strava not authorized with enough access.");
+						}
+					} else { // gpx data pasted in by user
 						gpxFile = gpxPrompt;
-
 						// load the data - URL to your GPX file (or the GPX itself)
 						new L.GPX(gpxFile, {
 							async: true,
@@ -793,7 +824,7 @@
 								shadowUrl:    '', //'http://github.com/mpetazzoni/leaflet-gpx/raw/master/pin-shadow.png',
 							},
 						}).on('loaded', function(e) {
-							gpxRouteName = 'GPX: ' + e.target.get_name();
+							gpxRouteName = 'GPX: ' + e.target.get_name().replace(/[^\x20-\x7E]/g, ''); //get rid of non-printing characters;
 							e.target.bindTooltip(gpxRouteName, {sticky: true});
 							gpxPoints = e.target.toGeoJSON().features[0]; // changed so that gxpPoints is not a collection, just one set of data
 							mymap.fitBounds(e.target.getBounds());
