@@ -728,6 +728,61 @@
 			// http://fontawesome.io/icon/file/
 			// htt	ps://fontawesome.com/v4.7.0/icons/
 
+			// variables for Strava authorization codes
+			var stravaClientID = 31392;		// ID for Strava App
+			var stravaAppCode = '62b8199e3a3b620dd6e76e790d3476fb3932edd5'; // only works with specific website
+			var stravaExpiresAt = 0; 			// expiry time for token (epoch time)
+			var stravaAccessToken = '';		// used to get data
+			var stravaRefreshToken = '';	// used to get new AccessToken if expired
+			var stravaCode = ''; 					// returned by redirect
+			var stravaScope = '';					// returned by redirect
+			var stravaReady = false;			// are Strava Tokens etc set up?
+
+			function stravaTokens() { // handle Strava token, including local storage, do this early to avoid any asyncronicity issues
+				// first check if strava code is already available, otherwise try to get it from browser window
+				if (stravaCode == '') {
+					// get access code from browser window (later try to get from storage)
+					var authString = window.location.search;
+					var authArray = {};
+					var pairs = (authString[0] === '?' ? authString.substr(1) : authString).split('&');
+					for (var i = 0; i < pairs.length; i++) {
+						var pair = pairs[i].split('=');
+						authArray[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1] || '');
+					}
+					//console.log(authArray);
+					// expect - .scope: "read,activity:read"
+					// 					.code = access token
+					if (typeof authArray.code !== 'undefined' && typeof authArray.scope !== 'undefined') {
+						stravaCode = authArray.code;
+						stravaScope = authArray.scope;
+
+						// now get Tokens
+						var jqPost = $.post('https://www.strava.com/oauth/token?client_id=' + stravaClientID + '&client_secret=' +
+						stravaAppCode + '&code=' + stravaCode + '&grant_type=authorization_code',
+							function(data, status){
+								//console.log("data: " + data + "\nStatus: " + status);
+								//console.log(data);
+								if (status == 'success') {
+									stravaExpiresAt = data.expires_at; 			// expiry time for token (epoch time)
+									stravaAccessToken = data.access_token;
+									stravaRefreshToken = data.refresh_token;	// used to get new AccessToken if expired
+									stravaReady = true;
+									//console.log('in if');
+								} else {
+									stravaReady = false;
+								}
+							});
+							//console.log('between');
+							//jqPost.always(function() {
+							//	console.log('at end'); // testpurposes - forces to wait for finish
+							//});
+					} else {
+						stravaReady = false;
+					}
+				}
+				return;
+			}
+
 			var gpxToggleButton = L.easyButton({ states: [{
 				stateName: 'gpx',
 				icon: 'fa fa-map-o fa-lg',
@@ -735,55 +790,48 @@
 				onClick: function(btn, map){
 					// toggle GPX
 
+					stravaTokens(); // set up tokens
+
 					var gpxPrompt = window.prompt("Paste GPX data or Strava ActivityID");
 					var gpxFile = '';
 
 					if (gpxPrompt == '' || gpxPrompt == null) {
 						// do nothing if press cancel
 					} else if ($.isNumeric(gpxPrompt)) {
-
 						// loaded default data
 						//gpxFile = 'https://gist.githubusercontent.com/richardjy/fe9e3a189e47e4c75aa5e083a00f4740/raw';
 						// Example run - Strava 2933015864
 						if (gpxPrompt == 0) gpxPrompt = 2933015864; // if set to zero then grab default run for Richard
 						var stravaActivityID = Number(gpxPrompt);
 
-						// get access code from browser window
-						var authString = window.location.search;
-						var authArray = {};
-						var pairs = (authString[0] === '?' ? authString.substr(1) : authString).split('&');
-						for (var i = 0; i < pairs.length; i++) {
-							var pair = pairs[i].split('=');
-							authArray[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1] || '');
-						}
-						//console.log(authArray);
-						// expect - scope: "read,activity:read"
-						// code = access token
-						if (typeof authArray.code !== 'undefined' && typeof authArray.scope !== 'undefined' && authArray.scope.includes("activity:read")) {
-							$.post('https://www.strava.com/oauth/token?client_id=31392&client_secret=62b8199e3a3b620dd6e76e790d3476fb3932edd5&' +
-								'code=' + authArray.code + '&grant_type=authorization_code',
-								function(data, status){
-									//console.log("data: " + data + "\nStatus: " + status);
-									var accessT = data.access_token;
-									// get activity name
- 									$.get('https://www.strava.com/api/v3/activities/' + stravaActivityID + '?include_all_efforts=false&access_token='+accessT,
-									function(data, status){
-										//console.log(data);
-										gpxRouteName = data.name.replace(/[^\x20-\x7E]/g, '').trim(); //get rid of non-printing characters
-										gpxRouteName = 'Strava: ' + stravaActivityID + ' (' + gpxRouteName +')';
-										// get gpx data
-										$.get('https://www.strava.com/api/v3/activities/' + stravaActivityID + '/streams?keys=latlng&key_by_type=true&access_token='+accessT,
-											function(data, status){
-												//console.log(data);
-												//console.log(data.latlng.data);
+						// to do - check expiry of codes
+						if (stravaReady == true && stravaScope.includes("activity:read")) {
+							// get activity name
+							$.get('https://www.strava.com/api/v3/activities/' + stravaActivityID + '?include_all_efforts=false&access_token='
+								+ stravaAccessToken, function(data, status){
+								//console.log(data);
+								if (status == 'success') {
+									gpxRouteName = data.name.replace(/[^\x20-\x7E]/g, '').trim(); //get rid of non-printing characters
+									gpxRouteName = 'Strava: ' + stravaActivityID + ' (' + gpxRouteName +')';
+									// get gpx data
+									$.get('https://www.strava.com/api/v3/activities/' + stravaActivityID + '/streams?keys=latlng&key_by_type=true&access_token='
+										+ stravaAccessToken, function(data, status){
+											//console.log(data);
+											//console.log(data.latlng.data);
+											if (status == 'success') {
 												stravaGPX = L.polyline(data.latlng.data, {color: 'blue'}).addTo(gpxdata);
 												stravaGPX.bindTooltip(gpxRouteName, {sticky: true});
 												gpxPoints = stravaGPX.toGeoJSON();
 												mymap.fitBounds(stravaGPX.getBounds());
 												gpxLoaded = true;
 												gpxCalcButton.enable();
-										});
+											} else {
+											window.alert("Strava Activity data not accessible.");
+											}
 									});
+								} else {
+								window.alert("Strava Activity not accessible.");
+								}
 							});
 						} else {
 							window.alert("Strava not authorized with enough access.");
