@@ -837,7 +837,7 @@
 						if (stravaReady == true && stravaScope.includes("activity:read")) {
 							// get list of activities - use per_page=1 to get Nth activity (up to N=999), if actual stravaID then just get most recent activity
 							var stravaSearch = (stravaActivityID > 999) ? 1 : stravaActivityID;
-							$.get('https://www.strava.com/api/v3/athlete/activities/?page=' + stravaSearch + '&per_page=1&access_token='
+							$.get('https://www.strava.com/api/v3/athlete/activities?page=' + stravaSearch + '&per_page=1&access_token='
 								+ stravaAccessToken, function(data, status){
 									//console.log(data);
 									if (status == 'success') {
