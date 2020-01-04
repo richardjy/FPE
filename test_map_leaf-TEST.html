@@ -824,7 +824,7 @@
 					}
 					// Strava Activity ID or Index (or Paste GPX data) [33min left]
 					// Paste GPX data (Strava link not available)
-					var promptText =  (stravaReady == true) ? 'Strava Activity ID or Index (or Paste GPX data) [' + Math.round(timeLeft/60) +
+					var promptText =  (stravaReady == true) ? 'Strava Activity ID or Index (or Paste GPX data) [Test: ' + Math.round(timeLeft/60) +
 						'min left]' : 'Paste GPX data (Strava link not available)';
 					var gpxPrompt = window.prompt(promptText);
 					if (gpxPrompt == '' || gpxPrompt == null) {
