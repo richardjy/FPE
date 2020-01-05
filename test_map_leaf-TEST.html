@@ -863,17 +863,17 @@
 											})
 											.fail(function(response) {
 												window.alert("Strava Activity GPX data not accessible.");
-												stravaReady = false;
+												//stravaReady = false;
 											});
 									})
 									.fail(function(error) {
-										window.alert("Strava Activity ID not accessible.");
-										stravaReady = false;
+										window.alert("Strava Activity not accessible.");
+										//stravaReady = false;
 									});
 							})
 							.fail(function(response) {
 								window.alert("Strava Activities not accessible.");
-								stravaReady = false;
+								//stravaReady = false;
 							});
 						} else {
 							window.alert("Strava not authorized with enough access.");
