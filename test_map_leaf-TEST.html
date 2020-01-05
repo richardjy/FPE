@@ -779,14 +779,13 @@
 							function(data, status){
 								//console.log("data: " + data + "\nStatus: " + status);
 								//console.log(data);
-								if (status == 'success') {
-									stravaExpiresAt = data.expires_at; 			// expiry time for token (epoch time)
-									stravaAccessToken = data.access_token;
-									stravaRefreshToken = data.refresh_token;	// used to get new AccessToken if expired
-								} else {
-									window.alert("Strava token exchange failed.");
-									stravaReady = false;
-								}
+								stravaExpiresAt = data.expires_at; 			// expiry time for token (epoch time)
+								stravaAccessToken = data.access_token;
+								stravaRefreshToken = data.refresh_token;	// used to get new AccessToken if expired
+							})
+							.fail(function(response) {
+								window.alert("Strava token exchange failed.");
+								stravaReady = false;
 							});
 					}
 				return;
@@ -798,14 +797,13 @@
 					function(data, status){
 						//console.log("Status: " + status);
 						//console.log(data);
-						if (status == 'success') {
-							stravaExpiresAt = data.expires_at; 			// expiry time for token (epoch time)
-							stravaAccessToken = data.access_token;
-							stravaRefreshToken = data.refresh_token;	// used to get new AccessToken if expired
-						} else {
-							window.alert("Strava token exchange failed.");
-							stravaReady = false;
-						}
+						stravaExpiresAt = data.expires_at; 			// expiry time for token (epoch time)
+						stravaAccessToken = data.access_token;
+						stravaRefreshToken = data.refresh_token;	// used to get new AccessToken if expired
+					})
+					.fail(function(response) {
+						window.alert("Strava token exchange failed (during refresh).");
+						stravaReady = false;
 					});
 				return;
 			}
@@ -837,44 +835,45 @@
 						if (stravaReady == true && stravaScope.includes("activity:read")) {
 							// get list of activities - use per_page=1 to get Nth activity (up to N=999), if actual stravaID then just get most recent activity
 							var stravaSearch = (stravaActivityID > 999) ? 1 : stravaActivityID;
+
 							$.get('https://www.strava.com/api/v3/athlete/activities?page=' + stravaSearch + '&per_page=1&access_token='
 								+ stravaAccessToken, function(data, status){
-									//console.log(data);
-									if (status == 'success') {
-										// do things with activities
-											if (stravaActivityID < 1000) {
-												stravaActivityID = data[0].id;
-											}
-											// get activity name
-											$.get('https://www.strava.com/api/v3/activities/' + stravaActivityID + '?include_all_efforts=false&access_token='
-												+ stravaAccessToken, function(data, status){
-												//console.log(data);
-												if (status == 'success') {
-													gpxRouteName = data.name.replace(/[^\x20-\x7E]/g, '').trim(); //get rid of non-printing characters
-													gpxRouteName = 'Strava: ' + gpxRouteName + ' (' + stravaActivityID +')';
-													// get gpx data
-													$.get('https://www.strava.com/api/v3/activities/' + stravaActivityID + '/streams?keys=latlng&key_by_type=true&access_token='
-														+ stravaAccessToken, function(data, status){
-															//console.log(data);
-															//console.log(data.latlng.data);
-															if (status == 'success') {
-																stravaGPX = L.polyline(data.latlng.data, {color: 'blue'}).addTo(gpxdata);
-																stravaGPX.bindTooltip(gpxRouteName, {sticky: true});
-																gpxPoints = stravaGPX.toGeoJSON();
-																mymap.fitBounds(stravaGPX.getBounds());
-																gpxLoaded = true;
-																gpxCalcButton.enable();
-															} else {
-																window.alert("Strava Activity GPX data not accessible.");
-															}
-													});
-												} else {
-													window.alert("Strava Activity ID not accessible.");
-												}
-											});
-									} else {
-										window.alert("Strava Activities not accessible.");
+									console.log(data);
+									// do things with activities
+									if (stravaActivityID < 1000) {
+										stravaActivityID = data[0].id;
 									}
+									// get activity name
+									$.get('https://www.strava.com/api/v3/activities/' + stravaActivityID + '?include_all_efforts=false&access_token='
+										+ stravaAccessToken, function(data, status){
+											console.log(data);
+											gpxRouteName = data.name.replace(/[^\x20-\x7E]/g, '').trim(); //get rid of non-printing characters
+											gpxRouteName = 'Strava: ' + gpxRouteName + ' (' + stravaActivityID +')';
+											// get gpx data
+											$.get('https://www.strava.com/api/v3/activities/' + stravaActivityID + '/streams?keys=latlng&key_by_type=true&access_token='
+												+ stravaAccessToken, function(data, status){
+													console.log(data);
+													//console.log(data.latlng.data);
+													stravaGPX = L.polyline(data.latlng.data, {color: 'blue'}).addTo(gpxdata);
+													stravaGPX.bindTooltip(gpxRouteName, {sticky: true});
+													gpxPoints = stravaGPX.toGeoJSON();
+													mymap.fitBounds(stravaGPX.getBounds());
+													gpxLoaded = true;
+													gpxCalcButton.enable();
+											})
+											.fail(function(response) {
+												window.alert("Strava Activity GPX data not accessible.");
+												stravaReady = false;
+											});
+									})
+									.fail(function(error) {
+										window.alert("Strava Activity ID not accessible.");
+										stravaReady = false;
+									});
+							})
+							.fail(function(response) {
+								window.alert("Strava Activities not accessible.");
+								stravaReady = false;
 							});
 						} else {
 							window.alert("Strava not authorized with enough access.");
