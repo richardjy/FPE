@@ -84,6 +84,13 @@
 			<div id="gpxresultText"></div>
 		</div>
 
+		<!-- strava dialog -->
+		<div id="stravadescrip" title="Strava Description">
+			<div id="stravadescripText">
+				<textarea id="stravadescripTextArea"  rows="4" cols="50">
+				</textarea>
+			</div>
+		</div>
 
 		<script>
 
@@ -219,6 +226,7 @@
 				}).css({"font-size": "12px", 'font-family': "Arial, Helvetica, sans-serif"});
 			});
 
+			$(function(){
 				$("#stravadescrip").dialog({
 					autoOpen: false,
 					//width: 600,
