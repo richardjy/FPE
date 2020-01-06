@@ -53,6 +53,13 @@
 				.ui-dialog { z-index: 1000 !important ;}
 				.ui-dialog-titlebar { font-size: 12px !important;}
 				html, body { height: 100%; }
+				textarea{
+    			white-space: pre;
+    			overflow-x: auto;
+				}
+				.ui-button {
+    			font-size: 12px !important; /* Or whatever smaller value works for you. */
+				}
 			</style>
 		</head>
 		<body>
@@ -209,6 +216,24 @@
 					my: "left top",
 					at: "center top",
 					collision: "none",
+				}).css({"font-size": "12px", 'font-family': "Arial, Helvetica, sans-serif"});
+			});
+
+				$("#stravadescrip").dialog({
+					autoOpen: false,
+					//width: 600,
+					width:'auto',
+					height: 'auto',
+					padding: 0,
+					my: "left top",
+					at: "center top",
+					collision: "none",
+					buttons: {
+						"Update Strava": updateStrava,
+						Cancel: function() {
+							$("#stravadescrip").dialog("close");
+						}
+					},
 				}).css({"font-size": "12px", 'font-family': "Arial, Helvetica, sans-serif"});
 			});
 
@@ -741,6 +766,7 @@
 			var stravaCode = ''; 					// returned by redirect
 			var stravaScope = '';					// returned by redirect
 			var stravaReady = false;			// are Strava Tokens etc set up?
+			var stravaActivityID = 0;			// current activityID
 
 			stravaTokens(); // setup tokens at startup - may need to refresh later
 
@@ -830,7 +856,7 @@
 					} else if ($.isNumeric(gpxPrompt)) {
 						// Example run - Strava 2933015864
 						if (gpxPrompt == 0) gpxPrompt = 2933015864; // if set to zero then grab default run for Richard
-						var stravaActivityID = Number(gpxPrompt); // if set to < 1000 then look at last 'n' runs
+						stravaActivityID = Number(gpxPrompt); // if set to < 1000 then look at last 'n' runs
 						// check scope is OK
 						if (stravaReady == true && stravaScope.includes("activity:read")) {
 							// get list of activities - use per_page=1 to get Nth activity (up to N=999), if actual stravaID then just get most recent activity
@@ -838,7 +864,7 @@
 
 							$.get('https://www.strava.com/api/v3/athlete/activities?page=' + stravaSearch + '&per_page=1&access_token='
 								+ stravaAccessToken, function(data, status){
-									console.log(data);
+									//console.log(data);
 									// do things with activities
 									if (stravaActivityID < 1000) {
 										stravaActivityID = data[0].id;
@@ -846,13 +872,13 @@
 									// get activity name
 									$.get('https://www.strava.com/api/v3/activities/' + stravaActivityID + '?include_all_efforts=false&access_token='
 										+ stravaAccessToken, function(data, status){
-											console.log(data);
+											//console.log(data);
 											gpxRouteName = data.name.replace(/[^\x20-\x7E]/g, '').trim(); //get rid of non-printing characters
 											gpxRouteName = 'Strava: ' + gpxRouteName + ' (' + stravaActivityID +')';
 											// get gpx data
 											$.get('https://www.strava.com/api/v3/activities/' + stravaActivityID + '/streams?keys=latlng&key_by_type=true&access_token='
 												+ stravaAccessToken, function(data, status){
-													console.log(data);
+													//console.log(data);
 													//console.log(data.latlng.data);
 													stravaGPX = L.polyline(data.latlng.data, {color: 'blue'}).addTo(gpxdata);
 													stravaGPX.bindTooltip(gpxRouteName, {sticky: true});
@@ -1223,10 +1249,47 @@
 						dialogtext += '\n  Total distance ' + gpxRoute[0][4].toFixed(2) + "mi    (GPX: " + gpxRoute[0][6].toFixed(2) + " mi)";
 						$("#gpxresultText").html($('<pre>').text(dialogtext));
 						$("#gpxresult").dialog({title: gpxRouteName}).dialog("open");
-						$("#gpxresult").dialog({my: "center-100 top",})
+						$("#gpxresult").dialog({my: "center-100 top",});
+
+						// post to Strava if allowed
+						// gpxRouteName if Strava = 'Strava: name (StravaID)'
+						if (gpxRouteName.startsWith("Strava") && stravaReady == true  && stravaScope.includes("activity:write")) {
+							// get activity data
+							$.get('https://www.strava.com/api/v3/activities/' + stravaActivityID + '?include_all_efforts=false&access_token='
+								+ stravaAccessToken, function(data, status){
+									//console.log(data);
+									var stravaDescription = data.description;
+									stravaDescription += '\nFPE:  Total distance ' + gpxRoute[0][4].toFixed(2) + "mi    (GPX: " + gpxRoute[0][6].toFixed(2) + " mi)\n";
+									//window.prompt("Updated Activity Description:", stravaDescription);
+									//console.log(stravaDescription);
+									$("#stravadescripTextArea").val(stravaDescription);
+									$("#stravadescrip").dialog({title: 'Update Strava Activity Description:'}).dialog("open");
+									$("#stravadescrip").dialog({my: "center-100 top",});
+							})
+							.fail(function(error) {
+								window.alert("Strava Activity not accessible.");
+								//stravaReady = false;
+							});
+						}
 					}
 				}
 			}]  })
+
+			function updateStrava() {
+				var stravaDescription = $("#stravadescripTextArea").val();
+				$.ajax({
+				  url: 'https://www.strava.com/api/v3/activities/' + stravaActivityID + '?access_token=' + stravaAccessToken,
+				  method: 'PUT',
+				  data: 'description=' + stravaDescription,
+				  success: function(data) {
+				    window.alert('Upload successful.');
+				  }
+				})
+				.fail(function(error) {
+					window.alert("Strava write access problem.");
+				});
+				$("#stravadescrip").dialog("close");
+			}
 
 			var copyButton = L.easyButton({ states: [{
 				stateName: 'makegpx',
@@ -1243,7 +1306,7 @@
 					routeStr += getptlatlng(pos2).lng + "," + getptlatlng(pos2).lat + ";";
 					var pos3 = Math.round(Math.random()*150);
 					routeStr += getptlatlng(pos3).lng + "," + getptlatlng(pos3).lat;
-					console.log(routeStr);
+					//console.log(routeStr);
 					// use overview=full to get full gps route - check other options
 					var url = 'https://api.mapbox.com/directions/v5/mapbox/walking/' + routeStr +
 							'?geometries=geojson&overview=full&access_token=' + config.mapBoxKey;
