@@ -4,22 +4,15 @@
 			<title>Forest Park Explorer</title>
 			<meta charset="utf-8" />
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-			<link rel="shortcut icon" type="image/x-icon" href="docs/images/favicon.ico" />
+			<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
 
-			<link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css"
-				integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
-				crossorigin=""/>
-<!--
-			<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
-			<link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
--->
-			<script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"
-				integrity="sha512-QVftwZFqvtRNi0ZyCtsznlKSWOStnDORoefr1enyq5mVL4tmKB3S/EnC3rRJcxCPavG10IcrVGSmPh6Qw5lwrg=="
-				crossorigin=""></script>
-<!--
-			<script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
-			<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
--->
+			<link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
+  			integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
+  			crossorigin=""/>
+			<script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
+			  integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
+			  crossorigin=""></script>
+
 			<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css">
 			<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 			<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
@@ -87,7 +80,7 @@
 		<!-- strava dialog -->
 		<div id="stravadescrip" title="Strava Description">
 			<div id="stravadescripText">
-				<textarea id="stravadescripTextArea"  rows="4" cols="50">
+				<textarea id="stravadescripTextArea"  rows="6" cols="80">
 				</textarea>
 			</div>
 		</div>
@@ -850,14 +843,14 @@
 					// check for expired token (6 hours)
 					if (stravaReady == true) {
 						var timeLeft = stravaExpiresAt - Date.now()/1000;
-						if (timeLeft < 0) { // expired
+						if (timeLeft < 1800) { // expires in less than 30 mins
 							stravaRefresh();
 						}
 					}
 					// Strava Activity ID or Index (or Paste GPX data) [33min left]
 					// Paste GPX data (Strava link not available)
 					var promptText =  (stravaReady == true) ? 'Strava Activity ID or Index (or Paste GPX data) [Test: ' + Math.round(timeLeft/60) +
-						'min left]' : 'Paste GPX data (Strava link not available)';
+						' min left]' : 'Paste GPX data (Strava link not available)';
 					var gpxPrompt = window.prompt(promptText);
 					if (gpxPrompt == '' || gpxPrompt == null) {
 						// do nothing if press cancel
@@ -941,7 +934,7 @@
 			var gpxCalcButton = L.easyButton({ states: [{
 				stateName: 'gpx calc',
 				icon: 'fa fa-map-signs fa-lg',
-				title: 'Calculate GPX track',
+				title: 'Create route from GPX track',
 				onClick: function(btn, map){
 					// toggle GPX
 					if (gpxLoaded == false) {
@@ -1254,7 +1247,7 @@
 						} while (gpxIndex < gpxImax);
 						// finish off data dialog
 						updateleg(); //update route info
-						dialogtext += '\n  Total distance ' + gpxRoute[0][4].toFixed(2) + "mi    (GPX: " + gpxRoute[0][6].toFixed(2) + " mi)";
+						dialogtext += '\n  Total distance ' + gpxRoute[0][4].toFixed(2) + " mi    (GPX: " + gpxRoute[0][6].toFixed(2) + " mi)";
 						$("#gpxresultText").html($('<pre>').text(dialogtext));
 						$("#gpxresult").dialog({title: gpxRouteName}).dialog("open");
 						$("#gpxresult").dialog({my: "center-100 top",});
@@ -1262,12 +1255,17 @@
 						// post to Strava if allowed
 						// gpxRouteName if Strava = 'Strava: name (StravaID)'
 						if (gpxRouteName.startsWith("Strava") && stravaReady == true  && stravaScope.includes("activity:write")) {
+							// check if need to refresh (may need to repeat calc as asynchronous)
+							if ((stravaExpiresAt - Date.now()/1000) < 1800) { // expires in less than 30min
+								stravaRefresh();
+							}
+
 							// get activity data
 							$.get('https://www.strava.com/api/v3/activities/' + stravaActivityID + '?include_all_efforts=false&access_token='
 								+ stravaAccessToken, function(data, status){
 									//console.log(data);
 									var stravaDescription = data.description;
-									stravaDescription += '\nFPE:  Total distance ' + gpxRoute[0][4].toFixed(2) + "mi    (GPX: " + gpxRoute[0][6].toFixed(2) + " mi)\n";
+									stravaDescription += '\n🌲📏 FPE:  Total distance ' + gpxRoute[0][4].toFixed(2) + " mi    (GPX: " + gpxRoute[0][6].toFixed(2) + " mi)\n";
 									//window.prompt("Updated Activity Description:", stravaDescription);
 									//console.log(stravaDescription);
 									$("#stravadescripTextArea").val(stravaDescription);
