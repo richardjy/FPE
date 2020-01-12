@@ -47,8 +47,10 @@ function stravaTokens() { // handle Strava token, do this early to avoid any asy
   if (stravaReady == true) {
       // now get Tokens
       //console.log(stravaCode);
-      var jqPost = $.post('https://www.strava.com/api/v3/oauth/token?client_id=' + stravaClientID + '&client_secret=' +
-      stravaAppCode + '&code=' + stravaCode + '&grant_type=authorization_code',
+      var postURL = 'https://www.strava.com/oauth/token?client_id=' + stravaClientID + '&client_secret=' +
+      stravaAppCode + '&code=' + stravaCode + '&grant_type=authorization_code';
+      //console.log(postURL);
+      var jqPost = $.post(postURL,
         function(data, status){
           //console.log("data: " + data + "\nStatus: " + status);
           //console.log(data);
@@ -61,6 +63,7 @@ function stravaTokens() { // handle Strava token, do this early to avoid any asy
           window.alert("Strava token exchange failed.");
           stravaReady = false;
         });
+      //console.log(jqPost);
     }
   return;
 }
@@ -548,48 +551,65 @@ function updateStrava() {
 var copyButton = L.easyButton({ states: [{
   stateName: 'makegpx',
   icon: 'fa fa-file fa-lg',
-  title: 'Create and export GPX route',
+  title: 'Create and export GPX route (max 24 legs)',
   onClick: function(btn, map){
     // build route string
     // original data '-122.73019,45.53811;-122.72621,45.5405;-122.72853,45.54629'
     // start with random gpxPoints
     // future - use actual max number of Junctions
     // max number is 25
-    var pos1 = Math.round(Math.random()*150);
-    var routeStr = getptlatlng(pos1).lng + "," + getptlatlng(pos1).lat + ";";
-    var pos2 = Math.round(Math.random()*150);
-    routeStr += getptlatlng(pos2).lng + "," + getptlatlng(pos2).lat + ";";
-    var pos3 = Math.round(Math.random()*150);
-    routeStr += getptlatlng(pos3).lng + "," + getptlatlng(pos3).lat;
-    //console.log(routeStr);
-    // use overview=full to get full gps route - check other options
-    var url = 'https://api.mapbox.com/directions/v5/mapbox/walking/' + routeStr +
-        '?geometries=geojson&overview=full&access_token=' + config.mapBoxKey;
-    var req = new XMLHttpRequest();  // try using $.post later??
-    var jsonResponse;
-    req.responseType = 'json';
-    req.open('GET', url, true);
-    req.onload = function () {
-        jsonResponse = req.response;
-        var distance = jsonResponse.routes[0].distance;
-        //console.log('Distance between ' + distance);
-        //console.log(jsonResponse);
-        L.geoJSON(jsonResponse.routes[0].geometry).bindTooltip('Random route: ' +
-            (distance/1000).toFixed(2) + 'km', {sticky: true}).addTo(gpxdata);
-        mymap.fitBounds(L.geoJSON(jsonResponse.routes[0].geometry).getBounds());
+    if (routelegs == 0) {
+      window.alert("No route to expert");   // later disable button in thi scase
+    } else {
 
-        var gpxData = togpx(jsonResponse.routes[0].geometry, {creator: "Forest Park Explorer", metadata: {name:"FPE-export"}});
-        //console.log(jsonResponse.routes[0].geometry);
-        // export gpx
-        var element = document.createElement('a');
-        element.href = 'data:application/gpx+xml;charset=utf-8,' + encodeURIComponent(gpxData);
-        element.download = 'export.gpx';
-        element.style.display = 'none';
-        document.body.appendChild(element);
-        element.click();
-        document.body.removeChild(element);
-    };
-    req.send();
+      var curPt = routedata[0][0];
+      var routeStr = getptlatlng(curPt).lng + "," + getptlatlng(curPt).lat;
+      var firstPt = 1;
+      var lastPt = routelegs;
+      if (routelegs > 24) {
+        lastPt = 24;      // later loop round every 24
+      }
+      for (i=firstPt; i<=lastPt; i++){
+        curPt = routedata[i][2];
+        routeStr += ";" + getptlatlng(curPt).lng + "," + getptlatlng(curPt).lat;
+        // var pos1 = Math.round(Math.random()*150);
+        // routeStr = getptlatlng(pos1).lng + "," + getptlatlng(pos1).lat + ";";
+        // var pos2 = Math.round(Math.random()*150);
+        // routeStr += getptlatlng(pos2).lng + "," + getptlatlng(pos2).lat + ";";
+        // var pos3 = Math.round(Math.random()*150);
+        // routeStr += getptlatlng(pos3).lng + "," + getptlatlng(pos3).lat;
+      }
+
+      console.log(routeStr);
+      // use overview=full to get full gps route - check other options
+      var url = 'https://api.mapbox.com/directions/v5/mapbox/walking/' + routeStr +
+          '?geometries=geojson&overview=full&access_token=' + config.mapBoxKey;
+      var req = new XMLHttpRequest();  // try using $.post later??
+      var jsonResponse;
+      req.responseType = 'json';
+      req.open('GET', url, true);
+      req.onload = function () {
+          jsonResponse = req.response;
+          var distance = jsonResponse.routes[0].distance;
+          //console.log('Distance between ' + distance);
+          //console.log(jsonResponse);
+          L.geoJSON(jsonResponse.routes[0].geometry).bindTooltip('Route to GPX: ' +
+              (distance/1000).toFixed(2) + 'km (' + lastPt + ' legs)', {sticky: true}).addTo(gpxdata);
+          mymap.fitBounds(L.geoJSON(jsonResponse.routes[0].geometry).getBounds());
+
+          var gpxData = togpx(jsonResponse.routes[0].geometry, {creator: "Forest Park Explorer", metadata: {name:"FPE-export"}});
+          //console.log(jsonResponse.routes[0].geometry);
+          // export gpx
+          var element = document.createElement('a');
+          element.href = 'data:application/gpx+xml;charset=utf-8,' + encodeURIComponent(gpxData);
+          element.download = 'export.gpx';
+          element.style.display = 'none';
+          document.body.appendChild(element);
+          element.click();
+          document.body.removeChild(element);
+      };
+      req.send();
+    }
   }
 }]  })
 
