@@ -1,6 +1,7 @@
 ---
 layout: default
 ---
+<link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
 
 ## Welcome to Forest Park Explorer
 
