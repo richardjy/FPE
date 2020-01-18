@@ -754,6 +754,16 @@
 
 			L.control.scale().addTo(mymap);
 
+			//strava logo area
+			var stravalogo = L.control({position: 'bottomleft'});
+			stravalogo.onAdd = function (mymap) {
+				var img = L.DomUtil.create('img');
+        img.src = '/images/api_logo_cptblWith_strava_stack_light.png';
+        img.style.width = '80px';
+        return img;
+			 };
+			stravalogo.addTo(mymap);
+
 			// display buttons
 			var buttonBar = L.easyBar([ copyButton, gpxToggleButton, gpxCalcButton, resetButton, undoButton, ]);
 			buttonBar.addTo(mymap);
