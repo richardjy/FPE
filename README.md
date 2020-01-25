@@ -6,6 +6,8 @@
   FPE with Strava Authorization
 </a>
 
+<br>
+
 ### Strava Authorization Options
 
 - activity:read: needed by FPE to read activities (and load GPX from your activity)
@@ -15,6 +17,9 @@
 More details to be added later
 
 © Richard Young 2020.
+
+<br>
+<img src="/images/api_logo_cptblWith_strava_stack_light.png" alt="Compatible with Strava" width="120">
 
 ## Github Info:
 
