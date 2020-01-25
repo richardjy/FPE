@@ -138,8 +138,9 @@ var gpxToggleButton = L.easyButton({ states: [{
                   + stravaAccessToken, function(data, status){
                     //console.log(data);
                     //console.log(data.latlng.data);
-                    stravaGPX = L.polyline(data.latlng.data, {color: 'blue'}).addTo(gpxdata);
+                    stravaGPX = L.Polyline.PolylineEditor(data.latlng.data, {color: 'blue', maxMarkers: 500}).addTo(gpxdata);
                     //L.Polyline.PolylineEditor
+                    stravaGPX = L.polyline(data.latlng.data, {color: 'blue'}).addTo(gpxdata);
                     stravaGPX.bindTooltip(gpxRouteName, {sticky: true});
                     gpxPoints = stravaGPX.toGeoJSON();
                     mymap.fitBounds(stravaGPX.getBounds());
