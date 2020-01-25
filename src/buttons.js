@@ -139,6 +139,7 @@ var gpxToggleButton = L.easyButton({ states: [{
                     //console.log(data);
                     //console.log(data.latlng.data);
                     stravaGPX = L.polyline(data.latlng.data, {color: 'blue'}).addTo(gpxdata);
+                    //L.Polyline.PolylineEditor
                     stravaGPX.bindTooltip(gpxRouteName, {sticky: true});
                     gpxPoints = stravaGPX.toGeoJSON();
                     mymap.fitBounds(stravaGPX.getBounds());
@@ -587,7 +588,7 @@ var copyButton = L.easyButton({ states: [{
         // routeStr += getptlatlng(pos3).lng + "," + getptlatlng(pos3).lat;
       }
 
-      console.log(routeStr);
+      //console.log(routeStr);
       // use overview=full to get full gps route - check other options
       var url = 'https://api.mapbox.com/directions/v5/mapbox/walking/' + routeStr +
           '?geometries=geojson&overview=full&access_token=' + config.mapBoxKey;
@@ -605,7 +606,7 @@ var copyButton = L.easyButton({ states: [{
           mymap.fitBounds(L.geoJSON(jsonResponse.routes[0].geometry).getBounds());
 
           var gpxData = togpx(jsonResponse.routes[0].geometry, {creator: "Forest Park Explorer", metadata: {name:"FPE-export"}});
-          //console.log(jsonResponse.routes[0].geometry);
+          //console.log(jsonResponse.routes[0]);
           // export gpx
           var element = document.createElement('a');
           element.href = 'data:application/gpx+xml;charset=utf-8,' + encodeURIComponent(gpxData);
