@@ -13,11 +13,10 @@ var stravaCode = ''; 					// returned by redirect
 var stravaScope = '';					// returned by redirect
 var stravaReady = false;			// are Strava Tokens etc set up?
 var stravaActivityID = 0;			// current activityID
-
-stravaTokens(); // setup tokens at startup - may need to refresh later
+var stravaRequest = 'auto&scope=read,activity:read,activity:read_all,activity:write'; // request string
 
 function stravaTokens() { // handle Strava token, do this early to avoid any asynchronicity issue
-  // get 'redirect' access code from browser window (if that fails then try to get from browser localStorage)
+  // get 'redirect' access code from browser window (if that fails then force reconnect to Strava - how to avoid cycle?)
   var authString = window.location.search;
   var authArray = {};
   var pairs = (authString[0] === '?' ? authString.substr(1) : authString).split('&');
@@ -31,17 +30,18 @@ function stravaTokens() { // handle Strava token, do this early to avoid any asy
   if (typeof authArray.code !== 'undefined' && typeof authArray.scope !== 'undefined') {
     stravaCode = authArray.code;
     stravaScope = authArray.scope;
-    localStorage.setItem("FPEstrava", stravaCode);
-    localStorage.setItem("FPEscope", stravaScope);
+    //localStorage.setItem("FPEstrava", stravaCode); // don't use local storage anymore
+    //localStorage.setItem("FPEscope", stravaScope);
     stravaReady = true;
   } else { // no Strava auth data in browser try to get from storage
-    if (localStorage.FPEstrava) {
-      stravaCode = localStorage.FPEstrava;
-      stravaReady = true;
-    }
-    if (localStorage.FPEscope) {
-      stravaScope = localStorage.FPEscope;
-    }
+    // if (localStorage.FPEstrava) {
+    //   stravaCode = localStorage.FPEstrava;
+    //   stravaReady = true;
+    // }
+    // if (localStorage.FPEscope) {
+    //   stravaScope = localStorage.FPEscope;
+    // }
+    stravaReady = false;
   }
 
   if (stravaReady == true) {
@@ -60,8 +60,15 @@ function stravaTokens() { // handle Strava token, do this early to avoid any asy
         })
         .fail(function(response) {
           //console.log(response);
-          window.alert("Strava token exchange failed.");
+          //var locHostPath = location.protocol + '//' + location.host + location.pathname;
+          var locHref = 'https://www.strava.com/oauth/authorize?client_id=' + stravaClientID +
+            '&response_type=code&redirect_uri=' +
+            location.protocol + '//' + location.host + location.pathname +
+            '&approval_prompt=' + stravaRequest;
+          //window.alert("Strava token exchange failed. URL = " + locHref);
           stravaReady = false;
+          // how to prevent a loop?
+          location.href = locHref;
         });
       //console.log(jqPost);
     }

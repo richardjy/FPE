@@ -88,6 +88,8 @@
 
 		<script>
 
+			// setup StravaLink (if appropriate)
+			stravaTokens(); // setup tokens at startup - may need to refresh later
 			// google chart
 			google.charts.load('current', {packages: ['corechart']});
 
@@ -762,8 +764,9 @@
         img.style.width = '80px';
         return img;
 			 };
-			stravalogo.addTo(mymap);
-
+			if (stravaReady == true) {
+				stravalogo.addTo(mymap);
+			}
 			// display buttons
 			var buttonBar = L.easyBar([ copyButton, gpxToggleButton, gpxCalcButton, resetButton, undoButton, ]);
 			buttonBar.addTo(mymap);
