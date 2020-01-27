@@ -567,10 +567,10 @@ function updateStrava() {
   $("#stravadescrip").dialog("close");
 }
 
-var copyButton = L.easyButton({ states: [{
+var exportGPXButton = L.easyButton({ states: [{
   stateName: 'makegpx',
   icon: 'fa fa-download fa-lg',
-  title: 'Create and export GPX route (max 24 legs)',
+  title: 'Export GPX of current route (max 24 legs)',
   onClick: function(btn, map){
     // build route string
     // original data '-122.73019,45.53811;-122.72621,45.5405;-122.72853,45.54629'
@@ -578,7 +578,7 @@ var copyButton = L.easyButton({ states: [{
     // future - use actual max number of Junctions
     // max number is 25
     if (routelegs == 0) {
-      window.alert("No route to expert");   // later disable button in thi scase
+      window.alert("No route to export");   // later disable button in this case
     } else {
 
       var curPt = routedata[0][0];

@@ -263,7 +263,6 @@
 				attribution: 'Map data: &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
 			});
 
-			// maxZoom 19 is standard - set to 20 to allow editing of GPX at high zoom
 			var OpenStreetMap_Mapnik = L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 				maxZoom: 19,
 				attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -286,6 +285,7 @@
 			//	subdomains:['mt0','mt1','mt2','mt3']
 			//});
 
+			// maxZoom 19 is standard - set to 22 to allow editing of GPX at high zoom
 			var BlankMap = L.tileLayer('', {
 				maxZoom: 22
 			});
@@ -425,9 +425,8 @@
 			var gpxPoints = L.geoJson(); //
 			var gpxLoaded = false;
 			var gpxRouteName = '';
+
 			// load GeoJSON from an external file
-			// https://api.myjson.com/bins/1aq4o1    older
-			// https://api.myjson.com/bins/1gnnh1    newer
 			// https://gist.github.com/richardjy/9524f0810c1bda554c69f36501cbd92a/raw
 
 			$.getJSON("https://gist.githubusercontent.com/richardjy/9524f0810c1bda554c69f36501cbd92a/raw",function(data){
@@ -774,7 +773,7 @@
 				stravalogo.addTo(mymap);
 			}
 			// display buttons
-			var buttonBar = L.easyBar([ copyButton, gpxToggleButton, gpxCalcButton, resetButton, undoButton, ]);
+			var buttonBar = L.easyBar([ gpxToggleButton, gpxCalcButton, exportGPXButton, resetButton, undoButton, ]);
 			buttonBar.addTo(mymap);
 			// disable calc button
 			gpxCalcButton.disable();

@@ -1,8 +1,8 @@
 ## Welcome to Forest Park Explorer
 
 - Go to [Forest Park Explorer site page](https://richardjy.github.io/FPE)
-- Go to [Forest Park Explorer](https://richardjy.github.io/FPE/FPE_main.html)
-- Go to <a href="https://www.strava.com/oauth/authorize?client_id=31392&response_type=code&redirect_uri=https://richardjy.github.io/FPE/FPE_main.html&approval_prompt=auto&scope=read,activity:read,activity:read_all,activity:write">
+- Go to [Forest Park Explorer](https://richardjy.github.io/FPE/main.html)
+- Go to <a href="https://www.strava.com/oauth/authorize?client_id=31392&response_type=code&redirect_uri=https://richardjy.github.io/FPE/main.html&approval_prompt=auto&scope=read,activity:read,activity:read_all,activity:write">
   FPE with Strava Authorization
 </a>
 
