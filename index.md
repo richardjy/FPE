@@ -5,10 +5,10 @@ layout: default
 
 ## Welcome to Forest Park Explorer
 
-- Click here for [Forest Park Explorer without Strava link](test_map_leaf-TEST.html)
+- Click here for [Forest Park Explorer without Strava link](FPE_main.html)
 
 - Click below for FPE with Strava link:  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[![Connect with Strava](/images/btn_strava_connectwith_orange.png)](https://www.strava.com/oauth/authorize?client_id=31392&response_type=code&redirect_uri=https://richardjy.github.io/FPE/test_map_leaf-TEST.html&approval_prompt=auto&scope=read,activity:read,activity:read_all,activity:write)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[![Connect with Strava](/images/btn_strava_connectwith_orange.png)](https://www.strava.com/oauth/authorize?client_id=31392&response_type=code&redirect_uri=https://richardjy.github.io/FPE/FPE_main.html&approval_prompt=auto&scope=read,activity:read,activity:read_all,activity:write)
 
 - Your activities: [View on Strava](https://www.strava.com/dashboard?feed_type=my_activity){:target="_blank"} (opens a new Tab)
 
