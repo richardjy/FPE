@@ -1,7 +1,3 @@
-// buttons - all code for buttons
-//'fa fa-file fa-lg'
-// http://fontawesome.io/icon/file/
-// htt	ps://fontawesome.com/v4.7.0/icons/
 
 // variables for Strava authorization codes
 var stravaClientID = 31392;		// ID for Strava App
@@ -92,9 +88,14 @@ function stravaRefresh() { // refresh Strava token, assumes stravaReady is true
   return;
 }
 
+// buttons - all code for buttons
+//'fa fa-file fa-lg'
+// http://fontawesome.io/icon/file/
+// https://fontawesome.com/v4.7.0/icons/
+
 var gpxToggleButton = L.easyButton({ states: [{
   stateName: 'gpx',
-  icon: 'fa fa-map-o fa-lg',
+  icon: 'fa fa-map-o',
   title: 'Import GPX track or Strava Activity',
   onClick: function(btn, map){
     // check for expired token (6 hours)
@@ -139,10 +140,12 @@ var gpxToggleButton = L.easyButton({ states: [{
                     //console.log(data);
                     //console.log(data.latlng.data);
                     stravaGPX = L.Polyline.PolylineEditor(data.latlng.data, {color: 'blue', maxMarkers: 500}).addTo(gpxdata);
+                    // updated line gpxdata.getLayers()[0].toGeoJSON()
+                    //  sizeof  gpxdata.getLayers().length  last = length-1
                     //L.Polyline.PolylineEditor
-                    stravaGPX = L.polyline(data.latlng.data, {color: 'blue'}).addTo(gpxdata);
+                    //stravaGPX = L.polyline(data.latlng.data, {color: 'blue'}).addTo(gpxdata);
                     stravaGPX.bindTooltip(gpxRouteName, {sticky: true});
-                    gpxPoints = stravaGPX.toGeoJSON();
+                    //gpxPoints = stravaGPX.toGeoJSON();  // this is now done at conversion
                     mymap.fitBounds(stravaGPX.getBounds());
                     gpxLoaded = true;
                     gpxCalcButton.enable();
@@ -178,9 +181,12 @@ var gpxToggleButton = L.easyButton({ states: [{
       }).on('loaded', function(e) {
         gpxRouteName = 'GPX: ' + e.target.get_name().replace(/[^\x20-\x7E]/g, ''); //get rid of non-printing characters;
         e.target.bindTooltip(gpxRouteName, {sticky: true});
-        gpxPoints = e.target.toGeoJSON().features[0]; // changed so that gxpPoints is not a collection, just one set of data
+        //gpxPoints = e.target.toGeoJSON().features[0]; // changed so that gxpPoints is not a collection, just one set of data
         mymap.fitBounds(e.target.getBounds());
-      }).addTo(gpxdata);
+        //console.log(e.target);
+        //console.log(e.target.getLayers()[0]);
+        L.Polyline.PolylineEditor(e.target.getLayers()[0].getLatLngs(), {color: 'blue', maxMarkers: 500}).addTo(gpxdata);
+      });
 
       gpxLoaded = true;
       // need to wait for data to load!
@@ -199,7 +205,11 @@ var gpxCalcButton = L.easyButton({ states: [{
     if (gpxLoaded == false) {
       window.alert("No GPX yet!");
     } else {
-      // access data
+      // get latest GPX Data
+      // updated line gpxdata.getLayers()[0].toGeoJSON()
+      //  sizeof  gpxdata.getLayers().length  last = length-1
+      gpxcircles.clearLayers();  // remove any circles (later could include optionally)
+      gpxPoints = gpxdata.getLayers()[gpxdata.getLayers().length -1].toGeoJSON();
       var startGPXlatlng =  getGPXlatlng(gpxPoints, 0);
       var startPtGPXindex = 0;
       var startPtGPXoffset = 999999.9;
@@ -559,7 +569,7 @@ function updateStrava() {
 
 var copyButton = L.easyButton({ states: [{
   stateName: 'makegpx',
-  icon: 'fa fa-file fa-lg',
+  icon: 'fa fa-download fa-lg',
   title: 'Create and export GPX route (max 24 legs)',
   onClick: function(btn, map){
     // build route string

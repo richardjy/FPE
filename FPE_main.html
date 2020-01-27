@@ -63,13 +63,16 @@
 		  <style>
 			.easy-button-button .button-state{
 				height: 100%;
+				width: 100%;
+				text-align: center;
 			}
 			@-moz-document url-prefix() {
 				.easy-button-button .button-state{
-					margin-left: -10%;
+					margin-left: -0%;
 				}
 			}
 		  </style>
+
 
 		<!-- was w 800px h 600px, try with % -->
 		<div id="mapid" style="width: 100%; height: 100%;"></div>
@@ -260,9 +263,9 @@
 				attribution: 'Map data: &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
 			});
 
-			// maxZoom 19 is standard - set to 20 to allow editing of GPX
+			// maxZoom 19 is standard - set to 20 to allow editing of GPX at high zoom
 			var OpenStreetMap_Mapnik = L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-				maxZoom: 20,
+				maxZoom: 19,
 				attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 			});
 
@@ -284,7 +287,7 @@
 			//});
 
 			var BlankMap = L.tileLayer('', {
-				maxZoom: 19
+				maxZoom: 22
 			});
 
 			var junctions = new L.LayerGroup();
