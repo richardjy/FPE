@@ -25,4 +25,4 @@ More details to be added later
 © Richard Young 2020.
 
 <br>
-<img src="/images/api_logo_cptblWith_strava_stack_light.png" alt="Compatible with Strava" width="120">
+<img src="images/api_logo_cptblWith_strava_stack_light.png" alt="Compatible with Strava" width="120">
