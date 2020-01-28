@@ -613,7 +613,7 @@ var exportGPXButton = L.easyButton({ states: [{
           //console.log('Distance between ' + distance);
           //console.log(jsonResponse);
           L.geoJSON(jsonResponse.routes[0].geometry).bindTooltip('Route to GPX: ' +
-              (distance/1000).toFixed(2) + 'km (' + lastPt + ' legs)', {sticky: true}).addTo(gpxdata);
+              (distance/1609).toFixed(2) + ' mi (' + lastPt + ' legs)', {sticky: true}).addTo(gpxdata);
           mymap.fitBounds(L.geoJSON(jsonResponse.routes[0].geometry).getBounds());
 
           var gpxData = togpx(jsonResponse.routes[0].geometry, {creator: "Forest Park Explorer", metadata: {name:"FPE-export"}});

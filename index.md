@@ -10,7 +10,7 @@ layout: default
 - Click below for FPE with Strava link:  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[![Connect with Strava](/images/btn_strava_connectwith_orange.png)](https://www.strava.com/oauth/authorize?client_id=31392&response_type=code&redirect_uri=https://richardjy.github.io/FPE/main.html&approval_prompt=auto&scope=read,activity:read,activity:read_all,activity:write)
 
-- Your activities: [View on Strava](https://www.strava.com/dashboard?feed_type=my_activity){:target="_blank"} (opens a new Tab)
+- Your activities: [View on Strava](https://www.strava.com/athlete/training){:target="_blank"} (opens a new Tab)
 
 <br>
 
