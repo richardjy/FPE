@@ -20,7 +20,7 @@ layout: default
 - activity:read_all: allows FPE to also read your private activites
 - activity:write: allows FPE to update activity description (you control updated text)
 
-More details to be added later
+More details to be added later...
 
 © Richard Young 2020.
 
