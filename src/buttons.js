@@ -577,10 +577,12 @@ var exportGPXButton = L.easyButton({ states: [{
     // start with random gpxPoints
     // future - use actual max number of Junctions
     // max number is 25
+console.log("hello");
     if (routelegs == 0) {
-      window.alert("No route to export");   // later disable button in this case
+      window.alert("No route to export...");   // later disable button in this case
     } else {
 
+      //  routedata[0] is summary: 0 start pt, 1 start name, 2 end pt, 3 end name, 4 dist, 5 ascent, 6 descent, 7 start elevation
       var curPt = routedata[0][0];
       var routeStr = getptlatlng(curPt).lng + "," + getptlatlng(curPt).lat;
       var firstPt = 1;
@@ -589,8 +591,12 @@ var exportGPXButton = L.easyButton({ states: [{
         lastPt = 24;      // later loop round every 24
       }
       for (i=firstPt; i<=lastPt; i++){
+        // routedata[n]: 0 route index, 1 route name, 2 end pt, 3 end name, 4 dist, 5 ascent, 6 descent, 7 direction bearing
         curPt = routedata[i][2];
         routeStr += ";" + getptlatlng(curPt).lng + "," + getptlatlng(curPt).lat;
+
+        gettraillatlng(routedata[i][0], routedata[i][1], routedata[i][7]);
+        console.log("hello");
         // var pos1 = Math.round(Math.random()*150);
         // routeStr = getptlatlng(pos1).lng + "," + getptlatlng(pos1).lat + ";";
         // var pos2 = Math.round(Math.random()*150);
@@ -697,13 +703,3 @@ var undoButton = L.easyButton({ states: [{
     info.update();
   }
 }]  })
-
-
-// not working yet
-function download(text, name, type) {
-  var a = document.createElement("a");
-  var file = new Blob([text], {type: type});
-  a.href = URL.createObjectURL(file);
-  a.download = name;
-  a.click();
-};

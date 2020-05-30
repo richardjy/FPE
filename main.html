@@ -30,6 +30,7 @@
 			<script src="./src/config.js"></script>
 			<script src="./src/config_local.js"></script>
 			<script src="./src/buttons.js"></script>
+			<script src="./src/point_functions.js"></script>
 			<script src="./src/leaflet-editable-polyline.js"></script>
 
 			<style>
@@ -470,7 +471,7 @@
 						}
 						routecount += 1;  // should be 1 as new route
 					} else {
-						// routedata: 0 route index, 1 route name, 2 end pt, 3 end name, 4 dist, 5 ascent, 6 descent, 7 direction bearing
+						// routedata[n]: 0 route index, 1 route name, 2 end pt, 3 end name, 4 dist, 5 ascent, 6 descent, 7 direction bearing
 						// check one end of line matches current end point
 						var startindex = this.feature.properties.start
 						var endindex = this.feature.properties.finish
@@ -632,104 +633,6 @@
 					routestring = '';
 				}
 				info.update();
-			};
-
-			// find latlng from GPX - otherwise values of lat lng reversed!
-			// assumes that gpdindex is valid
-			function getGPXlatlng(gpxJSON, gpxindex) {
-				var gpxLat = gpxJSON.geometry.coordinates[gpxindex][1];
-				var gpxLng = gpxJSON.geometry.coordinates[gpxindex][0];
-				var gpxlatlng = [ gpxLat, gpxLng ];
-				return gpxlatlng;
-			};
-
-			function getptname(ptindex) {
-				// find name of end point
-				//geojsondata has all points whether or not displayed
-				var ptname = '';
-				geojsondata.eachLayer(function (layer) {
-					// Check if layer is a marker
-					if (layer instanceof L.Marker && layer.hasOwnProperty('feature') ) {
-						// set name of end point
-						if (layer.feature.properties.index == ptindex) {
-							ptname = layer.feature.properties.label;
-						}
-					}
-				});
-				//window.prompt('ptname ' + ptname);
-				return ptname;
-			};
-
-			function getptlatlng(ptindex) {
-				//geojsondata has all points whether or not displayed
-				var ptlatlng = L.latLng();  // define type - returns lat lng alt
-				geojsondata.eachLayer(function (layer) {
-					// Check if layer is a marker
-					if (layer instanceof L.Marker && layer.hasOwnProperty('feature') ) {
-						// set name of end point
-						if (layer.feature.properties.index == ptindex) {
-							ptlatlng = layer.getLatLng();
-						}
-					}
-				});
-				return ptlatlng;
-			};
-
-			function getRouteData(rindex, rlabel) {
-				var rLayer;
-				trails.eachLayer(function (layer) {
-					// Check if layer is line with correct index and label
-					if (layer instanceof L.Polyline && layer.feature.properties.label == rlabel && layer.feature.properties.index == rindex) {
-						rLayer = layer;
-					}
-				});
-				return rLayer;
-			};
-
-			function distP2P(pt1, pt2) { // return value in meters - add generic gpx
-				var ptA = L.latLng();  // initialize returns lat lng alt
-				var ptB = L.latLng();  // initialize returns lat lng alt
-				var distm = -1.0; //set default - indicates error
-				if (pt2 > pt1) {
-					distm = 0;
-					ptA = getGPXlatlng(gpxPoints, pt1);
-					for (var i = pt1 + 1; i <=pt2; i++) {
-						ptB = getGPXlatlng(gpxPoints, i);
-						distm += mymap.distance(ptA, ptB);
-						ptA = ptB;
-					}
-				}
-				return distm; // return value in meters
-			};
-
-			function ptAtDist(pt1, dist) { //- add generic gpx
-				// find pt that is dist meters further on (or back if distance negative)
-				// unless reach start or end - return at least one pt further on
-				var maxPt = gpxPoints.geometry.coordinates.length - 1;
-				var ptA = getGPXlatlng(gpxPoints, pt1);
-				var ptB = L.latLng();  // initialize returns lat lng alt
-				var pt = pt1;
-				// if (pt >= maxPt) { // make sure not too large
-				// 	pt = maxPt-1;
-				// }
-				//console.log(pt);
-				var distm = 0.0; // starting point
-				if (dist > 0){
-					do {
-						pt++;
-						ptB = getGPXlatlng(gpxPoints, pt);
-						distm += mymap.distance(ptA, ptB);
-						ptA = ptB;
-					} while (distm < dist && pt < maxPt);
-				}	else { // search backwards
-					do {
-						pt--;
-						ptB = getGPXlatlng(gpxPoints, pt);
-						distm += mymap.distance(ptA, ptB);
-						ptA = ptB;
-					} while (distm < (-dist) && pt > 0);
-				}
-				return pt;
 			};
 
 			// setup global variables
