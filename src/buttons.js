@@ -577,7 +577,7 @@ var exportGPXButton = L.easyButton({ states: [{
     // start with random gpxPoints
     // future - use actual max number of Junctions
     // max number is 25
-console.log("hello");
+    // console.log("hello");
     if (routelegs == 0) {
       window.alert("No route to export...");   // later disable button in this case
     } else {
@@ -585,6 +585,7 @@ console.log("hello");
       //  routedata[0] is summary: 0 start pt, 1 start name, 2 end pt, 3 end name, 4 dist, 5 ascent, 6 descent, 7 start elevation
       var curPt = routedata[0][0];
       var routeStr = getptlatlng(curPt).lng + "," + getptlatlng(curPt).lat;
+      //var routeStr2 = routeStr;
       var firstPt = 1;
       var lastPt = routelegs;
       if (routelegs > 24) {
@@ -593,19 +594,16 @@ console.log("hello");
       for (i=firstPt; i<=lastPt; i++){
         // routedata[n]: 0 route index, 1 route name, 2 end pt, 3 end name, 4 dist, 5 ascent, 6 descent, 7 direction bearing
         curPt = routedata[i][2];
-        routeStr += ";" + getptlatlng(curPt).lng + "," + getptlatlng(curPt).lat;
+        //routeStr += ";" + getptlatlng(curPt).lng + "," + getptlatlng(curPt).lat;
 
-        gettraillatlng(routedata[i][0], routedata[i][1], routedata[i][7]);
-        console.log("hello");
-        // var pos1 = Math.round(Math.random()*150);
-        // routeStr = getptlatlng(pos1).lng + "," + getptlatlng(pos1).lat + ";";
-        // var pos2 = Math.round(Math.random()*150);
-        // routeStr += getptlatlng(pos2).lng + "," + getptlatlng(pos2).lat + ";";
-        // var pos3 = Math.round(Math.random()*150);
-        // routeStr += getptlatlng(pos3).lng + "," + getptlatlng(pos3).lat;
+        var trailcoords = gettraillatlng(routedata[i][0], routedata[i][1], routedata[i][7]);
+        for (var j = 1; j<trailcoords.length; j++) { // skip first point and add one or more
+          routeStr += ";" + trailcoords[j][0] + "," + trailcoords[j][1];
+        }
       }
 
       //console.log(routeStr);
+      //console.log(routeStr2);
       // use overview=full to get full gps route - check other options
       var url = 'https://api.mapbox.com/directions/v5/mapbox/walking/' + routeStr +
           '?geometries=geojson&overview=full&access_token=' + config.mapBoxKey;

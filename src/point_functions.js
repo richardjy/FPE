@@ -46,11 +46,13 @@ function gettraillatlng(trailindex, traillabel, dirSF) {
    trails.eachLayer(function (layer) {
      // find correct line (check for index and name)
      if (layer instanceof L.Polyline && layer.feature.properties.index == trailindex && layer.feature.properties.label == traillabel) {
-       trailline = layer.feature.geometry.coordinates;
-       console.log(layer.feature.geometry.coordinates);
+       trailline = layer.feature.geometry.coordinates.slice(); //get copy in case reverse
+       if (dirSF == -1) {
+         trailline.reverse();
+       }
      }
    });
-  //console.log(trailindex, traillabel, trailline);
+  //console.log(trailindex, traillabel, dirSF, trailline);
   return trailline;
   //return 1;
 };
