@@ -186,6 +186,7 @@ var gpxToggleButton = L.easyButton({ states: [{
         //console.log(e.target);
         //console.log(e.target.getLayers()[0]);
         L.Polyline.PolylineEditor(e.target.getLayers()[0].getLatLngs(), {color: 'blue', maxMarkers: 500}).addTo(gpxdata);
+        //L.Polyline(e.target.getLayers()[0], {color: 'blue', maxMarkers: 500}).addTo(gpxdata);
       });
 
       gpxLoaded = true;
@@ -581,57 +582,116 @@ var exportGPXButton = L.easyButton({ states: [{
     if (routelegs == 0) {
       window.alert("No route to export...");   // later disable button in this case
     } else {
+      // start fresh
+      gpxdata.clearLayers();
+      gpxLoaded = false;
 
       //  routedata[0] is summary: 0 start pt, 1 start name, 2 end pt, 3 end name, 4 dist, 5 ascent, 6 descent, 7 start elevation
       var curPt = routedata[0][0];
-      var routeStr = getptlatlng(curPt).lng + "," + getptlatlng(curPt).lat;
-      //var routeStr2 = routeStr;
-      var firstPt = 1;
-      var lastPt = routelegs;
-      if (routelegs > 24) {
-        lastPt = 24;      // later loop round every 24
-      }
-      for (i=firstPt; i<=lastPt; i++){
+      var routeStr = ([]);
+      var routeStrNo = 0;
+      routeStr[routeStrNo] = getptlatlng(curPt).lng + "," + getptlatlng(curPt).lat;
+      var reqPt = 1;  // 25 is max number in request - go to 24 in case next is two points
+      //var lastPt = 1;
+      // if (routelegs > 24) {
+      //   lastPt = 24;      // later loop round every 24
+      // }
+      for (i=1; i<=routelegs; i++){
         // routedata[n]: 0 route index, 1 route name, 2 end pt, 3 end name, 4 dist, 5 ascent, 6 descent, 7 direction bearing
-        curPt = routedata[i][2];
+        //curPt = routedata[i][2];
         //routeStr += ";" + getptlatlng(curPt).lng + "," + getptlatlng(curPt).lat;
 
         var trailcoords = gettraillatlng(routedata[i][0], routedata[i][1], routedata[i][7]);
-        for (var j = 1; j<trailcoords.length; j++) { // skip first point and add one or more
-          routeStr += ";" + trailcoords[j][0] + "," + trailcoords[j][1];
+        for (var j = 1; j<trailcoords.length; j++) { // skip first point and add one or two (assume 2 is max)
+          //routeStr[routeStrNo] += ";" + trailcoords[j][0] + "," + trailcoords[j][1];
+          routeStr[routeStrNo] += ";" + trailcoords[j]; // includes both lng and lat
+          reqPt++;
+          //lastPt++;
+        }
+        // allow to get to 24 or 25 points
+        if (reqPt > 4) {
+          routeStrNo++;
+          // start new string with last coords
+          //routeStr[routeStrNo] = trailcoords.slice(-1)[0] + "," + trailcoords.slice(-1)[1];
+          routeStr[routeStrNo] = trailcoords.slice(-1);  // includes both lng and lat
+          reqPt=1;
         }
       }
-
       //console.log(routeStr);
-      //console.log(routeStr2);
-      // use overview=full to get full gps route - check other options
-      var url = 'https://api.mapbox.com/directions/v5/mapbox/walking/' + routeStr +
-          '?geometries=geojson&overview=full&access_token=' + config.mapBoxKey;
-      var req = new XMLHttpRequest();  // try using $.post later??
-      var jsonResponse;
-      req.responseType = 'json';
-      req.open('GET', url, true);
-      req.onload = function () {
-          jsonResponse = req.response;
-          var distance = jsonResponse.routes[0].distance;
-          //console.log('Distance between ' + distance);
-          //console.log(jsonResponse);
-          L.geoJSON(jsonResponse.routes[0].geometry).bindTooltip('Route to GPX: ' +
-              (distance/1609).toFixed(2) + ' mi (' + lastPt + ' legs)', {sticky: true}).addTo(gpxdata);
-          mymap.fitBounds(L.geoJSON(jsonResponse.routes[0].geometry).getBounds());
 
-          var gpxData = togpx(jsonResponse.routes[0].geometry, {creator: "Forest Park Explorer", metadata: {name:"FPE-export"}});
-          //console.log(jsonResponse.routes[0]);
-          // export gpx
-          var element = document.createElement('a');
-          element.href = 'data:application/gpx+xml;charset=utf-8,' + encodeURIComponent(gpxData);
-          element.download = 'export.gpx';
-          element.style.display = 'none';
-          document.body.appendChild(element);
-          element.click();
-          document.body.removeChild(element);
-      };
-      req.send();
+      // use overview=full to get full gps route - check other options
+      var url = ([]);
+      for (var i = 0; i<routeStr.length; i++) {
+        url[i] ='https://api.mapbox.com/directions/v5/mapbox/walking/' + routeStr[i] +
+             '?geometries=geojson&overview=full&access_token=' + config.mapBoxKey;
+        console.log(routeStr[i]);
+      }
+
+      // var req = new XMLHttpRequest();  // try using $.get later??
+      // req.responseType = 'json';
+      // req.open('GET', url, true);
+      // req.onload = function () {
+      //     var routeResponse = req.response.routes[0];
+      //
+      //     // display response
+      //     var distance = routeResponse.distance;
+      //     L.geoJSON(routeResponse.geometry).bindTooltip('Route to GPX: ' +
+      //         (distance/1609).toFixed(2) + ' mi (' + lastPt + ' legs)', {sticky: true}).addTo(gpxdata);
+      //     mymap.fitBounds(L.geoJSON(routeResponse.geometry).getBounds());
+      //
+      //     // export gpx
+      //     var gpxData = togpx(routeResponse.geometry, {creator: "Forest Park Explorer", metadata: {name:"FPE-export"}});
+      //     var element = document.createElement('a');
+      //     element.href = 'data:application/gpx+xml;charset=utf-8,' + encodeURIComponent(gpxData);
+      //     element.download = 'export.gpx';
+      //     element.style.display = 'none';
+      //     document.body.appendChild(element);
+      //     element.click();
+      //     document.body.removeChild(element);
+      // };
+      // req.send();
+
+      $.get(url[0], function(data, status){
+          //console.log(data);
+          var routeLayer = L.geoJSON(data.routes[0].geometry);
+          var distance = data.routes[0].distance;
+          console.log(routeLayer);
+          console.log(distance);
+          // call next set of routes (Mapbox has a max)
+
+          $.get(url[1], function(data, status){
+            //console.log(data.routes[0]);
+            distance += data.routes[0].distance;
+            routeLayer.addData(data.routes[0].geometry);
+            console.log(routeLayer);
+            console.log(distance);
+
+
+            // display response
+            //L.geoJSON(routeResponse.geometry).bindTooltip('Route to GPX: ' +
+            routeLayer.bindTooltip('Route to GPX: ' +
+                (distance/1609).toFixed(2) + ' mi (' + routelegs + ' legs)', {sticky: true}).addTo(gpxdata);
+            mymap.fitBounds(routeLayer.getBounds());
+
+            // export gpx
+            //var gpxData = togpx(routeResponse.geometry, {creator: "Forest Park Explorer", metadata: {name:"FPE-export"}});
+            var gpxData = togpx(gpxdata.toGeoJSON(), {creator: "Forest Park Explorer", metadata: {name:"FPE-export"}});
+            var element = document.createElement('a');
+            element.href = 'data:application/gpx+xml;charset=utf-8,' + encodeURIComponent(gpxData);
+            element.download = 'export.gpx';
+            element.style.display = 'none';
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+          })
+          .fail(function(response) {
+            window.alert("Mapbox gpx request failed.");
+          });
+      })
+      .fail(function(response) {
+        window.alert("Mapbox gpx request failed.");
+      });
+
     }
   }
 }]  })
