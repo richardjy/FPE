@@ -296,6 +296,7 @@
 			var trails =  new L.LayerGroup();
 			var gpxdata =  new L.LayerGroup();
 			var gpxcircles =  new L.LayerGroup();
+			var gpxKeep =  new L.LayerGroup();  // Dummy layer to flag whether to keep gpx traces when add more (default off)
 
 			var baseLayers = {
 				//"Blank": L.tileLayer(),
@@ -312,7 +313,8 @@
 				"Junctions": junctions,
 				"Trails": trails,
 				"GPX data": gpxdata,
-				"GPX 'circles'": gpxcircles
+				"GPX 'circles'": gpxcircles,
+				"Keep GPX":gpxKeep
 			};
 
 			//45.55313, -122.75042
