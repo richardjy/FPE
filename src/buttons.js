@@ -587,10 +587,10 @@ function updateStrava() {
 var exportGPXButton = L.easyButton({ states: [{
   stateName: 'makegpx',
   icon: 'fa fa-download fa-lg',
-  title: 'Export GPX of current route (max up to 96 legs)',
+  title: 'Export GPX of current route (max ~75-80 legs)',
   onClick: function(btn, map){
     // build route string
-    // max number is up to 92 (depends on extra mid points)
+    // max number is up to 100 (depends on extra mid points)
     if (routelegs == 0) {
       window.alert("No route to export...");   // later disable button in this case
     } else {
@@ -604,34 +604,36 @@ var exportGPXButton = L.easyButton({ states: [{
       var routeStr = ([]);
       var routeStrNo = 0;
       routeStr[routeStrNo] = getptlatlng(curPt).lng + "," + getptlatlng(curPt).lat;
-      var reqPt = 1;  // 25 is max number in request - go to 24 in case next is two points
+      var reqPt = 1;  // 25 is max number in request
       var legCount = 0;
       for (i=1; i<=routelegs; i++){
         // routedata[n]: 0 route index, 1 route name, 2 end pt, 3 end name, 4 dist, 5 ascent, 6 descent, 7 direction bearing
         var trailcoords = gettraillatlng(routedata[i][0], routedata[i][1], routedata[i][7]);
-        for (var j = 1; j<trailcoords.length; j++) { // skip first point and add one or two (assume 2 is max)
+
+        // max number of points is 25 and 4 sets [index 0 - 3]
+        if (reqPt + trailcoords.length > 26) {
+          if (routeStrNo < 3){
+            routeStrNo++;
+            // start new string with first coord
+            routeStr[routeStrNo] = trailcoords[0];  // includes both lng and lat
+            reqPt=1;
+          } else {
+            break; // get out of the loop
+          }
+        }
+        // add the points
+        for (var j = 1; j<trailcoords.length; j++) { // skip first point and add others (typically one or two)
           routeStr[routeStrNo] += ";" + trailcoords[j]; // includes both lng and lat
           reqPt++;
         }
         legCount++;
-        // allow to get to 24 or 25 points and 4 sets [index 0 - 3]
-        if (reqPt > 23) {
-          if (routeStrNo < 3){
-            routeStrNo++;
-            // start new string with last coords
-            routeStr[routeStrNo] = trailcoords.slice(-1);  // includes both lng and lat
-            reqPt=1;
-          } else {
-            i = routelegs + 1; //finish loop
-          }
-        }
+
       }
       //console.log(routeStr);
 
       // use overview=full to get full gps route - check other options
       var url = ([]);
-      var numLoop = routeStr.length;
-      for (var i = 0; i<numLoop; i++) {
+      for (var i = 0; i<=routeStrNo; i++) {
         url[i] ='https://api.mapbox.com/directions/v5/mapbox/walking/' + routeStr[i] +
              '?geometries=geojson&overview=full&access_token=' + config.mapBoxKey;
         //console.log(routeStr[i]);
@@ -645,21 +647,21 @@ var exportGPXButton = L.easyButton({ states: [{
           var polyLine = L.polyline(coord);
           //console.log(coord.length, distance, polyLine);
 
-          if (numLoop > 1) {
+          if (routeStrNo > 0) {
             $.get(url[1], function(data, status){
               distance += data.routes[0].distance;
               coord = data.routes[0].geometry.coordinates;
               for(i=1; i<coord.length;i++) {  // skip first point as already in previous line
                 polyLine.addLatLng([coord[i][1],coord[i][0]]); // flip lat and lng
               }
-              if (numLoop > 2) {
+              if (routeStrNo > 1) {
                 $.get(url[2], function(data, status){
                   distance += data.routes[0].distance;
                   coord = data.routes[0].geometry.coordinates;
                   for(i=1; i<coord.length;i++) {  // skip first point as already in previous line
                     polyLine.addLatLng([coord[i][1],coord[i][0]]);
                   }
-                  if (numLoop > 3) {
+                  if (routeStrNo > 2) {
                     $.get(url[3], function(data, status){
                       distance += data.routes[0].distance;
                       coord = data.routes[0].geometry.coordinates;
@@ -688,11 +690,6 @@ var exportGPXButton = L.easyButton({ states: [{
   }
 }]  })
 
-function getMapBoxRoute() {
-
-  return true;
-};
-
 function displayExportRoute(polyLine, distance, legCount) {
   // display response
   polyLine.bindTooltip('Route to GPX: ' +
@@ -702,7 +699,14 @@ function displayExportRoute(polyLine, distance, legCount) {
   gpxCalcButton.enable();
 
   // export gpx
-  var gpxData = togpx(polyLine.toGeoJSON(), {creator: "Forest Park Explorer", metadata: {name:"FPE-export"}});
+  // add name track to line - it will end up in track in gpx
+  var feature = polyLine.feature = polyLine.feature || {};
+  feature.type = "Feature";
+  feature.properties = feature.properties || {};
+  feature.properties["name"] = "FPE-export";
+
+  var gpxData = togpx(polyLine.toGeoJSON(), {creator: "Forest Park Explorer", metadata: {name:"FPE-export-gpx"}});
+  //console.log(polyLine, polyLine.toGeoJSON(), gpxData);
   var element = document.createElement('a');
   element.href = 'data:application/gpx+xml;charset=utf-8,' + encodeURIComponent(gpxData);
   element.download = 'export.gpx';
