@@ -98,6 +98,13 @@ var gpxToggleButton = L.easyButton({ states: [{
   icon: 'fa fa-map-o',
   title: 'Import GPX track or Strava Activity',
   onClick: function(btn, map){
+
+    // remove existing layers if checkbox unchecked
+    if ( mymap.hasLayer(gpxKeep) == false) {
+      gpxdata.clearLayers();
+      gpxLoaded = false;
+    }
+
     // check for expired token (6 hours)
     if (stravaReady == true) {
       var timeLeft = stravaExpiresAt - Date.now()/1000;
@@ -139,7 +146,7 @@ var gpxToggleButton = L.easyButton({ states: [{
                   + stravaAccessToken, function(data, status){
                     //console.log(data);
                     //console.log(data.latlng.data);
-                    stravaGPX = L.Polyline.PolylineEditor(data.latlng.data, {color: 'blue', maxMarkers: 500}).addTo(gpxdata);
+                    var stravaGPX = L.Polyline.PolylineEditor(data.latlng.data, {color: 'blue', maxMarkers: 500}).addTo(gpxdata);
                     // updated line gpxdata.getLayers()[0].toGeoJSON()
                     //  sizeof  gpxdata.getLayers().length  last = length-1
                     //L.Polyline.PolylineEditor
@@ -180,18 +187,15 @@ var gpxToggleButton = L.easyButton({ states: [{
         },
       }).on('loaded', function(e) {
         gpxRouteName = 'GPX: ' + e.target.get_name().replace(/[^\x20-\x7E]/g, ''); //get rid of non-printing characters;
-        e.target.bindTooltip(gpxRouteName, {sticky: true});
-        //gpxPoints = e.target.toGeoJSON().features[0]; // changed so that gxpPoints is not a collection, just one set of data
-        mymap.fitBounds(e.target.getBounds());
-        //console.log(e.target);
-        //console.log(e.target.getLayers()[0]);
-        L.Polyline.PolylineEditor(e.target.getLayers()[0].getLatLngs(), {color: 'blue', maxMarkers: 500}).addTo(gpxdata);
+        var gpxLoad = L.Polyline.PolylineEditor(e.target.getLayers()[0].getLatLngs(), {color: 'blue', maxMarkers: 500}).addTo(gpxdata);
+        //L.Polyline(e.target.getLayers()[0], {color: 'blue', maxMarkers: 500}).addTo(gpxdata);
+        gpxLoad.bindTooltip(gpxRouteName, {sticky: true});
+        mymap.fitBounds(gpxLoad.getBounds());
+        gpxLoaded = true;
+        // need to wait for data to load!
+        //window.alert("Loaded");
+        gpxCalcButton.enable();
       });
-
-      gpxLoaded = true;
-      // need to wait for data to load!
-      //window.alert("Loaded");
-      gpxCalcButton.enable();
     }
   }
 }]  })
@@ -224,6 +228,12 @@ var gpxCalcButton = L.easyButton({ states: [{
       var gpxRoute = ([],[]);  //  [0]route index, [1]route name, [2]end pt, [3]end name, [4]dist, [5]gpxindex, [6]gpxdist, [7]offset
       var gpxLegs = 0;
       var gpxIndex = 0;
+      var minPtGPXoffset = 999999.9;
+      var minPtGPXindex = 0;
+      var minPtGPXdist = 0;
+      var curIndex = 0;
+      var endIndex = 0;
+      var endLatLng = finishGPXlatlng; // placeholder in correct format
       var nearPt = 75; 	// criteria for being near enough to a node
       var atPt = 20; 		// criteria for being at a node
       routelegs = 0; // restart route display and reset all trails
@@ -274,6 +284,7 @@ var gpxCalcButton = L.easyButton({ states: [{
         if (offset < startPtGPXoffset) {
           startPtGPXoffset = offset;
           gpxIndex = i;
+          console.log('start281', gpxIndex);
         }
       }
       if (gpxIndex > 0) { // moved point - get distance
@@ -306,15 +317,15 @@ var gpxCalcButton = L.easyButton({ states: [{
           if (layer instanceof L.Polyline && (layer.feature.properties.start == currentPtGPXindex
               || layer.feature.properties.finish == currentPtGPXindex )) {
             // look for closest point
-            var endIndex = ((layer.feature.properties.start == currentPtGPXindex) ? layer.feature.properties.finish : layer.feature.properties.start);
-            var endLatLng = getptlatlng(endIndex);
+            endIndex = ((layer.feature.properties.start == currentPtGPXindex) ? layer.feature.properties.finish : layer.feature.properties.start);
+            endLatLng = getptlatlng(endIndex);
             //console.log(endLatLng);  //testing
-            var curRouteName = layer.feature.properties.label;
-            var curEndName = getptname(endIndex);
+            //var curRouteName = layer.feature.properties.label;
+            //var curEndName = getptname(endIndex);
             //var curIndex = gpxIndex;
-            var minPtGPXoffset = 999999.9;
-            var minPtGPXindex = 0;
-            var minPtGPXdist = 0;
+            minPtGPXoffset = 999999.9;
+            minPtGPXindex = 0;
+            minPtGPXdist = 0;
 
             // convert to meters, search 1.25x route (gps normally short) add 0.1 in case of short inaccurate trails
             // adjust to 1.1x, was 1.25x
@@ -387,7 +398,9 @@ var gpxCalcButton = L.easyButton({ states: [{
           curIndex = ptAtDist(gpxIndex, 100); // move 100m to avoid finding same point too close
           //console.log(gpxIndex);  //testing
           minPtGPXoffset = 999999.0;
-          minPtGPXindex = 0;
+          //console.log('minPtGPXindex, curIndex', minPtGPXindex, curIndex);
+          minPtGPXindex = curIndex;  //currindex?
+          //console.log('minPtGPXindex, curIndex', minPtGPXindex, curIndex);
           do {
             curIndex = ptAtDist(curIndex, 50); // move 50m
             curGPXLatLng = getGPXlatlng(gpxPoints, curIndex);  // later do averaging over 50m of trace?
@@ -405,6 +418,7 @@ var gpxCalcButton = L.easyButton({ states: [{
             });
           }	while (minPtGPXoffset > nearPt); // find first place less than 75m from trail
           // now within 75m look for closest place - back up 100m and search 300m
+          minPtGPXindex = curIndex;
           curIndex = ptAtDist(curIndex, -100.0);
           endLatLng = getptlatlng(endIndex);
           for (var i = curIndex; i < ptAtDist(curIndex, 400.0); i++) {
@@ -466,6 +480,7 @@ var gpxCalcButton = L.easyButton({ states: [{
           } else {
             addleg(rline, -1);
           }
+          //console.log('addx', gpxIndex, gpxRoute);
           updatecolor(rline, routecount);
         } else {
           gpxRoute[gpxLegs] = gpxFindLeg[minCount];
@@ -479,11 +494,13 @@ var gpxCalcButton = L.easyButton({ states: [{
           } else {
             addleg(rline, -1);
           }
+          //console.log('add', gpxIndex);
           updatecolor(rline, routecount);
         }
         gpxRoute[0][4] += gpxRoute[gpxLegs][4]; //keep track of route distance
         gpxRoute[0][6] += gpxRoute[gpxLegs][6]; //keep track of gpx distance
         gpxIndex = gpxRoute[gpxLegs][5] + 1;	// move onto next point in gpx trace
+        //console.log('move493', gpxIndex);
         currentPtGPXindex = gpxRoute[gpxLegs][2];
         dialogtext += '\n' + gpxRoute[gpxLegs][4].toFixed(2) + " mi\t GPX: " + gpxRoute[gpxLegs][5].toFixed(0).padStart(5, " ") + " (" + gpxRoute[gpxLegs][6].toFixed(2) +
             " mi)\t(" + gpxRoute[gpxLegs][7].toFixed(1).padStart(4, " ") + " m)  " + gpxRoute[gpxLegs][1] + " to " + gpxRoute[gpxLegs][3];
@@ -570,67 +587,135 @@ function updateStrava() {
 var exportGPXButton = L.easyButton({ states: [{
   stateName: 'makegpx',
   icon: 'fa fa-download fa-lg',
-  title: 'Export GPX of current route (max 24 legs)',
+  title: 'Export GPX of current route (max ~75-80 legs)',
   onClick: function(btn, map){
     // build route string
-    // original data '-122.73019,45.53811;-122.72621,45.5405;-122.72853,45.54629'
-    // start with random gpxPoints
-    // future - use actual max number of Junctions
-    // max number is 25
+    // max number is up to 100 (depends on extra mid points)
     if (routelegs == 0) {
-      window.alert("No route to export");   // later disable button in this case
+      window.alert("No route to export...");   // later disable button in this case
     } else {
-
+      // start fresh if box unchecked
+      if ( mymap.hasLayer(gpxKeep) == false) {
+        gpxdata.clearLayers();
+        gpxLoaded = false;
+      }
+      //  routedata[0] is summary: 0 start pt, 1 start name, 2 end pt, 3 end name, 4 dist, 5 ascent, 6 descent, 7 start elevation
       var curPt = routedata[0][0];
-      var routeStr = getptlatlng(curPt).lng + "," + getptlatlng(curPt).lat;
-      var firstPt = 1;
-      var lastPt = routelegs;
-      if (routelegs > 24) {
-        lastPt = 24;      // later loop round every 24
-      }
-      for (i=firstPt; i<=lastPt; i++){
-        curPt = routedata[i][2];
-        routeStr += ";" + getptlatlng(curPt).lng + "," + getptlatlng(curPt).lat;
-        // var pos1 = Math.round(Math.random()*150);
-        // routeStr = getptlatlng(pos1).lng + "," + getptlatlng(pos1).lat + ";";
-        // var pos2 = Math.round(Math.random()*150);
-        // routeStr += getptlatlng(pos2).lng + "," + getptlatlng(pos2).lat + ";";
-        // var pos3 = Math.round(Math.random()*150);
-        // routeStr += getptlatlng(pos3).lng + "," + getptlatlng(pos3).lat;
-      }
+      var routeStr = ([]);
+      var routeStrNo = 0;
+      routeStr[routeStrNo] = getptlatlng(curPt).lng + "," + getptlatlng(curPt).lat;
+      var reqPt = 1;  // 25 is max number in request
+      var legCount = 0;
+      for (i=1; i<=routelegs; i++){
+        // routedata[n]: 0 route index, 1 route name, 2 end pt, 3 end name, 4 dist, 5 ascent, 6 descent, 7 direction bearing
+        var trailcoords = gettraillatlng(routedata[i][0], routedata[i][1], routedata[i][7]);
 
+        // max number of points is 25 and 4 sets [index 0 - 3]
+        if (reqPt + trailcoords.length > 26) {
+          if (routeStrNo < 3){
+            routeStrNo++;
+            // start new string with first coord
+            routeStr[routeStrNo] = trailcoords[0];  // includes both lng and lat
+            reqPt=1;
+          } else {
+            break; // get out of the loop
+          }
+        }
+        // add the points
+        for (var j = 1; j<trailcoords.length; j++) { // skip first point and add others (typically one or two)
+          routeStr[routeStrNo] += ";" + trailcoords[j]; // includes both lng and lat
+          reqPt++;
+        }
+        legCount++;
+
+      }
       //console.log(routeStr);
-      // use overview=full to get full gps route - check other options
-      var url = 'https://api.mapbox.com/directions/v5/mapbox/walking/' + routeStr +
-          '?geometries=geojson&overview=full&access_token=' + config.mapBoxKey;
-      var req = new XMLHttpRequest();  // try using $.post later??
-      var jsonResponse;
-      req.responseType = 'json';
-      req.open('GET', url, true);
-      req.onload = function () {
-          jsonResponse = req.response;
-          var distance = jsonResponse.routes[0].distance;
-          //console.log('Distance between ' + distance);
-          //console.log(jsonResponse);
-          L.geoJSON(jsonResponse.routes[0].geometry).bindTooltip('Route to GPX: ' +
-              (distance/1609).toFixed(2) + ' mi (' + lastPt + ' legs)', {sticky: true}).addTo(gpxdata);
-          mymap.fitBounds(L.geoJSON(jsonResponse.routes[0].geometry).getBounds());
 
-          var gpxData = togpx(jsonResponse.routes[0].geometry, {creator: "Forest Park Explorer", metadata: {name:"FPE-export"}});
-          //console.log(jsonResponse.routes[0]);
-          // export gpx
-          var element = document.createElement('a');
-          element.href = 'data:application/gpx+xml;charset=utf-8,' + encodeURIComponent(gpxData);
-          element.download = 'export.gpx';
-          element.style.display = 'none';
-          document.body.appendChild(element);
-          element.click();
-          document.body.removeChild(element);
-      };
-      req.send();
+      // use overview=full to get full gps route - check other options
+      var url = ([]);
+      for (var i = 0; i<=routeStrNo; i++) {
+        url[i] ='https://api.mapbox.com/directions/v5/mapbox/walking/' + routeStr[i] +
+             '?geometries=geojson&overview=full&access_token=' + config.mapBoxKey;
+        //console.log(routeStr[i]);
+      }
+
+      // avoid recursive call - allow 4 nests approx 96 legs
+      $.get(url[0], function(data, status){
+          //console.log('data = ', data);
+          var distance = data.routes[0].distance;
+          var coord = L.GeoJSON.coordsToLatLngs(data.routes[0].geometry.coordinates,0);
+          var polyLine = L.polyline(coord);
+          //console.log(coord.length, distance, polyLine);
+
+          if (routeStrNo > 0) {
+            $.get(url[1], function(data, status){
+              distance += data.routes[0].distance;
+              coord = data.routes[0].geometry.coordinates;
+              for(i=1; i<coord.length;i++) {  // skip first point as already in previous line
+                polyLine.addLatLng([coord[i][1],coord[i][0]]); // flip lat and lng
+              }
+              if (routeStrNo > 1) {
+                $.get(url[2], function(data, status){
+                  distance += data.routes[0].distance;
+                  coord = data.routes[0].geometry.coordinates;
+                  for(i=1; i<coord.length;i++) {  // skip first point as already in previous line
+                    polyLine.addLatLng([coord[i][1],coord[i][0]]);
+                  }
+                  if (routeStrNo > 2) {
+                    $.get(url[3], function(data, status){
+                      distance += data.routes[0].distance;
+                      coord = data.routes[0].geometry.coordinates;
+                      for(i=1; i<coord.length;i++) {  // skip first point as already in previous line
+                        polyLine.addLatLng([coord[i][1],coord[i][0]]);
+                      }
+                      displayExportRoute(polyLine, distance, legCount);
+                    })
+                  } else {
+                    displayExportRoute(polyLine, distance, legCount);
+                  }
+                })
+              } else {
+                displayExportRoute(polyLine, distance, legCount);
+              }
+            })
+          } else {
+            displayExportRoute(polyLine, distance, legCount);
+          }
+      })
+      // only put error trap on first level for clarity
+      .fail(function(response) {
+        window.alert("Mapbox gpx request failed.");
+      });
     }
   }
 }]  })
+
+function displayExportRoute(polyLine, distance, legCount) {
+  // display response
+  polyLine.bindTooltip('Route to GPX: ' +
+      (distance/1609).toFixed(2) + ' mi (' + legCount + ' legs)', {sticky: true}).addTo(gpxdata);
+  mymap.fitBounds(polyLine.getBounds());
+  gpxLoaded = true;
+  gpxCalcButton.enable();
+
+  // export gpx
+  // add name track to line - it will end up in track in gpx
+  var feature = polyLine.feature = polyLine.feature || {};
+  feature.type = "Feature";
+  feature.properties = feature.properties || {};
+  feature.properties["name"] = "FPE-export";
+
+  var gpxData = togpx(polyLine.toGeoJSON(), {creator: "Forest Park Explorer", metadata: {name:"FPE-export-gpx"}});
+  //console.log(polyLine, polyLine.toGeoJSON(), gpxData);
+  var element = document.createElement('a');
+  element.href = 'data:application/gpx+xml;charset=utf-8,' + encodeURIComponent(gpxData);
+  element.download = 'export.gpx';
+  element.style.display = 'none';
+  document.body.appendChild(element);
+  element.click();
+  document.body.removeChild(element);
+  return true;
+};
 
 var resetButton = L.easyButton({ states: [{
   stateName: 'reset',
@@ -697,13 +782,3 @@ var undoButton = L.easyButton({ states: [{
     info.update();
   }
 }]  })
-
-
-// not working yet
-function download(text, name, type) {
-  var a = document.createElement("a");
-  var file = new Blob([text], {type: type});
-  a.href = URL.createObjectURL(file);
-  a.download = name;
-  a.click();
-};
