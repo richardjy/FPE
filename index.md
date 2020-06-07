@@ -3,7 +3,7 @@ layout: default
 ---
 <head>
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.1/css/font-awesome.min.css">
-  <link rel="shortcut icon" type="image/png" href="favicon.png">
+  <link rel="shortcut icon" type="image/png" href="{{ site.baseurl }}/favicon.png">
 </head>
 
 ## Welcome to Forest Park Explorer
@@ -23,13 +23,23 @@ layout: default
 - activity:read_all: allows FPE to also read your private activites
 - activity:write: allows FPE to update activity description (you control updated text)
 
-### Details
+### History (Draft text below)
+Forest Park Explorer was inspired by a network map of the Forest Park trails created in Visio tm by Rick Kneedler. A large measure of thanks is due to Pete Carleson, who was a passionate advocate for making an electronic version, and has made many useful suggestions and identified various bugs and issues during Alpha testing. 
+
+A big reason to use FPE is to overcome the 'tree tax' imposed when using a GPS in the park, reducing the actual distance covered by often 10% or more. Distances of the legs come from the Forest Park Conservancy map (2016 version) and FPC 'All Trails Challenge' spreadsheet (2018 version), along with additional values from Rick's data and some fixes to obvious errors (e.g. extensions to FL13 are listed as too short on the map). The data is stored in a 'geojson' file.
+
+Elevation gain/loss is handled in a simplistic way. The elevation change between the end points of each leg is tallied up and displayed. While this misses additional up and downs within the it does give a good impression of the profile for the planned run/walk. ELevation is from USGS [National Map] (https://www.usgs.gov/core-science-systems/national-geospatial-program/national-map){:target="_blank"}.
+
+
+### Create a Route
+
+### Button bar
 
 #### <i class='fa fa-map-o'></i>  Import GPX track or Strava Activity
 #### <i class='fa fa-map-signs fa-lg'></i>  Create route from GPX track
-- <i class='fa fa-download fa-lg'></i>  Export GPX of current route (max ~75-80 legs)
-- <i class='fa fa-refresh fa-lg'></i>  Reset to default
-- <i class='fa fa-undo fa-lg'></i>  Remove last leg (Ctrl-click on line)
+#### <i class='fa fa-download fa-lg'></i>  Export GPX of current route (max ~75-80 legs)
+#### <i class='fa fa-refresh fa-lg'></i>  Reset to default
+#### <i class='fa fa-undo fa-lg'></i>  Remove last leg (Ctrl-click on line)
 
 
 <br>
