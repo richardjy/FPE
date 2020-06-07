@@ -25,7 +25,7 @@ layout: default
 
 ### Details
 
-<li><i class='fa fa-map-o'></i></li>
+<i class='fa fa-map-o'></i> Import Strava activity or GPX data
 
 © Richard Young 2020.
 
