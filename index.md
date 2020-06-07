@@ -24,14 +24,18 @@ layout: default
 - activity:write: allows FPE to update activity description (you control updated text)
 
 ### History (Draft text below)
-Forest Park Explorer was inspired by a network map of the Forest Park trails created in Visio tm by Rick Kneedler. A large measure of thanks is due to Pete Carleson, who was a passionate advocate for making an electronic version, and has made many useful suggestions and identified various bugs and issues during Alpha testing. 
+Forest Park Explorer was inspired by a network map of the Forest Park trails created in Visio :tm: by Rick Kneedler. A large measure of thanks is due to Pete Carleson, who was a passionate advocate for making an electronic version and has made many useful suggestions and identified various bugs and issues during Alpha testing. 
 
-A big reason to use FPE is to overcome the 'tree tax' imposed when using a GPS in the park, reducing the actual distance covered by often 10% or more. Distances of the legs come from the Forest Park Conservancy map (2016 version) and FPC 'All Trails Challenge' spreadsheet (2018 version), along with additional values from Rick's data and some fixes to obvious errors (e.g. extensions to FL13 are listed as too short on the map). The data is stored in a 'geojson' file.
+A big reason to use FPE is to overcome the 'tree tax' imposed when using a GPS in the park, reducing the actual distance covered by often 10% or more. Distances along the trails within the park come from the Forest Park Conservancy map (2016 version) and FPC 'All Trails Challenge' spreadsheet (2018 version). Roads and missing trails were calculated using [www.mappedometer.com](https://www.mappedometer.com/). Some fixes to obvious errors were also made (e.g. extensions to FL13 are too short as listed on the FPC  map, causing GPX to routing failures). 
 
-Elevation gain/loss is handled in a simplistic way. The elevation change between the end points of each leg is tallied up and displayed. While this misses additional up and downs within the it does give a good impression of the profile for the planned run/walk. ELevation is from USGS [National Map] (https://www.usgs.gov/core-science-systems/national-geospatial-program/national-map){:target="_blank"}.
+Elevation gain/loss is handled in a simplistic way. The elevation change between the end points of each trail leg is tallied up and displayed. While this misses additional up and downs within each leg it does give a good impression of the profile for the planned run/walk. Elevation is from USGS [National Map](https://www.usgs.gov/core-science-systems/national-geospatial-program/national-map).
 
+The network of 'nodes' and 'legs' is stored in a 'geojson' [file](https://gist.github.com/richardjy/9524f0810c1bda554c69f36501cbd92a).
 
 ### Create a Route
+Click first leg near starting point<br>
+Autoroute on same trail<br>
+Ctrl-click = remove leg<br>
 
 ### Button bar
 
