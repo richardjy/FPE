@@ -3,7 +3,7 @@ layout: default
 ---
 <head>
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.1/css/font-awesome.min.css">
-  <link rel="shortcut icon" type="image/png" href="/fpe/favicon.png">
+  <link rel="shortcut icon" type="image/png" href="/favicon.png">
 </head>
 
 ## Welcome to Forest Park Explorer
