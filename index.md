@@ -25,8 +25,8 @@ layout: default
 
 ### Details
 
-- <i class='fa fa-map-o'></i>  Import GPX track or Strava Activity
-- <i class='fa fa-map-signs fa-lg'></i>  Create route from GPX track
+#### <i class='fa fa-map-o'></i>  Import GPX track or Strava Activity
+#### <i class='fa fa-map-signs fa-lg'></i>  Create route from GPX track
 - <i class='fa fa-download fa-lg'></i>  Export GPX of current route (max ~75-80 legs)
 - <i class='fa fa-refresh fa-lg'></i>  Reset to default
 - <i class='fa fa-undo fa-lg'></i>  Remove last leg (Ctrl-click on line)
