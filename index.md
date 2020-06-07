@@ -1,7 +1,10 @@
 ---
 layout: default
 ---
-
+<head>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.1/css/font-awesome.min.css">
+  <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
+</head>
 
 ## Welcome to Forest Park Explorer
 
