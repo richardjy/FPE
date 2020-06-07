@@ -33,7 +33,7 @@ Elevation gain/loss is handled in a simplistic way. The elevation change between
 The network of 'nodes' and 'legs' is stored in a ['geoJSON' file](https://gist.github.com/richardjy/9524f0810c1bda554c69f36501cbd92a). The network is a balance between keeping things too simple (and being inaccurate when a trail 'jogs' to the side where it crosses another trail) and having too many nodes (which would mean more clicks to create a route).
 
 ### Getting started: Create a Route
-- Click on the first leg near the starting point. Then add legs by clicking on connected trails. The <i class='fa flag-checkered'></i> shows the end of the trail. Clicking on the trail can be challenging on a tablet/phone depending on the 
+- Click on the first leg near the starting point. Then add legs by clicking on connected trails. The <i class='fa fa-flag-checkered'></i> shows the end of the trail. Clicking on the trail can be challenging on a tablet/phone depending on the 
 - Autoroute on same trail by clicking further along the trail (if going in the same direction).
 - To remove the last leg use Ctrl-click or the button, see below.
 
@@ -42,15 +42,19 @@ The network of 'nodes' and 'legs' is stored in a ['geoJSON' file](https://gist.g
 #### <i class='fa fa-map-o'></i>  Import GPX track or Strava Activity
 - Strava: Enter Strava activity ID (typically 10 digit number). ALternatively, entering 1 will return your last activity, 2 your second last etc (up to 999).
 - GPX: Open the GPX file in Notepad or similar, then select and copy the text (e.g. on Windows Ctrl-A, Ctrl-C) and paste into the dialog (Ctrl-V). If the file is too large for the field it will be truncated. 
+
 #### <i class='fa fa-map-signs fa-lg'></i>  Create route from GPX track
-- Translates the imported GPX activity/trail into a route. As the GPX 
+- Translates the imported GPX activity/trail into a route. As the GPX track will likely not pass exactly through the nodes, the algorithm will therefore look for nodes that are 'close enough' and build the route from these. Testing has been carried out using GPX tracks from several different Garmin watches, but feedback will be appreciated on nodes or tracks that are not reliably matching.
 - Includes option to update the Strava activity description with FPE calculated distance. Thanks to Pete for the FPE emoji combo: 🌲📏.
-- If the route does not match the network then additional 'Extra' legs will be added. This might be due to Extra distance at the start or end of the section in Forest Park. Extra-O&B is an out-and-back on a trail, whilst Extra-Skip means that the route seems to have gone to an unexpected node - perhaps due to a shortcut or different routing on roads.
+- If the route does not match the network then additional 'Extra' legs will be added. This might be due to Extra distance at the start or end of the section in Forest Park. Extra-O&B is an out-and-back on a trail, whilst Extra-Skip means that the route seems to have gone to an unexpected node - perhaps due to a shortcut or different routing on roads or other trails.
 - If your activity is outside FP then it will of course fail, perhaps ungracefully.
+
 #### <i class='fa fa-download fa-lg'></i>  Export GPX of current route
 - Converts the current route into a GPX file. This uses the Mapbox [Directions API](https://docs.mapbox.com/help/glossary/directions-api/). At the moment, routes of up to 75-80 legs are possible. If you find any routes where an incorrect shortcut is taken, please submit an issue on GitHub. Note - FPE only gets so many free API calls per month so don't go too crazy with this feature...
+
 #### <i class='fa fa-refresh fa-lg'></i>  Reset to default
 - Removes the current route and tidies up. Does change any of the map or layer options - to reset those refresh the web page.
+
 #### <i class='fa fa-undo fa-lg'></i>  Remove last leg (Ctrl-click on line)
 - See above.
 
