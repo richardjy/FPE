@@ -24,27 +24,35 @@ layout: default
 - activity:write: allows FPE to update activity description (you control updated text)
 
 ### Motivation and History (Draft)
-Forest Park Explorer was inspired by a network map of the Forest Park trails created in Visio™ by Rick Kneedler. A large measure of thanks is due to Pete Carleson, who was a passionate advocate for making an electronic version and has made many useful suggestions and identified various bugs and issues during Alpha testing. 
+Forest Park Explorer was inspired by a network map of the Forest Park trails created in Visio® by Rick Kneedler. A large measure of thanks is due to Pete Carleson, who was a passionate advocate for making an electronic version and has made many useful suggestions and identified various bugs and issues during Alpha testing.
 
 A big reason to use FPE is to overcome the 'tree tax' imposed when using a GPS in the park, reducing the actual distance covered by often 10% or more. Distances along the trails in FPE come from the Forest Park Conservancy [Trail Map](https://forestparkconservancy.org/product/trail-map-visitors-guide/) (2016 version) and 'All Trails Challenge' spreadsheet (2018 version). Roads and missing trails were calculated using [www.mappedometer.com](https://www.mappedometer.com/). Some fixes to obvious errors were also made (e.g. extensions to FL13 are too short as listed on the FPC  map, causing GPX-to-routing failures). 
 
 Elevation gain/loss is handled in a simplistic way. The elevation change between the end points of each trail leg is tallied up and displayed. While this misses additional ups and downs within each leg it does give a good impression of the profile for the planned run/walk. Elevation is from USGS [National Map](https://www.usgs.gov/core-science-systems/national-geospatial-program/national-map).
 
-The network of 'nodes' and 'legs' is stored in a ['geoJSON' file](https://gist.github.com/richardjy/9524f0810c1bda554c69f36501cbd92a). The network is a balance between keeping the network very simple (and being inaccurate when a trail 'jogs' to the side where it crosses another trail) and having too many nodes (which would mean more clicks to create a route).
+The network of 'nodes' and 'legs' is stored in a ['geoJSON' file](https://gist.github.com/richardjy/9524f0810c1bda554c69f36501cbd92a). The network is a balance between keeping things too simple (and being inaccurate when a trail 'jogs' to the side where it crosses another trail) and having too many nodes (which would mean more clicks to create a route).
 
 ### Getting started: Create a Route
-- Click on the first leg near the starting point. Then add legs by clicking on connected trails. The <i class='fa flag-checkered'></i> shows the end of the trail. 
+- Click on the first leg near the starting point. Then add legs by clicking on connected trails. The <i class='fa flag-checkered'></i> shows the end of the trail. Clicking on the trail can be challenging on a tablet/phone depending on the 
 - Autoroute on same trail by clicking further along the trail (if going in the same direction).
 - To remove the last leg use Ctrl-click or the button, see below.
 
 ### Button bar
 
 #### <i class='fa fa-map-o'></i>  Import GPX track or Strava Activity
+- Strava: Enter Strava activity ID (typically 10 digit number). ALternatively, entering 1 will return your last activity, 2 your second last etc (up to 999).
+- GPX: Open the GPX file in Notepad or similar, then select and copy the text (e.g. on Windows Ctrl-A, Ctrl-C) and paste into the dialog (Ctrl-V). If the file is too large for the field it will be truncated. 
 #### <i class='fa fa-map-signs fa-lg'></i>  Create route from GPX track
-#### <i class='fa fa-download fa-lg'></i>  Export GPX of current route (max ~75-80 legs)
+- Translates the imported GPX activity/trail into a route. As the GPX 
+- Includes option to update the Strava activity description with FPE calculated distance. Thanks to Pete for the FPE emoji combo: 🌲📏.
+- If the route does not match the network then additional 'Extra' legs will be added. This might be due to Extra distance at the start or end of the section in Forest Park. Extra-O&B is an out-and-back on a trail, whilst Extra-Skip means that the route seems to have gone to an unexpected node - perhaps due to a shortcut or different routing on roads.
+- If your activity is outside FP then it will of course fail, perhaps ungracefully.
+#### <i class='fa fa-download fa-lg'></i>  Export GPX of current route
+- Converts the current route into a GPX file. This uses the Mapbox [Directions API](https://docs.mapbox.com/help/glossary/directions-api/). At the moment, routes of up to 75-80 legs are possible. If you find any routes where an incorrect shortcut is taken, please submit an issue on GitHub. Note - FPE only gets so many free API calls per month so don't go too crazy with this feature...
 #### <i class='fa fa-refresh fa-lg'></i>  Reset to default
+- Removes the current route and tidies up. Does change any of the map or layer options - to reset those refresh the web page.
 #### <i class='fa fa-undo fa-lg'></i>  Remove last leg (Ctrl-click on line)
-
+- See above.
 
 <br>
 © Richard Young 2020.
