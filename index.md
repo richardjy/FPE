@@ -23,7 +23,7 @@ layout: default
 - activity:read_all: allows FPE to also read your private activites
 - activity:write: allows FPE to update activity description (you control updated text)
 
-### Motivation and History (Draft)
+### Motivation and History
 Forest Park Explorer was inspired by a network map of the Forest Park trails created in Visio® by Rick Kneedler. A large measure of thanks is due to Pete Carleson, who was a passionate advocate for making an electronic version and has made many useful suggestions and identified various bugs and issues during Alpha testing.
 
 A big reason to use FPE is to overcome the 'tree tax' imposed when using a GPS in the park, reducing the actual distance covered by often 10% or more. Distances along the trails in FPE come from the Forest Park Conservancy [Trail Map](https://forestparkconservancy.org/product/trail-map-visitors-guide/) (2016 version) and 'All Trails Challenge' spreadsheet (2018 version). Roads and missing trails were calculated using [www.mappedometer.com](https://www.mappedometer.com/). Some fixes to obvious errors were also made (e.g. extensions to FL13 are too short as listed on the FPC  map, causing GPX-to-routing failures). 
@@ -44,19 +44,24 @@ The network of 'nodes' and 'legs' is stored in a ['geoJSON' file](https://gist.g
 - GPX: Open the GPX file in Notepad or similar, then select and copy the text (e.g. on Windows Ctrl-A, Ctrl-C) and paste into the dialog (Ctrl-V). If the file is too large for the field it will be truncated. 
 
 #### <i class='fa fa-map-signs fa-lg'></i>  Create route from GPX track
-- Translates the imported GPX activity/trail into a route. As the GPX track will likely not pass exactly through the nodes, the algorithm will therefore look for nodes that are 'close enough' and build the route from these. Testing has been carried out using GPX tracks from several different Garmin watches, but feedback will be appreciated on nodes or tracks that are not reliably matching.
+- Translates the imported GPX activity/trail into a route. As the GPX track will likely not pass exactly through the nodes, the algorithm will therefore look for nodes that are 'close enough' and build the route from these. The summary dialog shows how close the track was to the various nodes, also indicated visually by a blue circle. The dialog shows all the legs that were found - this is in contrast to the summary of the route in the upper right, which combines legs on the same trail into a single entry. Testing has been carried out using GPX tracks from several different Garmin watches, but feedback will be appreciated on nodes or tracks that are not reliably matching.
 - Includes option to update the Strava activity description with FPE calculated distance. Thanks to Pete for the FPE emoji combo: 🌲📏.
 - If the route does not match the network then additional 'Extra' legs will be added. This might be due to Extra distance at the start or end of the section in Forest Park. Extra-O&B is an out-and-back on a trail, whilst Extra-Skip means that the route seems to have gone to an unexpected node - perhaps due to a shortcut or different routing on roads or other trails.
 - If your activity is outside FP then it will of course fail, perhaps ungracefully.
 
 #### <i class='fa fa-download fa-lg'></i>  Export GPX of current route
 - Converts the current route into a GPX file. This uses the Mapbox [Directions API](https://docs.mapbox.com/help/glossary/directions-api/). At the moment, routes of up to 75-80 legs are possible. If you find any routes where an incorrect shortcut is taken, please submit an issue on GitHub. Note - FPE only gets so many free API calls per month so don't go too crazy with this feature...
+- Exported tracks are shown in a ligher blue than imported tracks.
 
 #### <i class='fa fa-refresh fa-lg'></i>  Reset to default
 - Removes the current route and tidies up. Does change any of the map or layer options - to reset those refresh the web page.
 
 #### <i class='fa fa-undo fa-lg'></i>  Remove last leg (Ctrl-click on line)
 - See above.
+
+### Layer control
+- Select between different background maps.
+- Select which overlays to show - most are self explanatory. 'Keep GPX' determines whether to clear (default) or keep any existing GPX tracks when a new GPX is either imported or exported.
 
 <br>
 © Richard Young 2020.
