@@ -15,13 +15,14 @@ layout: default
 
 - Your activities: [View on Strava](https://www.strava.com/athlete/training){:target="_blank"} (opens a new Tab)
 
-<br>
 
 ### Strava Authorization Options
 
 - activity:read: needed by FPE to read activities (and load GPX from your activity)
 - activity:read_all: allows FPE to also read your private activities
 - activity:write: allows FPE to update activity description (you control updated text)
+
+<br>
 
 ## Motivation and History
 Forest Park Explorer was inspired by a network map of the Portland, Oregon's [Forest Park trails](https://forestparkconservancy.org/forest-park/) created in Visio® by Rick Kneedler. A large measure of thanks is due to Pete Carleson, who was a passionate advocate for making an electronic version and has made many useful suggestions and identified various bugs and issues during Alpha testing.
