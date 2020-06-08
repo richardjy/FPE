@@ -24,7 +24,7 @@ layout: default
 - activity:write: allows FPE to update activity description (you control updated text)
 
 ### Motivation and History
-Forest Park Explorer was inspired by a network map of the Forest Park trails created in Visio® by Rick Kneedler. A large measure of thanks is due to Pete Carleson, who was a passionate advocate for making an electronic version and has made many useful suggestions and identified various bugs and issues during Alpha testing.
+Forest Park Explorer was inspired by a network map of the Portland, Oregon's [Forest Park trails](https://forestparkconservancy.org/forest-park/) created in Visio® by Rick Kneedler. A large measure of thanks is due to Pete Carleson, who was a passionate advocate for making an electronic version and has made many useful suggestions and identified various bugs and issues during Alpha testing.
 
 A big reason to use FPE is to overcome the 'tree tax' imposed when using a GPS in the park, where the reported GPS distance is too short, often by 10% or more. Distances along the trails in FPE come from the Forest Park Conservancy [Trail Map](https://forestparkconservancy.org/product/trail-map-visitors-guide/) (2016 version) and 'All Trails Challenge' spreadsheet (2018 version). Roads and missing trails were calculated using [www.mappedometer.com](https://www.mappedometer.com/). Some fixes to obvious errors were also made (e.g. the extensions to FL13 are too short as listed on the FPC map, causing GPX-to-routing failures). While not claiming to be perfect, the values should be a better estimate of the actual distance traveled. 
 
