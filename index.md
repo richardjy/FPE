@@ -50,7 +50,9 @@ The network of 'nodes' and 'legs' is stored in a ['geoJSON' file](https://gist.g
 - If your activity is outside FP then it will of course fail, perhaps ungracefully.
 
 #### <i class='fa fa-download fa-lg'></i>  Export GPX of current route
-- Converts the current route into a GPX file. This uses the Mapbox [Directions API](https://docs.mapbox.com/help/glossary/directions-api/). At the moment, routes of up to 75-80 legs are possible. To force proper routing extra mid-points have been added to some trails, especially for Wildwood where shortcuts via other trails are possible on many of the legs. If you find any routes where an incorrect shortcut is taken, please send a message or submit an issue on GitHub. Note - FPE only gets so many free Direction API calls per month so don't go too crazy with the routing feature and spoil it for other users...
+- Converts the current route into a GPX file. This uses the Mapbox [Directions API](https://docs.mapbox.com/help/glossary/directions-api/). At the moment, routes of up to 75-80 legs are possible. To force proper routing extra mid-points have been added to some trails, especially for Wildwood where shortcuts via other trails are possible on many of the legs. If you find any routes where an incorrect shortcut is taken, please send a message or submit an issue on GitHub. 
+- One known issue on Safari - Mapbox features (Map and Export GPX) do not seem to work, unless ‘Prevent Cross-Site Tracking’ in Safari Settings to false.
+- Note - FPE only gets so many free Direction API calls per month so don't go too crazy with the routing feature and spoil it for other users...
 - Exported tracks are shown in a lighter blue than imported tracks.
 
 #### <i class='fa fa-refresh fa-lg'></i>  Reset to default
