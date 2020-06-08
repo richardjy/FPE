@@ -64,7 +64,7 @@ The network of 'nodes' and 'legs' is stored in a ['geoJSON' file](https://gist.g
 - Select which overlays to show - most are self-explanatory. 'Keep GPX' determines whether to clear (default) or keep any existing GPX tracks when a new GPX is either imported or exported.
 
 ### Technology
-FPE is based on [Leaflet](https://leafletjs.com/), an open-source library for interactive maps. Various additional Leaflet plugins and javascript libraries are used, details of which can be seen in the source code. Many thanks for those who contribute and make their work available for others to build upon. Project and web pages hosted on GitHub ([issues list](https://github.com/richardjy/FPE/issues)).
+FPE is based on [Leaflet](https://leafletjs.com/), an open-source library for interactive maps. Various additional Leaflet plugins and javascript libraries are used, details of which can be found in the source code. Many thanks for those who contribute and make their work available for others to build upon. Project and web pages are hosted on GitHub (see here for [issues list](https://github.com/richardjy/FPE/issues)).
 
 <br>
 © Richard Young 2020.
