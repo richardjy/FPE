@@ -1,6 +1,6 @@
+theme: jekyll-theme-midnight
 github:
   is_project_page: false
-  is_user_page: true
-theme: jekyll-theme-midnight
+  is_user_page: false
 title: 'FPE: Forest Park Explorer'
 description: 'Plan your visit, analyze your activity'
