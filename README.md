@@ -14,47 +14,14 @@
 - activity:read_all: allows FPE to also read your private activites
 - activity:write: allows FPE to update activity description (you control updated text)
 
-More details to be added later.
+See main site page for more details.
+
+### Technology
+FPE is based on [Leaflet](https://leafletjs.com/), an open-source library for interactive maps. Various additional Leaflet plugins and javascript libraries are used, details of which can be found in the source code. Many thanks for those who contribute and make their work available for others to build upon. Project and web pages are hosted on GitHub (see here for [issues list](https://github.com/richardjy/FPE/issues)).
 
 © Richard Young 2020.
 
 <br>
 <img src="/images/api_logo_cptblWith_strava_stack_light.png" alt="Compatible with Strava" width="120">
 
-## Github Info:
 
-You can use the [editor on GitHub](https://github.com/richardjy/FPE/edit/master/README.md) to maintain and preview the content for your website in Markdown files.
-
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
-
-### Markdown
-
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
-
-```markdown
-Syntax highlighted code block
-
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
-```
-
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/richardjy/FPE/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
