@@ -16,6 +16,8 @@
 
 See main site page for more details.
 
+<br>
+
 ### Technology
 FPE is based on [Leaflet](https://leafletjs.com/), an open-source library for interactive maps. Various additional Leaflet plugins and javascript libraries are used, details of which can be found in the source code. Many thanks for those who contribute and make their work available for others to build upon. Project and web pages are hosted on GitHub (see here for [issues list](https://github.com/richardjy/FPE/issues)).
 
