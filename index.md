@@ -3,7 +3,7 @@ layout: default
 ---
 <head>
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.1/css/font-awesome.min.css">
-  <link rel="shortcut icon" type="image/png" href="{{ site.baseurl }}/favicon.png">
+  <link rel="shortcut icon" type="image/png" href="favicon.png">
 </head>
 
 ## Welcome to Forest Park Explorer
@@ -20,7 +20,7 @@ layout: default
 ### Strava Authorization Options
 
 - activity:read: needed by FPE to read activities (and load GPX from your activity)
-- activity:read_all: allows FPE to also read your private activites
+- activity:read_all: allows FPE to also read your private activities
 - activity:write: allows FPE to update activity description (you control updated text)
 
 ### Motivation and History
@@ -40,7 +40,7 @@ The network of 'nodes' and 'legs' is stored in a ['geoJSON' file](https://gist.g
 ### Button bar
 
 #### <i class='fa fa-map-o'></i>  Import GPX track or Strava Activity
-- Strava: Enter Strava activity ID (typically 10 digit number). ALternatively, entering 1 will return your last activity, 2 your second last etc (up to 999).
+- Strava: Enter Strava activity ID (typically 10 digit number). Alternatively, entering 1 will return your last activity, 2 your second last, etc (up to 999).
 - GPX: Open the GPX file in Notepad or similar, then select and copy the text (e.g. on Windows Ctrl-A, Ctrl-C) and paste into the dialog (Ctrl-V). If the file is too large for the field it will be truncated. 
 
 #### <i class='fa fa-map-signs fa-lg'></i>  Create route from GPX track
@@ -51,7 +51,7 @@ The network of 'nodes' and 'legs' is stored in a ['geoJSON' file](https://gist.g
 
 #### <i class='fa fa-download fa-lg'></i>  Export GPX of current route
 - Converts the current route into a GPX file. This uses the Mapbox [Directions API](https://docs.mapbox.com/help/glossary/directions-api/). At the moment, routes of up to 75-80 legs are possible. To force proper routing extra mid-points have been added to some trails, especially for Wildwood where shortcuts via other trails are possible on many of the legs. If you find any routes where an incorrect shortcut is taken, please send a message or submit an issue on GitHub. Note - FPE only gets so many free Direction API calls per month so don't go too crazy with the routing feature and spoil it for other users...
-- Exported tracks are shown in a ligher blue than imported tracks.
+- Exported tracks are shown in a lighter blue than imported tracks.
 
 #### <i class='fa fa-refresh fa-lg'></i>  Reset to default
 - Removes the current route and tidies up. Does not change any of the map or layer options - to reset those refresh the web page.
@@ -61,7 +61,10 @@ The network of 'nodes' and 'legs' is stored in a ['geoJSON' file](https://gist.g
 
 ### Layer control
 - Select between different background maps.
-- Select which overlays to show - most are self explanatory. 'Keep GPX' determines whether to clear (default) or keep any existing GPX tracks when a new GPX is either imported or exported.
+- Select which overlays to show - most are self-explanatory. 'Keep GPX' determines whether to clear (default) or keep any existing GPX tracks when a new GPX is either imported or exported.
+
+### Technology
+FPE is based on [Leaflet](https://leafletjs.com/), an open-source library for interactive maps. Various additional Leaflet plugins and javascript libraries are used, details of which can be seen in the source code. Many thanks for those who contribute and make their work available for others to build upon.
 
 <br>
 © Richard Young 2020.
