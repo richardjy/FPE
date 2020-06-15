@@ -73,7 +73,7 @@ function stTokens() { // handle SportTracks token, do this early to avoid any as
           // how to prevent a loop?
           //location.href = locHref;
         });
-      //console.log(jqPost);
+      console.log(jqPost);
     }
   return;
 }
