@@ -71,7 +71,7 @@ function stTokens() { // handle SportTracks token, do this early to avoid any as
           window.alert("SportTracks token exchange failed. URL = " + locHref);
           stReady = false;
           // how to prevent a loop?
-          location.href = locHref;
+          //location.href = locHref;
         });
       //console.log(jqPost);
     }
