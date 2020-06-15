@@ -10,7 +10,7 @@ var stCode = ''; 					// returned by redirect
 var stState = '';					// returned by redirect
 var stReady = false;			// are SportTracks Tokens etc set up?
 var stActivityID = 0;			// current activityID
-var stRedirectURI = 'https://richardjy.github.io'; //needs redirect URI each time!
+var stRedirectURI = 'https://richardjy.github.io/FPE/main.html'; //needs redirect URI each time!
 //var stRequest = 'authorization_code'; // request string
 
 // setup SportTracksLink (if appropriate)
