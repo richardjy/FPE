@@ -14,7 +14,7 @@ var stRedirectURI = 'https://richardjy.github.io/FPE/main.html'; //needs redirec
 //var stRequest = 'authorization_code'; // request string
 
 // setup SportTracksLink (if appropriate)
-stTokens(); // setup tokens at startup - may need to refresh later
+// stTokens(); // setup tokens at startup - may need to refresh later
 
 function stTokens() { // handle SportTracks token, do this early to avoid any asynchronicity issue
   // get 'redirect' access code from browser window (if that fails then force reconnect to SportTracks - how to avoid cycle?)
