@@ -25,7 +25,8 @@ function stTokens() { // handle SportTracks token, do this early to avoid any as
 
    $.ajaxSetup({
      accepts: "application/json",
-     contentType: "application/json; charset=utf-8",
+     //contentType: "application/json; charset=utf-8",
+     contentType: "application/x-www-form-urlencoded",
      xhrFields: {
        //withCredentials: true
      }
