@@ -27,7 +27,7 @@ function stTokens() { // handle SportTracks token, do this early to avoid any as
      accepts: "application/json",
      contentType: "application/json; charset=utf-8",
      xhrFields: {
-       withCredentials: true
+       //withCredentials: true
      }
    });
 
