@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script
+      src="https://code.jquery.com/jquery-3.5.1.min.js"
+      integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0="
+      crossorigin="anonymous"></script>
+
+    <script>
+          var OAUTHURL    =   'https://api.sporttracks.mobi/oauth2/authorize?client_id=';
+          var VALIDURL    =   'https://api.sporttracks.mobi/oauth2/token?client_id=';
+          var STATE       =   'test';
+          var CLIENTID    =   'forest-park-explorer';
+          var CLIENTSEC   =   'ZVA6CTBL68FL6NSK';
+          var REDIRECT    =   'http://localhost';
+          //var LOGOUT      =   'http://accounts.google.com/Logout';
+          var TYPE        =   'code';
+          var _url        =   OAUTHURL + CLIENTID + '&redirect_uri=' + REDIRECT + '&state=' + STATE + '&response_type=' + TYPE;
+          var acCode
+          var acToken;
+          var reToken;
+          var expiresIn;
+          var user;
+          var loggedIn    =   false;
+
+          // $.ajaxSetup({
+          //   accepts: "application/json",
+          //   contentType: "application/json",
+          //   //contentType: "application/x-www-form-urlencoded",
+          //   xhrFields: {
+          //     withCredentials: true
+          //   }
+          // });
+
+          function login() {
+              var win         =   window.open(_url, "windowname1", 'width=800, height=600');
+
+              var pollTimer   =   window.setInterval(function() {
+                  try {
+                      console.log(win.document.URL);
+                      if (win.document.URL.indexOf(REDIRECT) != -1) {
+                          window.clearInterval(pollTimer);
+                          var url =   win.document.URL;
+                          acCode =   gup(url, 'code');
+                          console.log(acCode);
+                          //reToken = gup(url, 'refresh_token');
+                          //expiresIn = gup(url, 'expires_in');
+                          win.close();
+
+                          validateToken(acCode);
+                      }
+                  } catch(e) {
+                  }
+              }, 500);
+          }
+
+          function validateToken(token) {
+              $.ajax({
+                  type: 'POST',
+                  url: VALIDURL + CLIENTID + '&client_secret=' + CLIENTSEC + '&code=' + token +
+                    '&grant_type=authorization_code&redirect_uri=' + REDIRECT,
+                  data: null,
+                  success: function(responseText){
+                      //getUserInfo();
+                      //loggedIn = true;
+                      console.log(responseText)
+                      $('#loginText').hide();
+                      $('#logoutText').show();
+                  },
+                  dataType: "json"
+              });
+          }
+
+          function getUserInfo() {
+              $.ajax({
+                  url: 'https://www.googleapis.com/oauth2/v1/userinfo?access_token=' + acToken,
+                  data: null,
+                  success: function(resp) {
+                      user    =   resp;
+                      console.log(user);
+                      $('#uName').text('Welcome ' + user.name);
+                      $('#imgHolder').attr('src', user.picture);
+                  },
+                  dataType: "jsonp"
+              });
+          }
+
+          //credits: http://www.netlobo.com/url_query_string_javascript.html
+          function gup(url, name) {
+              name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+              var regexS = "[\\#&?]"+name+"=([^&#]*)";
+              var regex = new RegExp( regexS );
+              console.log(regexS, regex, url);
+              var results = regex.exec( url );
+              if( results == null )
+                  return "";
+              else
+                  return results[1];
+          }
+
+          function startLogoutPolling() {
+              $('#loginText').show();
+              $('#logoutText').hide();
+              loggedIn = false;
+              $('#uName').text('Welcome ');
+              $('#imgHolder').attr('src', 'none.jpg');
+          }
+
+    </script>
+  </head>
+  <body>
+      <a href='#' onClick='login();' id="loginText"'> Click here to login </a>
+      <a href="#" style="display:none" id="logoutText" target='myIFrame' onclick="myIFrame.location='https://www.google.com/accounts/Logout'; startLogoutPolling();return false;"> Click here to logout </a>
+      <iframe name='myIFrame' id="myIFrame" style='display:none'></iframe>
+      <div id='uName'></div>
+      <img src='' id='imgHolder'/>
+  </body>
+</html>
