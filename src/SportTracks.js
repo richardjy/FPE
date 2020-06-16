@@ -10,8 +10,11 @@ var stCode = ''; 					// returned by redirect
 var stState = '';					// returned by redirect
 var stReady = false;			// are SportTracks Tokens etc set up?
 var stActivityID = 0;			// current activityID
-var stRedirectURI = 'http://localhost'; //needs redirect URI each time!
+var stRedirectURI = 'https://richardjy.github.io/FPE/main.html'; //needs redirect URI each time!
 //var stRequest = 'authorization_code'; // request string
+
+// setup SportTracksLink (if appropriate)
+// stTokens(); // setup tokens at startup - may need to refresh later
 
 function stTokens() { // handle SportTracks token, do this early to avoid any asynchronicity issue
   // get 'redirect' access code from browser window (if that fails then force reconnect to SportTracks - how to avoid cycle?)
@@ -20,13 +23,14 @@ function stTokens() { // handle SportTracks token, do this early to avoid any as
   var authArray = {};
   var pairs = (authString[0] === '?' ? authString.substr(1) : authString).split('&');
 
-  // $.ajaxSetup({
-  //   accepts: "application/json",
-  //   contentType: "application/json; charset=utf-8",
-  //   xhrFields: {
-  //     withCredentials: true
-  //   }
-  // });
+   $.ajaxSetup({
+     accepts: "application/json",
+     contentType: "application/json",
+     //contentType: "application/x-www-form-urlencoded",
+     xhrFields: {
+       //withCredentials: true
+     }
+   });
 
 
   for (var i = 0; i < pairs.length; i++) {
@@ -59,7 +63,7 @@ function stTokens() { // handle SportTracks token, do this early to avoid any as
           stRefreshToken = data.refresh_token;	// used to get new AccessToken if expired
         })
         .fail(function(response) {
-          console.log(response);
+          console.log('response =', response);
           var locHostPath = location.protocol + '//' + location.host + location.pathname;
           //https://api.sporttracks.mobi/oauth2/authorize?client_id="forest-park-explorer"&redirect_uri=http://localhost:4000/SportTracks.html&state="Test"&response_type=code"
           var locHref = 'https://api.sporttracks.mobi/oauth2/authorize?client_id=' + stClientID +
@@ -68,9 +72,9 @@ function stTokens() { // handle SportTracks token, do this early to avoid any as
           window.alert("SportTracks token exchange failed. URL = " + locHref);
           stReady = false;
           // how to prevent a loop?
-          location.href = locHref;
+          //location.href = locHref;
         });
-      //console.log(jqPost);
+      console.log(jqPost);
     }
   return;
 }
