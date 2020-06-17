@@ -27,7 +27,7 @@ var loggedIn    =   false;
 //   }
 // });
 
-login();
+//login();
 
 function login() {
     var win         =   window.open(_url, "windowname1", 'width=800, height=600');
