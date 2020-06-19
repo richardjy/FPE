@@ -4,11 +4,13 @@
 
 var OAUTHURL    =   'https://api.sporttracks.mobi/oauth2/authorize?client_id=';
 var VALIDURL    =   'https://api.sporttracks.mobi/oauth2/token?client_id=';
+var VALIDURL2    =   'https://api.sporttracks.mobi/oauth2/token';
 var STATE       =   'test';
 var CLIENTID    =   'forest-park-explorer';
 var CLIENTSEC   =   'ZVA6CTBL68FL6NSK';
-//var REDIRECT    =   'https://richardjy.github.io/FPE/main.html';
-var REDIRECT    =   'http://localhost/sporttracks';
+//var REDIRECT    =   'https://richardjy.github.io/';
+var REDIRECT    =   'https://richardjy.github.io/FPE/main.html';
+//var REDIRECT    =   'http://localhost/sporttracks';
 //var LOGOUT      =   'http://accounts.google.com/Logout';
 var TYPE        =   'code';
 var _url        =   OAUTHURL + CLIENTID + '&redirect_uri=' + REDIRECT + '&state=' + STATE + '&response_type=' + TYPE;
@@ -28,7 +30,7 @@ var loggedIn    =   false;
 //   }
 // });
 
-//login();
+//login(1);
 
 function login(tryCode) {
     var win         =   window.open(_url, "windowname1", 'width=400, height=300');
@@ -46,8 +48,8 @@ function login(tryCode) {
                 win.close();
 
                 if (tryCode == 1) {
-                  console.log('ValidateToken: ', acCode);
-                  validateToken(acCode);
+                  console.log('ValidateToken2: ', acCode);
+                  validateToken2(acCode);
                 } else {
                   console.log('stTokens: ', acCode);
                   stTokens(acCode);
@@ -71,7 +73,29 @@ function validateToken(token) {
             $('#loginText').hide();
             $('#logoutText').show();
         },
-        dataType: "json"
+    });
+}
+
+function validateToken2(token) {
+    $.ajax({
+        type: 'POST',
+        url: VALIDURL2, 
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        contentType: 'application/x-www-form-urlencoded; charset=utf-8',
+        data: { 
+            'client_id': CLIENTID,
+            'client_secret': CLIENTSEC,
+            'code' : token,
+            'grant_type' : 'authorization_code',
+            'redirect_uri' : encodeURIComponent(REDIRECT)
+        },
+        success: function(responseText){
+            //getUserInfo();
+            //loggedIn = true;
+            console.log(responseText)
+            $('#loginText').hide();
+            $('#logoutText').show();
+        },
     });
 }
 
