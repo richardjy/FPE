@@ -29,7 +29,7 @@ var loggedIn    =   false;
 //   }
 // });
 
-//login();
+login(1);
 
 function login(tryCode) {
     var win         =   window.open(_url, "windowname1", 'width=400, height=300');
