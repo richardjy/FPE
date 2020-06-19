@@ -28,7 +28,7 @@ var loggedIn    =   false;
 //   }
 // });
 
-//login();
+login();
 
 function login() {
     var win         =   window.open(_url, "windowname1", 'width=800, height=600');
@@ -66,7 +66,7 @@ function validateToken(token) {
             $('#loginText').hide();
             $('#logoutText').show();
         },
-        dataType: "json"
+        dataType: "text"
     });
 }
 
@@ -138,8 +138,8 @@ function stTokens(token) { // handle SportTracks token, do this early to avoid a
 
    $.ajaxSetup({
      accepts: "application/json",
-     contentType: "application/json",
-     //contentType: "application/x-www-form-urlencoded",
+     //contentType: "application/json",
+     contentType: "application/x-www-form-urlencoded",
      xhrFields: {
        //withCredentials: true
      }
