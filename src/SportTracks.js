@@ -7,8 +7,8 @@ var VALIDURL    =   'https://api.sporttracks.mobi/oauth2/token?client_id=';
 var STATE       =   'test';
 var CLIENTID    =   'forest-park-explorer';
 var CLIENTSEC   =   'ZVA6CTBL68FL6NSK';
-var REDIRECT    =   'https://richardjy.github.io/FPE/main.html';
-//var REDIRECT    =   'http://localhost/';
+//var REDIRECT    =   'https://richardjy.github.io/FPE/main.html';
+var REDIRECT    =   'http://localhost/sporttracks';
 //var LOGOUT      =   'http://accounts.google.com/Logout';
 var TYPE        =   'code';
 var _url        =   OAUTHURL + CLIENTID + '&redirect_uri=' + REDIRECT + '&state=' + STATE + '&response_type=' + TYPE;
@@ -30,8 +30,8 @@ var loggedIn    =   false;
 
 //login();
 
-function login() {
-    var win         =   window.open(_url, "windowname1", 'width=800, height=600');
+function login(tryCode) {
+    var win         =   window.open(_url, "windowname1", 'width=400, height=300');
 
     var pollTimer   =   window.setInterval(function() {
         try {
@@ -40,13 +40,18 @@ function login() {
                 window.clearInterval(pollTimer);
                 var url =   win.document.URL;
                 acCode =   gup(url, 'code');
-                console.log(acCode);
+                //console.log(acCode);
                 //reToken = gup(url, 'refresh_token');
                 //expiresIn = gup(url, 'expires_in');
                 win.close();
 
-                validateToken(acCode);
-                stTokens(acCode);
+                if (tryCode == 1) {
+                  console.log('ValidateToken: ', acCode);
+                  validateToken(acCode);
+                } else {
+                  console.log('stTokens: ', acCode);
+                  stTokens(acCode);
+                }
             }
         } catch(e) {
         }
@@ -66,7 +71,7 @@ function validateToken(token) {
             $('#loginText').hide();
             $('#logoutText').show();
         },
-        dataType: "text"
+        dataType: "json"
     });
 }
 
@@ -89,7 +94,7 @@ function gup(url, name) {
     name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
     var regexS = "[\\#&?]"+name+"=([^&#]*)";
     var regex = new RegExp( regexS );
-    console.log(regexS, regex, url);
+    //console.log(regexS, regex, url);
     var results = regex.exec( url );
     if( results == null )
         return "";
@@ -137,11 +142,11 @@ function stTokens(token) { // handle SportTracks token, do this early to avoid a
   //  var pairs = (authString[0] === '?' ? authString.substr(1) : authString).split('&');
 
    $.ajaxSetup({
-     accepts: "application/json",
-     //contentType: "application/json",
-     contentType: "application/x-www-form-urlencoded",
+     //accepts: "application/json",
+     contentType: "application/json",
+     //contentType: "application/x-www-form-urlencoded",
      xhrFields: {
-       //withCredentials: true
+       withCredentials: true
      }
    });
 
@@ -164,7 +169,7 @@ function stTokens(token) { // handle SportTracks token, do this early to avoid a
 
   if (stReady == true) {
       // now get Tokens
-      console.log('token = ' + stCode);
+      //console.log('token = ' + stCode);
       var postURL = 'https://api.sporttracks.mobi/oauth2/token?client_id=' + stClientID + '&client_secret=' +
       stAppCode + '&code=' + stCode + '&grant_type=authorization_code&redirect_uri=' + stRedirectURI;
       console.log(postURL);
@@ -176,7 +181,7 @@ function stTokens(token) { // handle SportTracks token, do this early to avoid a
           stRefreshToken = data.refresh_token;	// used to get new AccessToken if expired
         })
         .fail(function(response) {
-          console.log('response =', response);
+          //console.log('response =', response);
           // var locHostPath = location.protocol + '//' + location.host + location.pathname;
           // //https://api.sporttracks.mobi/oauth2/authorize?client_id="forest-park-explorer"&redirect_uri=http://localhost:4000/SportTracks.html&state="Test"&response_type=code"
           // var locHref = 'https://api.sporttracks.mobi/oauth2/authorize?client_id=' + stClientID +
