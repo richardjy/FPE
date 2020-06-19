@@ -79,7 +79,7 @@ function validateToken(token) {
 function validateToken2(token) {
     $.ajax({
         type: 'POST',
-        url: VALIDURL, 
+        url: VALIDURL2, 
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         contentType: 'application/x-www-form-urlencoded; charset=utf-8',
         data: { 
