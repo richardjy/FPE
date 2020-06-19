@@ -48,8 +48,8 @@ function login(tryCode) {
                 win.close();
 
                 if (tryCode == 1) {
-                  console.log('ValidateToken: ', acCode);
-                  validateToken(acCode);
+                  console.log('ValidateToken2: ', acCode);
+                  validateToken2(acCode);
                 } else {
                   console.log('stTokens: ', acCode);
                   stTokens(acCode);
