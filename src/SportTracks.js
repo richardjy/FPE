@@ -4,6 +4,7 @@
 
 var OAUTHURL    =   'https://api.sporttracks.mobi/oauth2/authorize?client_id=';
 var VALIDURL    =   'https://api.sporttracks.mobi/oauth2/token?client_id=';
+var VALIDURL2    =   'https://api.sporttracks.mobi/oauth2/token';
 var STATE       =   'test';
 var CLIENTID    =   'forest-park-explorer';
 var CLIENTSEC   =   'ZVA6CTBL68FL6NSK';
@@ -72,7 +73,29 @@ function validateToken(token) {
             $('#loginText').hide();
             $('#logoutText').show();
         },
-        dataType: "json"
+    });
+}
+
+function validateToken2(token) {
+    $.ajax({
+        type: 'POST',
+        url: VALIDURL, 
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        contentType: 'application/x-www-form-urlencoded; charset=utf-8',
+        data: { 
+            'client_id': CLIENTID,
+            'client_secret': CLIENTSEC,
+            'code' : token,
+            'grant_type' : 'authorization_code',
+            'redirect_uri' : encodeURIComponent(REDIRECT)
+        },
+        success: function(responseText){
+            //getUserInfo();
+            //loggedIn = true;
+            console.log(responseText)
+            $('#loginText').hide();
+            $('#logoutText').show();
+        },
     });
 }
 
