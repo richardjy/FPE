@@ -1,7 +1,7 @@
 // javascript code for SportTracks
 
 
-
+var cors_api_url = 'https://cors-anywhere.herokuapp.com/';
 var OAUTHURL    =   'https://api.sporttracks.mobi/oauth2/authorize?client_id=';
 var VALIDURL    =   'https://api.sporttracks.mobi/oauth2/token?client_id=';
 var VALIDURL2    =   'https://api.sporttracks.mobi/oauth2/token';
@@ -9,8 +9,8 @@ var STATE       =   'test';
 var CLIENTID    =   'forest-park-explorer';
 var CLIENTSEC   =   'ZVA6CTBL68FL6NSK';
 //var REDIRECT    =   'https://richardjy.github.io/';
-var REDIRECT    =   'https://richardjy.github.io/FPE/main.html';
-//var REDIRECT    =   'http://localhost/sporttracks';
+//var REDIRECT    =   'https://richardjy.github.io/FPE/main.html';
+var REDIRECT    =   'http://localhost/';
 //var LOGOUT      =   'http://accounts.google.com/Logout';
 var TYPE        =   'code';
 var _url        =   OAUTHURL + CLIENTID + '&redirect_uri=' + REDIRECT + '&state=' + STATE + '&response_type=' + TYPE;
@@ -63,9 +63,12 @@ function login(tryCode) {
 function validateToken(token) {
     $.ajax({
         type: 'POST',
-        url: VALIDURL + CLIENTID + '&client_secret=' + CLIENTSEC + '&code=' + token +
+        url: cors_api_url + VALIDURL + CLIENTID + '&client_secret=' + CLIENTSEC + '&code=' + token +
           '&grant_type=authorization_code&redirect_uri=' + REDIRECT,
         data: null,
+        // this headers section is necessary for CORS-anywhere
+        // headers: {
+        //    "x-requested-with": "xhr" },
         success: function(responseText){
             //getUserInfo();
             //loggedIn = true;
@@ -73,21 +76,22 @@ function validateToken(token) {
             $('#loginText').hide();
             $('#logoutText').show();
         },
+        dataType: "json"
     });
 }
 
 function validateToken2(token) {
     $.ajax({
         type: 'POST',
-        url: VALIDURL2, 
+        url: cors_api_url + VALIDURL2,
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         contentType: 'application/x-www-form-urlencoded; charset=utf-8',
-        data: { 
+        data: {
             'client_id': CLIENTID,
             'client_secret': CLIENTSEC,
             'code' : token,
             'grant_type' : 'authorization_code',
-            'redirect_uri' : encodeURIComponent(REDIRECT)
+            'redirect_uri' : REDIRECT
         },
         success: function(responseText){
             //getUserInfo();
