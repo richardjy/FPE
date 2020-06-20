@@ -1,16 +1,16 @@
 // javascript code for SportTracks
 
 
-
+var cors_api_url = 'https://cors-anywhere.herokuapp.com/';
 var OAUTHURL    =   'https://api.sporttracks.mobi/oauth2/authorize?client_id=';
-var VALIDURL    =   'https://api.sporttracks.mobi/oauth2/token?client_id=';
-var VALIDURL2    =   'https://api.sporttracks.mobi/oauth2/token';
+//var VALIDURL    =   'https://api.sporttracks.mobi/oauth2/token?client_id=';
+var VALIDURL    =   'https://api.sporttracks.mobi/oauth2/token';
 var STATE       =   'test';
 var CLIENTID    =   'forest-park-explorer';
 var CLIENTSEC   =   'ZVA6CTBL68FL6NSK';
 //var REDIRECT    =   'https://richardjy.github.io/';
 var REDIRECT    =   'https://richardjy.github.io/FPE/main.html';
-//var REDIRECT    =   'http://localhost/sporttracks';
+//var REDIRECT    =   'http://localhost/';
 //var LOGOUT      =   'http://accounts.google.com/Logout';
 var TYPE        =   'code';
 var _url        =   OAUTHURL + CLIENTID + '&redirect_uri=' + REDIRECT + '&state=' + STATE + '&response_type=' + TYPE;
@@ -48,8 +48,8 @@ function login(tryCode) {
                 win.close();
 
                 if (tryCode == 1) {
-                  console.log('ValidateToken2: ', acCode);
-                  validateToken2(acCode);
+                  console.log('ValidateToken: ', acCode);
+                  validateToken(acCode);
                 } else {
                   console.log('stTokens: ', acCode);
                   stTokens(acCode);
@@ -60,58 +60,105 @@ function login(tryCode) {
     }, 500);
 }
 
+// function validateToken(token) {
+//     $.ajax({
+//         type: 'POST',
+//         url: cors_api_url + VALIDURL + CLIENTID + '&client_secret=' + CLIENTSEC + '&code=' + token +
+//           '&grant_type=authorization_code&redirect_uri=' + REDIRECT,
+//         data: null,
+//         // this headers section is necessary for CORS-anywhere
+//         // headers: {
+//         //    "x-requested-with": "xhr" },
+//         success: function(responseText){
+//             //getUserInfo();
+//             //loggedIn = true;
+//             console.log(responseText)
+//             $('#loginText').hide();
+//             $('#logoutText').show();
+//         },
+//         dataType: "json"
+//     });
+// }
+
 function validateToken(token) {
     $.ajax({
         type: 'POST',
-        url: VALIDURL + CLIENTID + '&client_secret=' + CLIENTSEC + '&code=' + token +
-          '&grant_type=authorization_code&redirect_uri=' + REDIRECT,
-        data: null,
-        success: function(responseText){
-            //getUserInfo();
-            //loggedIn = true;
-            console.log(responseText)
-            $('#loginText').hide();
-            $('#logoutText').show();
-        },
+        url: cors_api_url + VALIDURL,
+        //headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        //contentType: 'application/x-www-form-urlencoded; charset=utf-8',
+        data: {
+          'client_id' : CLIENTID,
+          'client_secret' : CLIENTSEC,
+          'code' : token,
+          'grant_type' : 'authorization_code',
+          'redirect_uri' : REDIRECT}
+    })
+    .done(function(data, status){
+        stExpiresAt = Date.now()/1000 + data.expires_in; 			// expiry time for token in seconds
+        stAccessToken = data.access_token;
+        stRefreshToken = data.refresh_token;	// used to get new AccessToken if expired
+        console.log("data: " + data + "\nExpires at: " + stExpiresAt);
+        var stReady = true;
+        getFitnessActivities();
+    })
+    .fail(function(response) {
+        window.alert("SportTracks token exchange failed.");
+        stReady = false;
     });
 }
 
-function validateToken2(token) {
+function getFitnessActivities(){
     $.ajax({
-        type: 'POST',
-        url: VALIDURL2, 
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        contentType: 'application/x-www-form-urlencoded; charset=utf-8',
-        data: { 
-            'client_id': CLIENTID,
-            'client_secret': CLIENTSEC,
-            'code' : token,
-            'grant_type' : 'authorization_code',
-            'redirect_uri' : encodeURIComponent(REDIRECT)
-        },
-        success: function(responseText){
-            //getUserInfo();
-            //loggedIn = true;
-            console.log(responseText)
-            $('#loginText').hide();
-            $('#logoutText').show();
-        },
+        type: 'GET',
+        url: cors_api_url + 'https://api.sporttracks.mobi/api/v2/fitnessActivities',
+        headers: {
+          'Authorization' : 'Bearer ' + stAccessToken,
+          'Accept' : 'application/json'
+        }
+    })
+    .done(function(data, status){
+        console.log("data: ", data,  "\nStatus: " + status);
+        var lastAct = data.items[0].uri
+        getFitnessActivity(lastAct);
+    })
+    .fail(function(response) {
+        window.alert("SportTracks data request failed.");
+        //stReady = false;
     });
 }
 
-function getUserInfo() {
+function getFitnessActivity(stActURI){
     $.ajax({
-        url: 'https://www.googleapis.com/oauth2/v1/userinfo?access_token=' + acToken,
-        data: null,
-        success: function(resp) {
-            user    =   resp;
-            console.log(user);
-            $('#uName').text('Welcome ' + user.name);
-            $('#imgHolder').attr('src', user.picture);
-        },
-        dataType: "jsonp"
+        type: 'GET',
+        url: cors_api_url + stActURI,
+        headers: {
+          'Authorization' : 'Bearer ' + stAccessToken,
+          'Accept' : 'application/json'
+        }
+    })
+    .done(function(data, status){
+        console.log("data: ", data,  "\nStatus: " + status);
+    })
+    .fail(function(response) {
+        window.alert("SportTracks data request failed.");
+        //stReady = false;
     });
 }
+
+
+// function getUserInfo() {
+//     $.ajax({
+//         url: 'https://www.googleapis.com/oauth2/v1/userinfo?access_token=' + acToken,
+//         data: null,
+//         success: function(resp) {
+//             user    =   resp;
+//             console.log(user);
+//             $('#uName').text('Welcome ' + user.name);
+//             $('#imgHolder').attr('src', user.picture);
+//         },
+//         dataType: "jsonp"
+//     });
+// }
 
 //credits: http://www.netlobo.com/url_query_string_javascript.html
 function gup(url, name) {
@@ -126,13 +173,13 @@ function gup(url, name) {
         return results[1];
 }
 
-function startLogoutPolling() {
-    $('#loginText').show();
-    $('#logoutText').hide();
-    loggedIn = false;
-    $('#uName').text('Welcome ');
-    $('#imgHolder').attr('src', 'none.jpg');
-}
+// function startLogoutPolling() {
+//     $('#loginText').show();
+//     $('#logoutText').hide();
+//     loggedIn = false;
+//     $('#uName').text('Welcome ');
+//     $('#imgHolder').attr('src', 'none.jpg');
+// }
 
 
 
@@ -144,7 +191,7 @@ function startLogoutPolling() {
 // variables for SportTracks authorization codes
 var stClientID = 'forest-park-explorer';		// ID for SportTracks App
 var stAppCode = 'ZVA6CTBL68FL6NSK'; // only works with specific website
-var stExpiresIn = 0; 			// expiry time for token in seconds
+var stExpiresAt = 0; 			// expiry time for token Epoch time
 var stAccessToken = '';		// used to get data
 var stRefreshToken = '';	// used to get new AccessToken if expired
 var stCode = ''; 					// returned by redirect
@@ -167,11 +214,11 @@ function stTokens(token) { // handle SportTracks token, do this early to avoid a
 
    $.ajaxSetup({
      //accepts: "application/json",
-     contentType: "application/json",
-     //contentType: "application/x-www-form-urlencoded",
-     xhrFields: {
-       withCredentials: true
-     }
+     //contentType: "application/json",
+     //contentType: "application/x-www-form-urlencoded"
+     // xhrFields: {
+     //   withCredentials: true
+     // }
    });
 
 
@@ -194,15 +241,15 @@ function stTokens(token) { // handle SportTracks token, do this early to avoid a
   if (stReady == true) {
       // now get Tokens
       //console.log('token = ' + stCode);
-      var postURL = 'https://api.sporttracks.mobi/oauth2/token?client_id=' + stClientID + '&client_secret=' +
+      var postURL = cors_api_url + 'https://api.sporttracks.mobi/oauth2/token?client_id=' + stClientID + '&client_secret=' +
       stAppCode + '&code=' + stCode + '&grant_type=authorization_code&redirect_uri=' + stRedirectURI;
       console.log(postURL);
       var jqPost = $.post(postURL,
         function(data, status){
-          console.log("data: " + data + "\nStatus: " + status);
-          stExpiresIn = data.expires_in; 			// expiry time for token in seconds
+          stExpiresAt = Date.now()/1000 + data.expires_in; 			// expiry time for token in seconds
           stAccessToken = data.access_token;
           stRefreshToken = data.refresh_token;	// used to get new AccessToken if expired
+          console.log("data: " + data + "\nExpires at: " + stExpiresAt);
         })
         .fail(function(response) {
           //console.log('response =', response);
