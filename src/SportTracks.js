@@ -1,29 +1,24 @@
 // javascript code for SportTracks
 
 // fixed values
-//var CORSURL     =   'https://cors-anywhere.herokuapp.com/';
-//var CORSURL     =   'http://localhost:8080/';
-var CORSURL     = 'https://fpe-cors.herokuapp.com/';
+//var CORSURL     =   'https://cors-anywhere.herokuapp.com/'; // backup CORS server
 var OAUTHURL    =   'https://api.sporttracks.mobi/oauth2/authorize?client_id=';
 var VALIDURL    =   'https://api.sporttracks.mobi/oauth2/token';
 var STATE       =   'test';
 var CLIENTID    =   'forest-park-explorer'; // ID for SportTracks App
 var CLIENTSEC   =   'ZVA6CTBL68FL6NSK'; // only works with specific website
 var FITNESSURL  =   'https://api.sporttracks.mobi/api/v2/fitnessActivities';
-//var REDIRECT    =   'https://richardjy.github.io/';
-//
 
 if (location.host == 'localhost') {
-  var REDIRECT    =   'http://localhost/';
+  var REDIRECT    = 'http://localhost/';
+  var CORSURL     = 'http://localhost:5000/';  // assumes cors server ('heroku local' is running (8080 if node server.js)
 } else {
-  var REDIRECT    =   'https://richardjy.github.io/FPE/main.html';
+  var REDIRECT    = 'https://richardjy.github.io/FPE/main.html';
+  var CORSURL     = 'https://fpe-cors.herokuapp.com/'; // whitelist set for 'https://richardjy.github.io' only
 }
 
 
-
-// different method
 // variables for SportTracks authorization codes
-
 var stExpiresAt = 0; 			// expiry time for token Epoch time
 var stAccessToken = '';		// used to get data
 var stRefreshToken = '';	// used to get new AccessToken if expired
