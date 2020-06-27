@@ -2,7 +2,8 @@
 
 // fixed values
 //var CORSURL     =   'https://cors-anywhere.herokuapp.com/';
-var CORSURL     =   'http://localhost:8080/';
+//var CORSURL     =   'http://localhost:8080/';
+var CORSURL     = 'https://fpe-cors.herokuapp.com/';
 var OAUTHURL    =   'https://api.sporttracks.mobi/oauth2/authorize?client_id=';
 var VALIDURL    =   'https://api.sporttracks.mobi/oauth2/token';
 var STATE       =   'test';
