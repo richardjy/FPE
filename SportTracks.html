@@ -15,33 +15,27 @@
 
 <form onsubmit="getSTdata()">
   <label for="STindex">Index:</label><br>
-  <input type="text" id="STindex" name="STindex" value="1"><br><br>
-  <input type="submit" value="Get from ST">
+  <input type="text" id="STindex" name="STindex" value="1"><br>
+  <input type="submit" value="Get from ST"><br><br>
 </form>	 
 	  	  
 <form onsubmit="setSTdata()">
   <label for="STname">Name:</label><br>
   <input type="text" id="STname" name="STname" value="Name"><br>
   <label for="STdistance">Distance:</label><br>
-  <input type="text" id="STdistance" name="STname"><br><br>
-  <input type="submit" value="Send to ST">
-</form>	  
-	  
-	  
-	  
+  <input type="text" id="STdistance" name="STname"><br>
+  <input type="submit" value="Send to ST"><br><br>
+</form>	  	  
   <br>
   <br>
 
     <script>
-      //  https://code.jquery.com/jquery-1.12.4.js
-      //  src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"
-      // src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"
 
 
       // setup SportTracksLink (if appropriate)
       //stTokens(); // setup tokens at startup - may need to refresh later
 
-      sportTracksInfo(-3);
+      sportTracksInfo(3);
 
       //if stReady = true
 
