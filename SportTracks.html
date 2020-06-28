@@ -19,11 +19,15 @@
   <input type="submit" value="Get from ST"><br><br>
 </form>	 
 	  	  
-<form onsubmit="return setSTdata();">
+<form onclick="return setSTdata();">
   <label for="STname">Name:</label><br>
   <input type="text" id="STname" name="STname" value="Name"><br>
   <label for="STdistance">Distance:</label><br>
-  <input type="text" id="STdistance" name="STname"><br><br>
+  <input type="text" id="STdistance" name="STname"><br>
+  <textarea rows = "5" cols = "60" id="STnotes" name="STnotes">
+     Enter details here...
+   </textarea><br>	
+	<br>
   <input type="submit" value="Send to ST"><br><br>
 </form>	  	  
   <br>
@@ -42,7 +46,10 @@ function getSTdata() {
 	getFitnessActivityIndex( document.getElementById("STindex").value);
   return false;
 }
-
+function setSTdata() {
+	
+  return false;
+}
 
     </script>
   </body>
