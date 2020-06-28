@@ -140,6 +140,8 @@ function getFitnessActivity(stActURI){
           window.alert("SportTracks - index " + stIndex + ": \n  " + data.name + " (" + stDate.toLocaleString() + ")\n  " + data.uri);
         }
         console.log("SportTracks - index " + stIndex + ": \n  " + data.name + " (" + stDate.toLocaleString() + ")\n  " + data.uri);
+      document.getElementById("STname").value = data.name;
+      document.getElementById("STdistance").value = data.distance;
     })
     .fail(function(response) {
         window.alert("SportTracks data request failed.");
