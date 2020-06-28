@@ -141,8 +141,8 @@ function getFitnessActivity(stActURI){
           window.alert("SportTracks - index " + stIndex + ": \n  " + data.name + " (" + stDate.toLocaleString() + ")\n  " + data.uri);
         }
         console.log("SportTracks - index " + stIndex + ": \n  " + data.name + " (" + stDate.toLocaleString() + ")\n  " + data.uri);
-      document.getElementById("STtypedate").innerHTML = data.type + " (" + stDate.toLocaleString() + ")";
-      document.getElementById("STactivity").innerHTML = data.activity;
+      document.getElementById("STtypedate").value = data.type + " (" + stDate.toLocaleString() + ")";
+      document.getElementById("STactivity").value = data.activity;
       document.getElementById("STname").value = data.name;
       document.getElementById("STdistance").value = data.total_distance; 
       document.getElementById("STnotes").value = data.notes;
