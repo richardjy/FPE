@@ -15,7 +15,7 @@
 
 <form onsubmit="getSTdata()">
   <label for="STindex">Index:</label><br>
-  <input type="text" id="STindex" name="STindex" value="1"><br>
+  <input type="text" id="STindex" name="STindex" value="1"><br><br>
   <input type="submit" value="Get from ST"><br><br>
 </form>	 
 	  	  
@@ -23,7 +23,7 @@
   <label for="STname">Name:</label><br>
   <input type="text" id="STname" name="STname" value="Name"><br>
   <label for="STdistance">Distance:</label><br>
-  <input type="text" id="STdistance" name="STname"><br>
+  <input type="text" id="STdistance" name="STname"><br><br>
   <input type="submit" value="Send to ST"><br><br>
 </form>	  	  
   <br>
@@ -38,6 +38,10 @@
       sportTracksInfo(3);
 
       //if stReady = true
+function getSTdata() {
+	document.getElementById("STname").innerHTML = "New name";
+  return;
+}
 
 
     </script>
