@@ -20,7 +20,7 @@
 </form>	 
 	  	  
 <form onclick="return setSTdata();">
-  <label for="STname">Name:</label><br>
+  <label for="STname" id="labelSTname">Name:</label><br>
   <input type="text" id="STname" name="STname" value="Name"><br>
   <label for="STdistance">Distance:</label><br>
   <input type="text" id="STdistance" name="STname"><br>
@@ -38,7 +38,7 @@
 
       // setup SportTracksLink (if appropriate)
       //stTokens(); // setup tokens at startup - may need to refresh later
-
+	document.getElementById("labelSTname").value ="abc:";   //innerHTML 
       sportTracksInfo(3);
 
       //if stReady = true
