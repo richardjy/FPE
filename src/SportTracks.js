@@ -135,8 +135,9 @@ function getFitnessActivity(stActURI){
     })
     .done(function(data, status){
         console.log("data: ", data,  "\nStatus: " + status);
-        if (stTest == true) {
-          stDate = new Date (data.start_time);
+      var stDate = new Date (data.start_time);  
+      if (stTest == true) {
+          
           window.alert("SportTracks - index " + stIndex + ": \n  " + data.name + " (" + stDate.toLocaleString() + ")\n  " + data.uri);
         }
         console.log("SportTracks - index " + stIndex + ": \n  " + data.name + " (" + stDate.toLocaleString() + ")\n  " + data.uri);
