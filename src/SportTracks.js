@@ -26,7 +26,7 @@ var stReady = false;			// are SportTracks Tokens etc set up?
 var loggedIn    =   false;  //not used yet
 var stTest = false;
 var stIndex = 1;
-var formSTdataOriginal = = $("#formSTdata").serialize();  // to check if data has changed
+var formSTdataOriginal;  // to check if data has changed
 
 
 //login(1);
@@ -38,6 +38,7 @@ function sportTracksInfo(stDoIt) {
   } else {
     stIndex = stDoIt;
   }
+ formSTdataOriginal = $("#formSTdata").serialize();  // to check if data has changed - where is best place?
   login();
   // if (stReady == true) {
   //   getFitnessActivities();
