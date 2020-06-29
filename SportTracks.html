@@ -40,7 +40,7 @@
 	</p>
 	<p>
   <label for="STdistance">Distance:&nbsp;</label>
-  <input type="text" id="STdistance" name="STname" size="6" style="padding-right:20px; text-align:right;"></input><span style="margin-left:-20px;">m</span>&nbsp;
+  <input type="text" id="STdistance" name="STname" size="6" style="padding-right:20px; text-align:right;"></input><span style="margin-left:-20px;">m</span>&nbsp;&nbsp;
 	  <input type="button" onclick="alert('Lets recalc from GPX')" value="Recalc" disabled>
 	</p>
   <label for="STnotes">Notes:</label>
@@ -73,10 +73,7 @@ function getSTdata() {
 	}
 	
 	getFitnessActivityIndex( document.getElementById("STindex").value);
-	// default data - may need to be part of call
-	$("#formSTdata :input").change(function() {
-   		$("#formSTdata").data("changed",true);
-	});
+
   return false;
 }
 function setSTdata() {
