@@ -67,7 +67,7 @@
 function getSTdata() {
 	if ($("#formSTdata").data("changed")) {
    		// warn it has changed
-		if (global.confirm("Data changed - override from SportTracks?") == false) {
+		if (confirm("Data changed - override from SportTracks?") == false) {
 			return false;
 		}
 	}
@@ -80,7 +80,7 @@ function getSTdata() {
   return false;
 }
 function setSTdata() {
-	if (windows.confirm("Send data to SportTracks?") == true) {
+	if (confirm("Send data to SportTracks?") == true) {
 		windows.alert("Feature not added yet....");
 	}
   return false;
