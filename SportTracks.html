@@ -67,8 +67,8 @@
 function getSTdata() {
 	if ($("#formSTdata").data("changed")) {
    		// warn it has changed
-		if (windows.confirm("Data changed - override from SportTracks?") == false) {
-		return false;
+		if (global.confirm("Data changed - override from SportTracks?") == false) {
+			return false;
 		}
 	}
 	
