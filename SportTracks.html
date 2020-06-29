@@ -65,7 +65,7 @@
 
       //if stReady = true
 function getSTdata() {
-	if ($("#formSTdata").data("changed")) {
+	if ($("#formSTdata").serialize() != formSTdataOriginal) {
    		// warn it has changed
 		if (confirm("Data changed - override from SportTracks?") == false) {
 			return false;
