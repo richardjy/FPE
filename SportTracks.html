@@ -21,7 +21,7 @@
 
 <form onclick="return getSTdata();">
   <label for="STindex">Index:&nbsp;</label>
-  <input type="text" id="STindex" name="STindex" value="1" size="7" style="padding-right:5px; text-align:right;">&nbsp;
+  <input type="number" id="STindex" name="STindex" value="1" size="7" style="padding-right:5px; text-align:right;">&nbsp;
   <input type="submit" value="Get from ST"><br><br>
 </form>	 
 	  	  
@@ -40,14 +40,17 @@
 	</p>
 	<p>
   <label for="STdistance">Distance:&nbsp;</label>
-  <input type="text" id="STdistance" name="STname" size="6" style="padding-right:20px; text-align:right;"></input><span style="margin-left:-20px;">m</span>
+  <input type="number" id="STdistance" name="STname" size="6" style="padding-right:20px; text-align:right;"></input><span style="margin-left:-20px;">m</span>
+	  <input type="button" onclick="alert('Lets recalc from GPX')" value="Recalc" disabled>
 	</p>
   <label for="STnotes">Notes:</label>
 <textarea rows = "5" cols = "60" id="STnotes" name="STnotes">
      Enter details here...
    </textarea><br>	
 	<br>
-  <input type="submit" value="Send to ST"><br><br>
+  <input type="submit" value="Send to ST">
+	<input type="button" onclick="alert('Revert')" value="Revert">
+	<br><br>
 </form>	  	  
   <br>
   <br>
@@ -66,7 +69,9 @@ function getSTdata() {
   return false;
 }
 function setSTdata() {
-	
+	if (windows.confirm("Send data to SportTracks?") == true) {
+		windows.alert("Feature not added yet....");
+	}
   return false;
 }
 
