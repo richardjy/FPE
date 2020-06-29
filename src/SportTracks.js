@@ -26,7 +26,7 @@ var stReady = false;			// are SportTracks Tokens etc set up?
 var loggedIn    =   false;  //not used yet
 var stTest = false;
 var stIndex = 1;
-var formSTdataOriginal;  // to check if data has changed
+var formSTdataOriginal = = $("#formSTdata").serialize();  // to check if data has changed
 
 
 //login(1);
