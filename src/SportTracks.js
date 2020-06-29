@@ -26,6 +26,7 @@ var stReady = false;			// are SportTracks Tokens etc set up?
 var loggedIn    =   false;  //not used yet
 var stTest = false;
 var stIndex = 1;
+var formSTdataOriginal;  // to check if data has changed
 
 
 //login(1);
@@ -148,10 +149,8 @@ function getFitnessActivity(stActURI){
       document.getElementById("STname").value = data.name;
       document.getElementById("STdistance").value = data.total_distance; 
       document.getElementById("STnotes").value = data.notes;
-      // default data -
-	    $("#formSTdata :input").change(function() {
-   		    $("#formSTdata").data("changed",true);
-	    });
+      // default data
+	formSTdataOriginal = $("#formSTdata").serialize(); 
     })
     .fail(function(response) {
         window.alert("SportTracks data request failed.");
