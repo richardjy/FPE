@@ -136,16 +136,22 @@ function getFitnessActivity(stActURI){
     .done(function(data, status){
         console.log("data: ", data,  "\nStatus: " + status);
       var stDate = new Date (data.start_time);  
+      
       if (stTest == true) {
           
           window.alert("SportTracks - index " + stIndex + ": \n  " + data.name + " (" + stDate.toLocaleString() + ")\n  " + data.uri);
         }
         console.log("SportTracks - index " + stIndex + ": \n  " + data.name + " (" + stDate.toLocaleString() + ")\n  " + data.uri);
+      //make a separate function to allow for refresh etc
       document.getElementById("STtypedate").value = data.type + " (" + stDate.toLocaleString() + ")";
       document.getElementById("STactivity").value = data.activity;
       document.getElementById("STname").value = data.name;
       document.getElementById("STdistance").value = data.total_distance; 
       document.getElementById("STnotes").value = data.notes;
+      // default data -
+	    $("#formSTdata :input").change(function() {
+   		    $("#formSTdata").data("changed",true);
+	    });
     })
     .fail(function(response) {
         window.alert("SportTracks data request failed.");
