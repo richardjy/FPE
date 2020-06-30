@@ -26,6 +26,7 @@ var stReady = false;			// are SportTracks Tokens etc set up?
 var loggedIn    =   false;  //not used yet
 var stTest = false;
 var stIndex = 1;
+var formSTdataOriginal;  // to check if data has changed
 
 
 //login(1);
@@ -37,6 +38,7 @@ function sportTracksInfo(stDoIt) {
   } else {
     stIndex = stDoIt;
   }
+ formSTdataOriginal = $("#formSTdata").serialize();  // to check if data has changed - where is best place?
   login();
   // if (stReady == true) {
   //   getFitnessActivities();
@@ -135,11 +137,21 @@ function getFitnessActivity(stActURI){
     })
     .done(function(data, status){
         console.log("data: ", data,  "\nStatus: " + status);
-        if (stTest == true) {
-          stDate = new Date (data.start_time);
+      var stDate = new Date (data.start_time);  
+      
+      if (stTest == true) {
+          
           window.alert("SportTracks - index " + stIndex + ": \n  " + data.name + " (" + stDate.toLocaleString() + ")\n  " + data.uri);
         }
         console.log("SportTracks - index " + stIndex + ": \n  " + data.name + " (" + stDate.toLocaleString() + ")\n  " + data.uri);
+      //make a separate function to allow for refresh etc
+      document.getElementById("STtypedate").value = data.type + " (" + stDate.toLocaleString() + ")";
+      document.getElementById("STactivity").value = data.activity;
+      document.getElementById("STname").value = data.name;
+      document.getElementById("STdistance").value = data.total_distance; 
+      document.getElementById("STnotes").value = data.notes;
+      // default data
+	formSTdataOriginal = $("#formSTdata").serialize(); 
     })
     .fail(function(response) {
         window.alert("SportTracks data request failed.");

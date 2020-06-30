@@ -8,26 +8,80 @@
 			  integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0="
 			  crossorigin="anonymous"></script>
   <script src='./src/SportTracks.js'></script>
+<style>
+	form  { display: table;      }
+	p     { display: table-row;  }
+	label { display: table-cell; vertical-align: top}
+	input { display: table-cell; }
+	  </style>	  
   </head>
   <body>
+	  
+<h2>Testing of SportTracks Links</h2>
 
-  Localhost testing of SportTracks links
+<form onsubmit="return getSTdata();">
+  <label for="STindex">Index:&nbsp;</label>
+  <input type="number" id="STindex" name="STindex" value="1" size="7" style="padding-right:5px; text-align:right;">&nbsp;
+  <input type="submit" value="Get from ST"><br><br>
+</form>	 
+	  	  
+<form onsubmit="return setSTdata();" id="formSTdata">
+	<p>
+		<label id="labelSTtypedate">Type: </label>
+		<input type="text" id="STtypedate" name="STtypedate" size="45" readonly>
+	</p>
+	<p>
+		<label id="labelSTactivity">Activity: </label>
+		<input type="url" id="STactivity" name="STactivity" size="45" readonly>
+	</p>
+  <p>
+<label for="STname" id="labelSTname">Name:      </label>
+  <input type="text" id="STname" name="STname" value="Name" size="45">
+	</p>
+	<p>
+  <label for="STdistance">Distance:&nbsp;</label>
+  <input type="text" id="STdistance" name="STname" size="6" style="padding-right:20px; text-align:right;"></input><span style="margin-left:-20px;">m</span>&nbsp;&nbsp;
+	  <input type="button" onclick="alert('Lets recalc from GPX')" value="Recalc" disabled>
+	</p>
+  <label for="STnotes">Notes:</label>
+<textarea rows = "5" cols = "60" id="STnotes" name="STnotes">
+     Enter details here...
+   </textarea><br>	
+	<br>
+  <input type="submit" value="Send to ST">&nbsp;&nbsp;
+	<input type="button" onclick="alert('Revert')" value="Revert">
+	<br><br>
+</form>	  	  
   <br>
   <br>
 
     <script>
-      //  https://code.jquery.com/jquery-1.12.4.js
-      //  src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"
-      // src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"
 
 
       // setup SportTracksLink (if appropriate)
       //stTokens(); // setup tokens at startup - may need to refresh later
-
-      sportTracksInfo(-3);
+	//document.getElementById("labelSTname").innerHTML ="abc:";   // 
+      sportTracksInfo(3);
 
       //if stReady = true
+function getSTdata() {
+	if ($("#formSTdata").serialize() != formSTdataOriginal) {
+   		// warn it has changed
+		if (confirm("Data changed - override from SportTracks?") == false) {
+			return false;
+		}
+	}
+	
+	getFitnessActivityIndex( document.getElementById("STindex").value);
 
+  return false;
+}
+function setSTdata() {
+	if (confirm("Send data to SportTracks?") == true) {
+		alert("Feature not added yet....");
+	}
+  return false;
+}
 
     </script>
   </body>
