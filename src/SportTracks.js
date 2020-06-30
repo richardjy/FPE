@@ -27,7 +27,8 @@ var loggedIn    =   false;  //not used yet
 var stTest = false;
 var stIndex = 1;
 var formSTdataOriginal;  // to check if data has changed
-
+var stActivityInit;      // initial data - used to revert
+var stActivityUpdate;    // updated data (initially same as Init)
 
 //login(1);
 
@@ -84,7 +85,8 @@ function validateToken(token) {
         stAccessToken = data.access_token;
         stRefreshToken = data.refresh_token;	// used to get new AccessToken if expired
         console.log("data: " , data, "\nExpires at: " + stExpiresAt);
-        var stReady = true;
+        stReady = true;
+        document.getElementById("STget").disabled = false;
         if (stTest == true) {
           getFitnessActivityIndex(stIndex);
         }
@@ -137,24 +139,37 @@ function getFitnessActivity(stActURI){
     })
     .done(function(data, status){
         console.log("data: ", data,  "\nStatus: " + status);
-      var stDate = new Date (data.start_time);  
-      
-      if (stTest == true) {
-          
-          window.alert("SportTracks - index " + stIndex + ": \n  " + data.name + " (" + stDate.toLocaleString() + ")\n  " + data.uri);
-        }
-        console.log("SportTracks - index " + stIndex + ": \n  " + data.name + " (" + stDate.toLocaleString() + ")\n  " + data.uri);
-      //make a separate function to allow for refresh etc
-      document.getElementById("STtypedate").value = data.type + " (" + stDate.toLocaleString() + ")";
-      document.getElementById("STactivity").value = data.activity;
-      document.getElementById("STname").value = data.name;
-      document.getElementById("STdistance").value = data.total_distance; 
-      document.getElementById("STnotes").value = data.notes;
-      // default data
-	formSTdataOriginal = $("#formSTdata").serialize(); 
+        // check for 'notes' not being defined
+
+        populateSTform (data);
+        stActivityInit = data;
+        stActivityUpdate = JSON.parse(JSON.stringify(data));  // make a cloned copy
     })
     .fail(function(response) {
         window.alert("SportTracks data request failed.");
+        //stReady = false;
+    });
+}
+
+function setFitnessActivity(stActivity){
+    $.ajax({
+        type: 'PUT',
+        url: CORSURL + stActivity.uri,
+        data:  JSON.stringify(stActivity),
+        dataType: "json",
+        headers: {
+          'Authorization' : 'Bearer ' + stAccessToken,
+          'Content-Type' : "application/json; charset=utf-8",
+          'Accept' : 'application/json'
+        }
+    })
+    .done(function(response){
+        console.log("response: ", response);
+        window.alert("Success. SportTracks data sent.");
+    })
+    .fail(function(response) {
+        console.log("response: ", response);
+        window.alert("SportTracks send request failed.");
         //stReady = false;
     });
 }
