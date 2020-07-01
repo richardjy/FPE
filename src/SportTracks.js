@@ -84,9 +84,9 @@ function validateToken(token) {
         stExpiresAt = Math.round(Date.now()/1000 + data.expires_in); 			// expiry time for token in seconds
         stAccessToken = data.access_token;
         stRefreshToken = data.refresh_token;	// used to get new AccessToken if expired
-        console.log("data: " , data, "\nExpires at: " + stExpiresAt);
+        //console.log("data: " , data, "\nExpires at: " + stExpiresAt);
         stReady = true;
-        document.getElementById("STget").disabled = false;
+        enableForm();
         if (stTest == true) {
           getFitnessActivityIndex(stIndex);
         }
@@ -117,7 +117,7 @@ function getFitnessActivityIndex(stIndexNo){   // index is which one to get 1 = 
           }
       })
       .done(function(data, status){
-          console.log("data: ", data,  "\nStatus: " + status);
+          //console.log("data: ", data,  "\nStatus: " + status);
           //var lastActuri = data.items[0].uri
           getFitnessActivity(data.items[0].uri);
       })
@@ -138,9 +138,7 @@ function getFitnessActivity(stActURI){
         }
     })
     .done(function(data, status){
-        console.log("data: ", data,  "\nStatus: " + status);
-        // check for 'notes' not being defined
-
+        //console.log("data: ", data,  "\nStatus: " + status);
         populateSTform (data);
         stActivityInit = data;
         stActivityUpdate = JSON.parse(JSON.stringify(data));  // make a cloned copy
@@ -164,11 +162,11 @@ function setFitnessActivity(stActivity){
         }
     })
     .done(function(response){
-        console.log("response: ", response);
-        window.alert("Success. SportTracks data sent.");
+        //console.log("response: ", response);
+        window.alert("Upload successful.");
     })
     .fail(function(response) {
-        console.log("response: ", response);
+        //console.log("response: ", response);
         window.alert("SportTracks send request failed.");
         //stReady = false;
     });

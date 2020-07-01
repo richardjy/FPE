@@ -284,7 +284,7 @@ var gpxCalcButton = L.easyButton({ states: [{
         if (offset < startPtGPXoffset) {
           startPtGPXoffset = offset;
           gpxIndex = i;
-          console.log('start281', gpxIndex);
+          //console.log('start281', gpxIndex);
         }
       }
       if (gpxIndex > 0) { // moved point - get distance
