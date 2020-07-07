@@ -68,6 +68,7 @@ function login() {
 }
 
 function validateToken(token) {
+    document.getElementById("infoText").innerHTML = "Please wait while Server wakes up...";
     $.ajax({
         type: 'POST',
         url: CORSURL + VALIDURL,
