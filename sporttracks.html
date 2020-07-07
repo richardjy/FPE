@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>SportTracks Reader</title>
+    <title>SportTracks Editor</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
@@ -17,6 +17,9 @@
 			  src="https://code.jquery.com/jquery-3.5.1.min.js"
 			  integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0="
 			  crossorigin="anonymous"></script>
+
+    <script src="./src/config.js"></script>
+    <script src="./src/config_local.js"></script>
     <script src='./src/sporttracks.js'></script>
 
     <style>
@@ -28,42 +31,60 @@
 
 </head>
 <body>
-<h2>SportTracks - Read workout data</h2>
+<h2>SportTracks - Edit workout data</h2>
 
 <div id="invisibleMap"></div>
+<pre id="infoText">SportTrack authorization dialog should appear. If not check Browser Pop-up settings.</pre>
 
 <form onsubmit="return getSTdata();">
-  <label for="STindex">Index:&nbsp;</label>
-  <input type="number" id="STindex" name="STindex" value="1" size="10" style="padding-right:5px; text-align:right;">&nbsp;
-  <input type="submit" id="STget" value="Get from ST" disabled><br><br>
+  <fieldset>
+    <legend>Activity Index:</legend>
+    <!-- <label for="STindex">Index:&nbsp;</label> -->
+    <input type="number" id="STindex" name="STindex" value="1" size="10" style="padding-right:5px; text-align:right;">&nbsp;
+    <input type="submit" id="STget" value="Get from ST" disabled>
+  </fieldset>
 </form>
+<br>
 
+<div style="display: inline-block">
 <form onsubmit="return setSTdata();" id="formSTdata">
-	<p>
-		<label id="labelSTtypedate">Type: </label>
-		<input type="text" id="STtypedate" name="STtypedate" size="45" readonly>
-	</p>
-	<p>
-		<label id="labelSTactivity">Activity: </label>
-		<input type="url" id="STactivity" name="STactivity" size="45" readonly>
-	</p>
-  <p>
-    <label for="STname" id="labelSTname">Name:      </label>
-    <input type="text" id="STname" name="STname" size="45">
-	</p>
-	<p>
-    <label for="STdistance">Distance:&nbsp;</label>
-    <input type="text" id="STdistance" name="STname" size="7" style="padding-right:30px; text-align:right;"></input><span style="margin-left:-25px;">mi</span>&nbsp;&nbsp;
-	  <input type="button" id="recalcButton" onclick="calcGPS(stActivityUpdate.location)" value="Recalc" disabled>
-	</p>
-  <label for="STnotes">Notes:</label>
-  <textarea rows = "5" cols = "60" id="STnotes" name="STnotes">
-  </textarea><br>
-	<br>
-  <input type="submit" id="STsend" value="Send to ST" disabled>&nbsp;&nbsp;
-	<input type="button" id="STrevert" onclick="revertSTdata()" value="Revert" disabled>
-	<br><br>
+  <fieldset id="fieldSTdata">
+    <legend>Activity Overview:</legend>
+    <p>
+  		<label id="labelSTtypedate">Type: </label>
+  		<input type="text" id="STtypedate" name="STtypedate" size="45" readonly>
+  	</p>
+  	<p>
+  		<label id="labelSTactivity">Activity: </label>
+  		<input type="url" id="STactivity" name="STactivity" size="45" readonly>
+  	</p>
+    <p>
+      <label for="STname" id="labelSTname">Name: </label>
+      <input type="text" id="STname" name="STname" size="45">
+  	</p>
+    <p>
+      <label for="STloc" id="labelSTloc">Location: </label>
+      <input type="text" id="STloc" name="STloc" size="45">
+      <input type="button" id="getLoc" onclick="getLocation(stActivityUpdate.location)" value="Get Location" disabled>
+    </p>
+  	<p>
+      <label for="STdistance">Distance:&nbsp;</label>
+      <input type="text" id="STdistance" name="STname" size="7" style="padding-right:30px; text-align:right;"></input><span style="margin-left:-25px;">mi</span>&nbsp;&nbsp;
+  	  <input type="button" id="recalcButton" onclick="calcGPS(stActivityUpdate.location)" value="Recalc" disabled>
+  	</p>
+    <label for="STnotes">Notes:</label>
+    <textarea rows = "5" cols = "60" id="STnotes" name="STnotes">
+    </textarea><br>
+  	<br>
+    <input type="submit" id="STsend" value="Send to ST" disabled>&nbsp;&nbsp;
+  	<input type="button" id="STrevert" onclick="revertSTdata()" value="Revert" disabled>
+  	<br><br>
+  </fieldset>
 </form>
+</div>
+<div style="display: inline-block; vertical-align: top">
+  <pre id="locText"></pre>
+</div>
 <br>
 <br>
 
@@ -76,6 +97,7 @@
 
       function enableForm() { // ST connection made, enable form button(s)
           document.getElementById("STget").disabled = false;
+          document.getElementById("infoText").innerHTML = "    ";
       }
 
       function getSTdata() {
@@ -85,6 +107,7 @@
       			return false;
       		}
       	}
+        document.getElementById("fieldSTdata").disabled = true;
         getFitnessActivityIndex( document.getElementById("STindex").value);
         return false;  // needed to avoid page refresh
       }
@@ -92,6 +115,7 @@
       function setSTdata() {
       	if (confirm("Send data to SportTracks?") == true) {
           stActivityUpdate.name = document.getElementById("STname").value;
+          stActivityUpdate.location_name = document.getElementById("STloc").value;
           stActivityUpdate.total_distance = document.getElementById("STdistance").value * 1609.34;
           stActivityUpdate.notes = document.getElementById("STnotes").value;
           setFitnessActivity(stActivityUpdate);
@@ -114,11 +138,14 @@
           document.getElementById("STtypedate").value = stActivity.type + " (" + stDate.toLocaleString() + ")";
           document.getElementById("STactivity").value = stActivity.activity;
           document.getElementById("STname").value = stActivity.name;
+          document.getElementById("STloc").value = typeof stActivity.location_name === 'undefined' ? "" : stActivity.location_name;
           document.getElementById("STdistance").value = (stActivity.total_distance/1609.34).toFixed(2);  // convert to miles, show 2 dp
           document.getElementById("recalcButton").disabled = (typeof stActivity.location === 'undefined'); // button enabled if GPS data
           document.getElementById("STnotes").value = typeof stActivity.notes === 'undefined' ? "" : stActivity.notes;
+          document.getElementById("getLoc").disabled = false;  // or diable / enable whole form
           document.getElementById("STsend").disabled = false;
           document.getElementById("STrevert").disabled = false;
+          document.getElementById("fieldSTdata").disabled = false;
           // default data
           formSTdataOriginal = $("#formSTdata").serialize();
       }
@@ -133,6 +160,44 @@
           document.getElementById("STdistance").value = (dist_mi).toFixed(2);
           document.getElementById("STnotes").value += "\nSTlink distance: " + dist_mi.toFixed(2) + " mi (original: " + orig_dist_mi.toFixed(2) +
             " mi)\n";
+      }
+
+      function getLocation(gps) {
+          // add attribution to page
+          //console.log(gps, typeof gps);
+          if (typeof gps !== 'undefined') {
+            var latCoord = gps[1][0];
+            var lonCoord = gps[1][1];
+            // max rate 2 per second (see if get any errors)
+            var urlLiq = 'https://us1.locationiq.com/v1/reverse.php?key=' + config.locIQkey + '&format=json&' +
+                'normalizeaddress=1&normalizecity=1&statecode=1&' +
+                'lat=' + latCoord + '&lon=' + lonCoord;
+            // max rate is 1 per second (need to add protection)
+            // var urlOSM ='https://nominatim.openstreetmap.org/reverse?format=jsonv2&' +
+            //     'lat=' + latCoord + '&lon=' + lonCoord;
+            //var policy = {'User-Agent': 'FPE SportTracks Editor'};  // per policy
+            //console.log(urlOSM);
+            //console.log(urlLiq);
+            $.ajax({
+                type: 'GET',
+                url: urlLiq
+                // url: urlOSM,
+                // headers: {
+                //   'User-Agent': 'FPE SportTracks Editor'
+                // }
+            })
+            .done(function(data, status){
+                //console.log('data = ', data);
+                var locData = 'Location uses: [name,] city, state <br><br>' + JSON.stringify(data.address, null, 5);
+                var locAddress = typeof data.address.name === 'undefined' ? "" : data.address.name + ', ';
+                locAddress += data.address.city + ", " + data.address.state;
+                document.getElementById("STloc").value = locAddress;
+                document.getElementById("locText").innerHTML = locData;
+            })
+            .fail(function(response) {
+              window.alert("Geocode request failed.");
+            });
+          }
       }
 
     </script>
