@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <title>SportTracks Editor</title>
     <meta charset="utf-8" />
@@ -18,6 +18,11 @@
 			  integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0="
 			  crossorigin="anonymous"></script>
 
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
+        integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU="
+        crossorigin="anonymous"></script>
+
     <script src="./src/config.js"></script>
     <script src="./src/config_local.js"></script>
     <script src='./src/sporttracks.js'></script>
@@ -27,6 +32,16 @@
         p     { display: table-row;  }
         label { display: table-cell; vertical-align: top}
         input { display: table-cell; }
+
+        body  { font-size: 100%; font-family: Arial,Helvetica,sans-serif; }
+        input, button, select, option, textarea { font-size: 100%; }
+        .ui-widget { font-size:80%; }
+        .ui-tooltip { white-space: pre-line; }
+
+        fieldset { display:inline }
+        pre { font-size: 100%; font-family: Arial,Helvetica,sans-serif; }
+        textarea { font-family: inherit; font-size: inherit; }
+
   	</style>
 
 </head>
@@ -36,18 +51,17 @@
 <div id="invisibleMap"></div>
 <pre id="infoText">SportTrack authorization dialog should appear. If not check Browser Pop-up settings.</pre>
 
-<form onsubmit="return getSTdata();">
-  <fieldset>
+<div>
+  <fieldset  id="fieldSTindex">
     <legend>Activity Index:</legend>
-    <!-- <label for="STindex">Index:&nbsp;</label> -->
-    <input type="number" id="STindex" name="STindex" value="1" size="10" style="padding-right:5px; text-align:right;">&nbsp;
-    <input type="submit" id="STget" value="Get from ST" disabled>
+    <input id="STindex" name="STindex" value="1" size="10" style="padding-right:5px; text-align:right;"
+    title="1 = latest activity, 2 = 2nd, etc&#013; or enter STmobi index number">&nbsp;
+    <input type="submit" id="STgetButton" onclick="getSTdata()" value="Get from ST">
   </fieldset>
-</form>
+</div>
 <br>
 
 <div style="display: inline-block">
-<form onsubmit="return setSTdata();" id="formSTdata">
   <fieldset id="fieldSTdata">
     <legend>Activity Overview:</legend>
     <p>
@@ -64,23 +78,24 @@
   	</p>
     <p>
       <label for="STloc" id="labelSTloc">Location: </label>
-      <input type="text" id="STloc" name="STloc" size="45">
-      <input type="button" id="getLoc" onclick="getLocation(stActivityUpdate.location)" value="Get Location" disabled>
+      <input type="text" id="STloc" name="STloc" size="45">&nbsp;
+      <input type="button" id="getLocButton" onclick="getLocation(stActivityUpdate.location)" value="Get Location"
+      title="Location uses: [name,] city, state/country &#013; (Search by LocationIQ.com)">
     </p>
   	<p>
       <label for="STdistance">Distance:&nbsp;</label>
-      <input type="text" id="STdistance" name="STname" size="7" style="padding-right:30px; text-align:right;"></input><span style="margin-left:-25px;">mi</span>&nbsp;&nbsp;
-  	  <input type="button" id="recalcButton" onclick="calcGPS(stActivityUpdate.location)" value="Recalc" disabled>
+      <input type="text" id="STdistance" name="STname" size="7" style="padding-right:30px; text-align:right;"></input><span style="margin-left:-25px;">mi</span>&nbsp;&nbsp;&nbsp;
+  	  <input type="button" id="recalcButton" onclick="calcGPS(stActivityUpdate.location)" value="Recalc">
   	</p>
     <label for="STnotes">Notes:</label>
     <textarea rows = "5" cols = "60" id="STnotes" name="STnotes">
     </textarea><br>
   	<br>
-    <input type="submit" id="STsend" value="Send to ST" disabled>&nbsp;&nbsp;
-  	<input type="button" id="STrevert" onclick="revertSTdata()" value="Revert" disabled>
+    <input type="submit" id="STsendButton" onclick="setSTdata()" value="Send to ST">&nbsp;&nbsp;
+  	<input type="button" id="STrevertButton" onclick="revertSTdata()" value="Revert">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    <input type="button" id="STgetGearButton" onclick="getSTgear()" value="Get Gear">
   	<br><br>
   </fieldset>
-</form>
 </div>
 <div style="display: inline-block; vertical-align: top">
   <pre id="locText"></pre>
@@ -93,21 +108,55 @@
       //stTokens(); // setup tokens at startup - may need to refresh later
     	// where possible keep all references to HTML fields on this page
       var map = L.map('invisibleMap');
+
+      document.getElementById("fieldSTindex").disabled = true;
+      document.getElementById("fieldSTdata").disabled = true;
       sportTracksInfo(3);  // initialize
 
-      function enableForm() { // ST connection made, enable form button(s)
-          document.getElementById("STget").disabled = false;
+      function enableForm() { // ST connection made, enable index area
+          document.getElementById("fieldSTindex").disabled = false;
           document.getElementById("infoText").innerHTML = "    ";
+          $( "#STgetButton" ).button( "option", "disabled", false );
+          $( "#STindex" ).spinner( "option", "disabled", false );
       }
 
+      var indexSpin = false;
+      $(function() {
+        // disable controls to start with
+        $( "#STgetButton, #getLocButton, #recalcButton, #STrevertButton, #STsendButton, #STgetGearButton" ).button( { disabled: true } );
+        $( document ).tooltip();
+        $( "#STindex" ).spinner({
+            disabled: true,
+            spin: function( event, ui ) {
+                indexSpin = true;
+            },
+            stop: function( event, ui ) {
+                // do check to ignore keypresses when typing the number
+                //console.log('stop ', event);
+                if (indexSpin == true) {
+                    indexSpin = false;
+                    getSTdata();
+                }
+            }
+        });
+        $( "#STindex" ).on( "keyup", function( event ) {
+            //console.log('keyup ', event, event.keyCode);
+            if ( event.keyCode == $.ui.keyCode.ENTER ) {
+                getSTdata();  // allow enter key to also trigger the update
+            }
+        });
+      });
+
       function getSTdata() {
-      	if ($("#formSTdata").serialize() != formSTdataOriginal) {
+      	if ($("#fieldSTdata").serialize() != formSTdataOriginal) {
          	// warn it has changed
       		if (confirm("Data changed - override from SportTracks?") == false) {
       			return false;
       		}
       	}
-        document.getElementById("fieldSTdata").disabled = true;
+        //document.getElementById("fieldSTdata").disabled = true;
+        document.getElementById("locText").innerHTML = "";
+        document.getElementById("infoText").innerHTML = "Getting data...";
         getFitnessActivityIndex( document.getElementById("STindex").value);
         return false;  // needed to avoid page refresh
       }
@@ -120,7 +169,7 @@
           stActivityUpdate.notes = document.getElementById("STnotes").value;
           setFitnessActivity(stActivityUpdate);
           //make new text the baseline
-          formSTdataOriginal = $("#formSTdata").serialize();
+          formSTdataOriginal = $("#fieldSTdata").serialize();
       	}
         return false;  // needed to avoid page refresh
       }
@@ -128,6 +177,11 @@
       function revertSTdata() {
         populateSTform (stActivityInit);
       }
+
+      function getSTgear() {
+        getSTgearList();
+      }
+
 
       // populate form
       function populateSTform (stActivity) {
@@ -140,14 +194,16 @@
           document.getElementById("STname").value = stActivity.name;
           document.getElementById("STloc").value = typeof stActivity.location_name === 'undefined' ? "" : stActivity.location_name;
           document.getElementById("STdistance").value = (stActivity.total_distance/1609.34).toFixed(2);  // convert to miles, show 2 dp
-          document.getElementById("recalcButton").disabled = (typeof stActivity.location === 'undefined'); // button enabled if GPS data
           document.getElementById("STnotes").value = typeof stActivity.notes === 'undefined' ? "" : stActivity.notes;
-          document.getElementById("getLoc").disabled = false;  // or diable / enable whole form
-          document.getElementById("STsend").disabled = false;
-          document.getElementById("STrevert").disabled = false;
+          $( "#getLocButton" ).button( "option", "disabled", typeof stActivity.location === 'undefined' ); // button enabled if GPS data
+          $( "#recalcButton" ).button( "option", "disabled", typeof stActivity.location === 'undefined' ); // button enabled if GPS data
+          $( "#STrevertButton" ).button( "option", "disabled", false ); // enable button (only needed once)
+          $( "#STsendButton" ).button( "option", "disabled", false ); // enable button (only needed once)
+          $( "#STgetGearButton" ).button( "option", "disabled", false ); // enable button (only needed once)
           document.getElementById("fieldSTdata").disabled = false;
           // default data
-          formSTdataOriginal = $("#formSTdata").serialize();
+          formSTdataOriginal = $("#fieldSTdata").serialize();
+          document.getElementById("infoText").innerHTML = "    ";
       }
 
       function calcGPS(gps) {
@@ -188,9 +244,15 @@
             })
             .done(function(data, status){
                 //console.log('data = ', data);
-                var locData = 'Location uses: [name,] city, state <br><br>' + JSON.stringify(data.address, null, 5);
+                // US: [name,] city, state_code     (if country_code == 'us')
+                // non-US: [name,] city, country_code
+                var locData = 'Location uses: [name,] city, state/country<br>(Search by LocationIQ.com)<br><br>' + JSON.stringify(data.address, null, 5);
                 var locAddress = typeof data.address.name === 'undefined' ? "" : data.address.name + ', ';
-                locAddress += data.address.city + ", " + data.address.state;
+                if (data.address.country_code == 'us') {
+                  locAddress += data.address.city + ", " + data.address.state_code.toUpperCase();
+                } else {   // non-US
+                  locAddress += data.address.city + ", " + data.address.country_code.toUpperCase();
+                }
                 document.getElementById("STloc").value = locAddress;
                 document.getElementById("locText").innerHTML = locData;
             })

@@ -8,6 +8,7 @@ var STATE       =   'test';
 var CLIENTID    =   'forest-park-explorer'; // ID for SportTracks App
 var CLIENTSEC   =   'ZVA6CTBL68FL6NSK'; // only works with specific website
 var FITNESSURL  =   'https://api.sporttracks.mobi/api/v2/fitnessActivities';
+var GEARURL     =   'https://api.sporttracks.mobi/api/v2/gear';
 
 if (location.host == 'localhost') {
   var REDIRECT    = 'http://localhost/';
@@ -39,7 +40,7 @@ function sportTracksInfo(stDoIt) {
   } else {
     stIndex = stDoIt;
   }
- formSTdataOriginal = $("#formSTdata").serialize();  // to check if data has changed - where is best place?
+  formSTdataOriginal = $("#formSTdata").serialize();  // to check if data has changed - where is best place?
   login();
   // if (stReady == true) {
   //   getFitnessActivities();
@@ -170,6 +171,41 @@ function setFitnessActivity(stActivity){
         //console.log("response: ", response);
         window.alert("SportTracks send request failed.");
         //stReady = false;
+    });
+}
+
+function getSTgearList(){
+    $.ajax({
+        type: 'GET',
+        url: CORSURL + GEARURL,
+        headers: {
+          'Authorization' : 'Bearer ' + stAccessToken,
+          'Accept' : 'application/json'
+        }
+    })
+    .done(function(data, status){
+        console.log("data: ", data,  "\nStatus: " + status);
+        getSTgearItem(data.items[1].uri)
+    })
+    .fail(function(response) {
+        window.alert("SportTracks gear data request failed.");
+    });
+}
+
+function getSTgearItem(gearURI){
+    $.ajax({
+        type: 'GET',
+        url: CORSURL + gearURI,
+        headers: {
+          'Authorization' : 'Bearer ' + stAccessToken,
+          'Accept' : 'application/json'
+        }
+    })
+    .done(function(data, status){
+        console.log("data: ", data,  "\nStatus: " + status);
+    })
+    .fail(function(response) {
+        window.alert("SportTracks gear data request failed.");
     });
 }
 
