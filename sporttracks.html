@@ -53,7 +53,7 @@
 
 <div>
   <fieldset  id="fieldSTindex">
-    <legend>Activity Index:</legend>
+    <legend>Activity Index</legend>
     <input id="STindex" name="STindex" value="1" size="10" style="padding-right:5px; text-align:right;"
     title="1 = latest activity, 2 = 2nd, etc&#013; or enter STmobi index number">&nbsp;
     <input type="submit" id="STgetButton" onclick="getSTdata()" value="Get from ST">
@@ -63,7 +63,7 @@
 
 <div style="display: inline-block">
   <fieldset id="fieldSTdata">
-    <legend>Activity Overview:</legend>
+    <legend>Activity Overview</legend>
     <p>
   		<label id="labelSTtypedate">Type: </label>
   		<input type="text" id="STtypedate" name="STtypedate" size="45" readonly>
@@ -80,25 +80,36 @@
       <label for="STloc" id="labelSTloc">Location: </label>
       <input type="text" id="STloc" name="STloc" size="45">&nbsp;
       <input type="button" id="getLocButton" onclick="getLocation(stActivityUpdate.location)" value="Get Location"
-      title="Location uses: [name,] city, state/country &#013; (Search by LocationIQ.com)">
+          title="Location uses: [name,] city, state/country &#013; (Search by LocationIQ.com)">
     </p>
   	<p>
       <label for="STdistance">Distance:&nbsp;</label>
       <input type="text" id="STdistance" name="STname" size="7" style="padding-right:30px; text-align:right;"></input><span style="margin-left:-25px;">mi</span>&nbsp;&nbsp;&nbsp;
-  	  <input type="button" id="recalcButton" onclick="calcGPS(stActivityUpdate.location)" value="Recalc">
+  	  <input type="button" id="recalcButton" onclick="calcGPS(stActivityUpdate.location)" value="Recalc"
+          title="Recalculate distance based on simple addition of GPS points">
   	</p>
     <label for="STnotes">Notes:</label>
     <textarea rows = "5" cols = "60" id="STnotes" name="STnotes">
     </textarea><br>
   	<br>
     <input type="submit" id="STsendButton" onclick="setSTdata()" value="Send to ST">&nbsp;&nbsp;
-  	<input type="button" id="STrevertButton" onclick="revertSTdata()" value="Revert">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-    <input type="button" id="STgetGearButton" onclick="getSTgear()" value="Get Gear">
+  	<input type="button" id="STrevertButton" onclick="revertSTdata()" value="Revert">
+
   	<br><br>
   </fieldset>
 </div>
 <div style="display: inline-block; vertical-align: top">
-  <pre id="locText"></pre>
+  <fieldset>
+    <legend>Gear</legend>
+    <div class="arrowButtons">
+        <input type="button" id="STgetGearButton" onclick="getSTgearList()" value="Get Gear">&nbsp;&nbsp;
+        <button id="gearLeft">Change Gear page</button>
+        <button id="gearRight">Change Gear page</button>
+        <br><br>
+    </div>
+    <div id="fieldSTgear">
+    </div>
+  </fieldset>
 </div>
 <br>
 <br>
@@ -118,13 +129,16 @@
           document.getElementById("infoText").innerHTML = "    ";
           $( "#STgetButton" ).button( "option", "disabled", false );
           $( "#STindex" ).spinner( "option", "disabled", false );
+          $( "#STgetGearButton" ).button( "option", "disabled", false );
       }
 
       var indexSpin = false;
+      var showGear = false;
       $(function() {
         // disable controls to start with
         $( "#STgetButton, #getLocButton, #recalcButton, #STrevertButton, #STsendButton, #STgetGearButton" ).button( { disabled: true } );
         $( document ).tooltip();
+        $( "#fieldSTgear" ).controlgroup();
         $( "#STindex" ).spinner({
             disabled: true,
             spin: function( event, ui ) {
@@ -145,7 +159,24 @@
                 getSTdata();  // allow enter key to also trigger the update
             }
         });
-      });
+        $( "#gearLeft"  ).button( { icon: "ui-icon-circle-arrow-w", showLabel: false } )
+            .on( "click", function( event ) {
+                  gearIndexPage--;
+                  showSTgear();
+            });
+        $( "#gearRight" ).button( { icon: "ui-icon-circle-arrow-e", showLabel: false } )
+            .on( "click", function( event ) {
+                  gearIndexPage++;
+                  showSTgear();
+            });
+        $(document).ajaxStop(function () {
+              if (showGear == true) {  // only react to one type of finish
+                showSTgear();
+                showGear = false;
+                document.getElementById("infoText").innerHTML = " ";
+              }
+        });
+      })
 
       function getSTdata() {
       	if ($("#fieldSTdata").serialize() != formSTdataOriginal) {
@@ -155,7 +186,7 @@
       		}
       	}
         //document.getElementById("fieldSTdata").disabled = true;
-        document.getElementById("locText").innerHTML = "";
+        //document.getElementById("locText").innerHTML = "";
         document.getElementById("infoText").innerHTML = "Getting data...";
         getFitnessActivityIndex( document.getElementById("STindex").value);
         return false;  // needed to avoid page refresh
@@ -178,9 +209,32 @@
         populateSTform (stActivityInit);
       }
 
-      function getSTgear() {
-        getSTgearList();
+      var gearIndexPage = 0;
+      function showSTgear() {
+        // show gear list (global variable)
+        // clear existing list
+        $('#fieldSTgear').find('input').each(function () {
+            $(this).remove();
+            $('label[for=' + $(this).attr('id') + ']').remove();
+        });
+        var numGear = 8;
+        var totalGear = stGearList.length;
+        var maxPage = Math.ceil(totalGear / numGear) - 1;
+        if (gearIndexPage > maxPage) gearIndexPage = 0;
+        if (gearIndexPage < 0) gearIndexPage = maxPage;
+        var maxOnPage = gearIndexPage < maxPage ? numGear : totalGear - maxPage*numGear
+        var minI = numGear*gearIndexPage;
+        var maxI = minI + maxOnPage;
+        // test for max
+        for (i = minI; i < maxI; i++) {
+            var newCBox = '<input type="checkbox" name="checkbox-' + i + '" id="checkbox-' + i + '" /> <label for="checkbox-'+ i + '">test</label';
+            $( "#fieldSTgear" ).append(newCBox);
+            $( "#fieldSTgear" ).controlgroup( "option", "direction", "vertical" );
+            var gearLbl = stGearList[i].brand + ' - ' + stGearList[i].model;
+            $( "#checkbox-" + i ).checkboxradio( { label: gearLbl } ).checkboxradio( "refresh" );
+        }
       }
+
 
 
       // populate form
@@ -199,7 +253,7 @@
           $( "#recalcButton" ).button( "option", "disabled", typeof stActivity.location === 'undefined' ); // button enabled if GPS data
           $( "#STrevertButton" ).button( "option", "disabled", false ); // enable button (only needed once)
           $( "#STsendButton" ).button( "option", "disabled", false ); // enable button (only needed once)
-          $( "#STgetGearButton" ).button( "option", "disabled", false ); // enable button (only needed once)
+          //$( "#STgetGearButton" ).button( "option", "disabled", false ); // enable button (only needed once)
           document.getElementById("fieldSTdata").disabled = false;
           // default data
           formSTdataOriginal = $("#fieldSTdata").serialize();
@@ -246,7 +300,7 @@
                 //console.log('data = ', data);
                 // US: [name,] city, state_code     (if country_code == 'us')
                 // non-US: [name,] city, country_code
-                var locData = 'Location uses: [name,] city, state/country<br>(Search by LocationIQ.com)<br><br>' + JSON.stringify(data.address, null, 5);
+                var locData = JSON.stringify(data.address, null, 5);
                 var locAddress = typeof data.address.name === 'undefined' ? "" : data.address.name + ', ';
                 if (data.address.country_code == 'us') {
                   locAddress += data.address.city + ", " + data.address.state_code.toUpperCase();
@@ -254,7 +308,7 @@
                   locAddress += data.address.city + ", " + data.address.country_code.toUpperCase();
                 }
                 document.getElementById("STloc").value = locAddress;
-                document.getElementById("locText").innerHTML = locData;
+                document.getElementById("STloc").title = locData;
             })
             .fail(function(response) {
               window.alert("Geocode request failed.");

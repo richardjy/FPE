@@ -30,6 +30,7 @@ var stIndex = 1;
 var formSTdataOriginal;  // to check if data has changed
 var stActivityInit;      // initial data - used to revert
 var stActivityUpdate;    // updated data (initially same as Init)
+var stGearList = ([]);   // list of gear
 
 //login(1);
 
@@ -175,24 +176,34 @@ function setFitnessActivity(stActivity){
 }
 
 function getSTgearList(){
+    document.getElementById("infoText").innerHTML = "Getting gear...";
     $.ajax({
         type: 'GET',
         url: CORSURL + GEARURL,
         headers: {
           'Authorization' : 'Bearer ' + stAccessToken,
           'Accept' : 'application/json'
+        },
+        data: {
+          'pageSize' : 1000  // assume fewer than that!
+          //'page' : (stIndexNo - 1)
         }
     })
     .done(function(data, status){
-        console.log("data: ", data,  "\nStatus: " + status);
-        getSTgearItem(data.items[1].uri)
+        //console.log("data: ", data,  "\nStatus: " + status);
+        // get all gear
+        for (i = 0; i < data.items.length; i++) {
+          getSTgearItem(data.items[i].uri, i);
+        }
+        gearIndexPage = 0;
+        showGear = true;
     })
     .fail(function(response) {
         window.alert("SportTracks gear data request failed.");
     });
 }
 
-function getSTgearItem(gearURI){
+function getSTgearItem(gearURI, gearInd){
     $.ajax({
         type: 'GET',
         url: CORSURL + gearURI,
@@ -203,6 +214,7 @@ function getSTgearItem(gearURI){
     })
     .done(function(data, status){
         console.log("data: ", data,  "\nStatus: " + status);
+        stGearList[gearInd] = data;
     })
     .fail(function(response) {
         window.alert("SportTracks gear data request failed.");
