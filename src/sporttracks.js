@@ -158,6 +158,7 @@ function getFitnessActivity(stActURI){
         var url = data.uri;
         stActivityID = url.substring(url.lastIndexOf("/") + 1, url.length);
         getActivity = false;
+        stGearUpdate = JSON.parse(JSON.stringify(stGearInit));  // revert to old list in case of changes
         prepGearList();
     })
     .fail(function(response) {
