@@ -9,6 +9,7 @@ var CLIENTID    =   'forest-park-explorer'; // ID for SportTracks App
 var CLIENTSEC   =   'ZVA6CTBL68FL6NSK'; // only works with specific website
 var FITNESSURL  =   'https://api.sporttracks.mobi/api/v2/fitnessActivities';
 var GEARURL     =   'https://api.sporttracks.mobi/api/v2/gear';
+var HEALTHURL   =   'https://api.sporttracks.mobi/api/v2/metrics';
 
 if (location.host == 'localhost') {
   var REDIRECT    = 'http://localhost/';
@@ -32,6 +33,8 @@ var stActivityInit;      // initial data - used to revert
 var stActivityUpdate;    // updated data (initially same as Init)
 var stGearInit = ([]);   // init list of gear
 var stGearUpdate = ([]); // updated list of gear
+var stHealthInit;        // health data - need to understand format
+var stHealthUpdate;       // uses 'upsert' so only need changed data
 var indexSpin = false;   // was the index change from the arrows?
 var getGear = false;     // get Gear is ongoing
 var getActivity = false; // get Activity is ongoing
@@ -260,6 +263,29 @@ function postSTgearItem(stGear){
         window.alert("SportTracks send request failed.");
         //stReady = false;
     });
+}
+
+getSThealth
+function getSThealth(){
+    
+      document.getElementById("infoTextGear").innerHTML = "Getting health...";
+      $.ajax({
+          type: 'GET',
+          url: CORSURL + HEALTHURL,
+          headers: {
+            'Authorization' : 'Bearer ' + stAccessToken,
+            'Accept' : 'application/json'
+          }
+      })
+      .done(function(data, status){
+          console.log("data: ", data,  "\nStatus: " + status);
+          // get all health
+          // store it somewhere and then display
+      })
+      .fail(function(response) {
+          window.alert("SportTracks health metrics request failed.");
+      });
+  
 }
 
 //credits: http://www.netlobo.com/url_query_string_javascript.html
