@@ -105,22 +105,34 @@
   	<br><br>
   </fieldset>
 </div>
-<div style="display: inline-block; vertical-align: top">
-  <fieldset>
-    <legend>Gear</legend>
-    <div class="arrowButtons">
+
+<div id="tabs"  style="display: inline-block; vertical-align: top">
+	<fieldset>
+		<ul>
+			<li><a href="#tab-gear">Gear</a></li>
+			<li><a href="#tab-health">Health</a></li>
+		</ul>
+		<div id="tab-gear">
+    	<div class="arrowButtons">
         <input type="button" id="STgetGearButton" onclick="getSTgearList()" value="Get Gear">&nbsp;&nbsp;
         <button id="gearLeft">Change Gear page</button>
         <button id="gearRight">Change Gear page</button>
         <br><br>
-    </div>
-    <div id="fieldSTgear">
-    </div>
-  </fieldset>
+    	</div>
+    	<div id="fieldSTgear">  </div>
+		</div>
+		<div id="tab-health">
+			<div>
+        <button id="STgetHealthButton" onclick="getSThealth()">Get Health</button>&nbsp;&nbsp;
+        <input type="text" id="healthDate">
+        <br><br>
+    	</div>
+    	<div id="fieldSThealth">  </div>
+		</div>
+	</fieldset>	
 </div>
 <br>
 <br>
-
     <script>
       // setup SportTracksLink (if appropriate)
       //stTokens(); // setup tokens at startup - may need to refresh later
@@ -199,7 +211,9 @@
                   gearIndexPage++;
                   showSTgear();
             });
-        $(document).ajaxStop(function () {  // come here at end of all GET POST etc
+        $( "#tabs" ).tabs();
+				$( "#healthDate" ).datepicker( { firstDay: 1 } );
+				$(document).ajaxStop(function () {  // come here at end of all GET POST etc
             if (getGear == true) {  // only react to one type of completion
               var filterGear = stGearInit.filter( function(g){ return g.status == "ACTIVE" } );
               stGearInit = filterGear; // not sure if can do in one step
