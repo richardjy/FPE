@@ -42,6 +42,7 @@ var postActGear = false; // POST Activity and gear is ongoing
 var gearIndexPage = 0;   // page being displayed
 var numGearPage = 10;     // number of gear per page
 var stActivityID = 0;     // ID for ST activity
+var progGearCount = 0;
 
 //login(1);
 
@@ -213,6 +214,10 @@ function getSTgearList(){
           // get all gear
           gearIndexPage = 0;
           getGear = true;
+          progGearCount = 0;
+          $( "#progressSTgear" ).progressbar("value", progGearCount);
+          $( "#progressSTgear" ).progressbar("option", "max", data.items.length);
+          $( "#progressSTgear" ).show();
           for (i = 0; i < data.items.length; i++) {
             getSTgearItem(data.items[i].uri, i);
           }
@@ -235,6 +240,8 @@ function getSTgearItem(gearURI, gearInd){
     .done(function(data, status){
         //console.log("data: ", data,  "\nStatus: " + status);
         stGearInit[gearInd] = data;
+        progGearCount++;
+        $( "#progressSTgear" ).progressbar("value", progGearCount);
     })
     .fail(function(response) {
         window.alert("SportTracks gear data request failed.");
@@ -265,27 +272,25 @@ function postSTgearItem(stGear){
     });
 }
 
-getSThealth
 function getSThealth(){
-    
-      document.getElementById("infoTextGear").innerHTML = "Getting health...";
-      $.ajax({
-          type: 'GET',
-          url: CORSURL + HEALTHURL,
-          headers: {
-            'Authorization' : 'Bearer ' + stAccessToken,
-            'Accept' : 'application/json'
-          }
-      })
-      .done(function(data, status){
-          console.log("data: ", data,  "\nStatus: " + status);
-          // get all health
-          // store it somewhere and then display
-      })
-      .fail(function(response) {
-          window.alert("SportTracks health metrics request failed.");
-      });
-  
+    //document.getElementById("infoTextGear").innerHTML = "Getting health...";
+    $.ajax({
+        type: 'GET',
+        url: CORSURL + HEALTHURL,
+        headers: {
+          'Authorization' : 'Bearer ' + stAccessToken,
+          'Accept' : 'application/json'
+        }
+    })
+    .done(function(data, status){
+        console.log("data: ", data,  "\nStatus: " + status);
+        // get all health
+        // store it somewhere and then display
+    })
+    .fail(function(response) {
+        window.alert("SportTracks health metrics request failed.");
+    });
+
 }
 
 //credits: http://www.netlobo.com/url_query_string_javascript.html
