@@ -120,7 +120,7 @@
         <button id="gearRight">Change Gear page</button>
         <br><br>
     	</div>
-      <div id="progressSTgear"></div>
+      <div id="progressSTgear">Getting gear...</div>
     	<div id="fieldSTgear">  </div>
 		</div>
 		<div id="tab-health">
@@ -129,14 +129,14 @@
         <input type="text" id="healthDate" size="10" style="text-align:center;">
         <br><br>
     	</div>
-    	<div id="fieldSThealth">
-        <p><label for="health1" id="lbl-health1" size="10"></label>&nbsp;<input type="text" id="health1" name="health1" size="8"></p>
-        <p><label for="health2" id="lbl-health2" size="10"></label>&nbsp;<input type="text" id="health2" name="health2" size="8"></p>
-        <p><label for="health3" id="lbl-health3" size="10"></label>&nbsp;<input type="text" id="health3" name="health3" size="8"></p>
-        <p><label for="health4" id="lbl-health4" size="10"></label>&nbsp;<input type="text" id="health4" name="health4" size="8"></p>
-        <p><label for="health5" id="lbl-health5" size="10"></label>&nbsp;<input type="text" id="health5" name="health5" size="8"></p>
-        <p><label for="health6" id="lbl-health6" size="10"></label>&nbsp;<input type="text" id="health6" name="health6" size="8"></p>
-        <p><label for="health7" id="lbl-health7" size="10"></label>&nbsp;<input type="text" id="health7" name="health7" size="8"></p>
+    	<div id="fieldSThealth" >
+        <p><label for="health1" id="lbl-health1" size="10"></label>&nbsp;<input type="text" id="health1" name="health1" size="8" style="text-align:center;"></p>
+        <p><label for="health2" id="lbl-health2" size="10"></label>&nbsp;<input type="text" id="health2" name="health2" size="8" style="text-align:center;"></p>
+        <p><label for="health3" id="lbl-health3" size="10"></label>&nbsp;<input type="text" id="health3" name="health3" size="8" style="text-align:center;"></p>
+        <p><label for="health4" id="lbl-health4" size="10"></label>&nbsp;<input type="text" id="health4" name="health4" size="8" style="text-align:center;"></p>
+        <p><label for="health5" id="lbl-health5" size="10"></label>&nbsp;<input type="text" id="health5" name="health5" size="8" style="text-align:center;"></p>
+        <p><label for="health6" id="lbl-health6" size="10"></label>&nbsp;<input type="text" id="health6" name="health6" size="8" style="text-align:center;"></p>
+        <p><label for="health7" id="lbl-health7" size="10"></label>&nbsp;<input type="text" id="health7" name="health7" size="8" style="text-align:center;"></p>
       </div>
 		</div>
 </div>
@@ -156,7 +156,7 @@
           document.getElementById("fieldSTindex").disabled = false;
           document.getElementById("infoText").innerHTML = "&nbsp;";
           //$( "#STgetButton" ).button( "option", "disabled", false );
-          //$( "#STindex" ).spinner( "option", "disabled", false );
+          $( "#STindex" ).spinner( "option", "disabled", false );
           //$( "#STgetGearButton" ).button( "option", "disabled", false );
           //$( "#STgetHealthButton" ).button( "option", "disabled", false );  // may not need to diable (diable area instead)
           $( "#tabs" ).find("*").prop( "disabled", false );
@@ -229,10 +229,12 @@
 				$( "#healthDate" ).datepicker( { firstDay: 1 } );
         var options = { weekday: 'long'};
         $( "#healthDate" ).change( function() {
-            document.getElementById("lbl-health1").innerHTML = $(this).datepicker('getDate').toLocaleDateString();
+            displayHealth();
         })
         $( "#healthDate" ).datepicker( "setDate", "today" );
-        document.getElementById("lbl-health1").innerHTML = $( "#healthDate" ).datepicker('getDate').toLocaleDateString() + ' ' + $( "#healthDate" ).datepicker('getDate').toString().split(' ')[0];
+        //displayHealth();
+        $( "#fieldSThealth" ).hide();
+
 				$(document).ajaxStop(function () {  // come here at end of all GET POST etc
             if (getGear == true) {  // only react to one type of completion
               var filterGear = stGearInit.filter( function(g){ return g.status == "ACTIVE" } );
@@ -242,7 +244,7 @@
               getGear = false;
               $( "#progressSTgear" ).hide();
               prepGearList();
-              document.getElementById("infoTextGear").innerHTML = "&nbsp;";
+              //document.getElementById("infoTextGear").innerHTML = "&nbsp;";
             }
             if (postActGear == true) {  // must be over
               postActGear = false;
@@ -251,6 +253,27 @@
         });
       })
 
+      function displayHealth() {
+        var selDate =  new Date($( "#healthDate" ).datepicker('getDate'));
+        var day = selDate.getDay() || 7;
+        selDate.setHours(-24*( day - 1));
+        for (i = 0; i < 7 ; i++ ) {
+          var lblDate =  selDate.toLocaleDateString() + ' ' + selDate.toString().split(' ')[0][0];  // should be Monday, but allow for changes later
+          document.getElementById( "lbl-health" + (i+1) ).innerHTML = lblDate
+          if (typeof stHealthInit !== 'undefined' && typeof stHealthInit.weight !== 'undefined') {
+              // look for this date ISO string
+              var result = stHealthInit.weight.find( function(weight) {
+                var isoSel = selDate.toISOString().substring(0,10);
+                //console.log(isoSel);
+                //if (day == selDate.getDate())
+                return weight[0].includes(isoSel);
+              });
+              //console.log(result, selDate);
+              document.getElementById( "health" + (i+1) ).value = typeof result !== 'undefined' ? (result[1]*2.20462).toFixed(2) : "" ;
+          }
+          selDate.setHours(24); // add a day - strange behavior around DST
+        }
+      }
 
       function getSTdata() {
       	if ($("#fieldSTdata").serialize() != formSTdataOriginal) {

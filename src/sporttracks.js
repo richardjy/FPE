@@ -196,7 +196,7 @@ function postFitnessActivity(stActivity){
 
 function getSTgearList(){
     if ( getGear == false ) {
-      document.getElementById("infoTextGear").innerHTML = "Getting gear...";
+      //document.getElementById("infoTextGear").innerHTML = "Getting gear...";
       $.ajax({
           type: 'GET',
           url: CORSURL + GEARURL,
@@ -284,6 +284,9 @@ function getSThealth(){
     })
     .done(function(data, status){
         console.log("data: ", data,  "\nStatus: " + status);
+        stHealthInit = data;
+        displayHealth();
+        $( "#fieldSThealth" ).show();
         // get all health
         // store it somewhere and then display
     })
