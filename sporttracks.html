@@ -39,11 +39,22 @@
 
         .ui-widget { font-size: 90%; }
         .ui-state-default, .ui-widget-content { background-color: #d1dae5; }
+        .ui-tabs, .ui-tabs-nav { background-color: #7A90AB; }
         .ui-tooltip { white-space: pre-line; }
+        .ui-progressbar-value { background-color: #7A90AB; }
+        .ui-progressbar { position: relative;  }
+        .progress-label {
+            position: absolute;
+            left: 20%;
+            top: 4px;
+            font-weight: bold;
+            text-shadow: 1px 1px 0 #fff;
+          }
 
         fieldset { display:inline }
         pre { font-size: 100%; font-family: Arial,Helvetica,sans-serif; }
         textarea { font-family: inherit; font-size: inherit; }
+        td.healthdataexists a { background-color: #90EE90 !important; font-weight:bold !important; }
 
   	</style>
 
@@ -52,10 +63,7 @@
 <h2>SportTracks - Edit workout data</h2>
 
 <div id="invisibleMap"></div>
-<div style="display: inline-block">
-    <span id="infoText">SportTrack authorization dialog should appear. If not check Browser Pop-up settings.</span>&nbsp;&nbsp;
-    <span id="infoTextGear">&nbsp;</span>
-</div>
+<div style="display: inline-block"><span id="infoText">SportTrack authorization dialog should appear. If not check Browser Pop-up settings.</span></div>
 <br><br>
 
 <div>
@@ -99,28 +107,54 @@
     <textarea rows = "5" cols = "60" id="STnotes" name="STnotes">
     </textarea><br>
   	<br>
-    <input type="submit" id="STsendButton" onclick="setSTdata()" value="Send to ST">&nbsp;&nbsp;
-  	<input type="button" id="STrevertButton" onclick="revertSTdata()" value="Revert">
-
+    <div >
+      <input type="submit" id="STsendButton" onclick="setSTdata()" value="Send to ST">&nbsp;&nbsp;
+  	   <input type="button" id="STrevertButton" onclick="revertSTdata()" value="Revert">&nbsp;&nbsp;
+       <div id="progressSTact" style="float: right; width: 40%; right: 15%;"><div class="progress-label">Activity data...</div></div>
+     </div>
   	<br><br>
   </fieldset>
 </div>
-<div style="display: inline-block; vertical-align: top">
-  <fieldset>
-    <legend>Gear</legend>
-    <div class="arrowButtons">
+
+<div id="tabs"  style="display: inline-block; vertical-align: top">
+		<ul>
+			<li><a href="#tab-gear">Gear</a></li>
+			<li><a href="#tab-health">Health</a></li>
+		</ul>
+		<div id="tab-gear">
+    	<div class="arrowButtons">
         <input type="button" id="STgetGearButton" onclick="getSTgearList()" value="Get Gear">&nbsp;&nbsp;
         <button id="gearLeft">Change Gear page</button>
         <button id="gearRight">Change Gear page</button>
         <br><br>
-    </div>
-    <div id="fieldSTgear">
-    </div>
-  </fieldset>
+    	</div>
+      <div id="progressSTgear"><div class="progress-label">Getting gear...</div></div>
+    	<div id="fieldSTgear">  </div>
+		</div>
+		<div id="tab-health">
+			<div>
+        <button id="STgetHealthButton" onclick="getSThealth()">Get Health</button>&nbsp;&nbsp;
+        <input type="text" id="healthDate" size="10" style="text-align:center;">
+        <br><br>
+    	</div>
+    	<div id="fieldSThealth" >
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<select id="healthSel" name="healthSel" style="text-align:center;"></select>
+        <p><label for="health1" id="lbl-health1" size="10"></label>&nbsp;<input type="text" id="health1" name="health1" size="8" style="text-align:center;"></p>
+        <p><label for="health2" id="lbl-health2" size="10"></label>&nbsp;<input type="text" id="health2" name="health2" size="8" style="text-align:center;"></p>
+        <p><label for="health3" id="lbl-health3" size="10"></label>&nbsp;<input type="text" id="health3" name="health3" size="8" style="text-align:center;"></p>
+        <p><label for="health4" id="lbl-health4" size="10"></label>&nbsp;<input type="text" id="health4" name="health4" size="8" style="text-align:center;"></p>
+        <p><label for="health5" id="lbl-health5" size="10"></label>&nbsp;<input type="text" id="health5" name="health5" size="8" style="text-align:center;"></p>
+        <p><label for="health6" id="lbl-health6" size="10"></label>&nbsp;<input type="text" id="health6" name="health6" size="8" style="text-align:center;"></p>
+        <p><label for="health7" id="lbl-health7" size="10"></label>&nbsp;<input type="text" id="health7" name="health7" size="8" style="text-align:center;"></p>
+        <br>
+        <button id="STsendHealthButton" onclick="sendSThealth()">Upload Health</button>
+      </div>
+      <br>
+      <div id="progressHealth"><div class="progress-label">Health data...</div></div>
+		</div>
 </div>
 <br>
 <br>
-
     <script>
       // setup SportTracksLink (if appropriate)
       //stTokens(); // setup tokens at startup - may need to refresh later
@@ -134,14 +168,15 @@
       function enableForm() { // ST connection made, enable index area
           document.getElementById("fieldSTindex").disabled = false;
           document.getElementById("infoText").innerHTML = "&nbsp;";
-          $( "#STgetButton" ).button( "option", "disabled", false );
           $( "#STindex" ).spinner( "option", "disabled", false );
-          $( "#STgetGearButton" ).button( "option", "disabled", false );
+          $( "#tabs" ).find("*").prop( "disabled", false );
+          formSTdataOriginal = $("#formSTdata").serialize();  // to check if data has changed - where is best place?
+          healthOriginal = $("#fieldSThealth input").serialize();
       }
 
       $(function() {
         // disable controls to start with
-        $( "#STgetButton, #getLocButton, #recalcButton, #STrevertButton, #STsendButton, #STgetGearButton" ).button( { disabled: true } );
+        $( "#STgetButton, #getLocButton, #recalcButton, #STrevertButton, #STsendButton, #STgetGearButton, #STgetHealthButton, #STsendHealthButton" ).button(  );  // { disabled: true }
         $( document ).tooltip();
         $( "#fieldSTgear" ).controlgroup()  // click on control group
           .on('click', '[type="checkbox"]', function( event, ui ){
@@ -199,7 +234,40 @@
                   gearIndexPage++;
                   showSTgear();
             });
-        $(document).ajaxStop(function () {  // come here at end of all GET POST etc
+        $( "#progressSTgear, #progressHealth, #progressSTact" ).progressbar();
+        $( "#progressHealth, #progressSTact" ).progressbar("value", false);
+        $( "#progressSTgear, #progressHealth, #progressSTact" ).hide();
+        $( "#tabs" ).tabs();
+        $( "#tabs" ).find("*").prop( "disabled", true );
+        $( "#healthSel" ).selectmenu( {
+              width: 150,
+              change: function() {
+                if ($("#fieldSThealth input").serialize() != healthOriginal) {
+                  // warn it has changed
+                  if (confirm("Health data changed - override?") == false) {
+                    return false;
+                  }
+                }
+                displayHealth();
+              }
+        });
+        $( "#healthDate" ).datepicker( {
+              firstDay: 1,
+              beforeShowDay: checkValueDate
+        } );
+        $( "#healthDate" ).change( function() {
+          if ($("#fieldSThealth input").serialize() != healthOriginal) {
+            // warn it has changed - no way to go back, so ignore
+            // if (confirm("Health data changed - override?") == false) {
+            //   return false;
+            // }
+          }
+          displayHealth();
+        })
+        $( "#healthDate" ).datepicker( "setDate", "today" );
+        $( "#fieldSThealth" ).hide();
+
+				$(document).ajaxStop(function () {  // come here at end of all GET POST etc
             if (getGear == true) {  // only react to one type of completion
               var filterGear = stGearInit.filter( function(g){ return g.status == "ACTIVE" } );
               stGearInit = filterGear; // not sure if can do in one step
@@ -207,15 +275,84 @@
               stGearUpdate = JSON.parse(JSON.stringify(stGearInit));  // cloned copy
               getGear = false;
               prepGearList();
-              document.getElementById("infoTextGear").innerHTML = "&nbsp;";
+              $( "#progressSTgear" ).hide();
             }
             if (postActGear == true) {  // must be over
               postActGear = false;
-              window.alert("Upload successful.");
+              $( "#progressSTact" ).hide();
+              //window.alert("Upload successful.");
             }
         });
       })
 
+      function displayHealth() {
+        var selDate =  new Date($( "#healthDate" ).datepicker('getDate'));
+        var day = selDate.getDay() || 7;
+        selDate.setHours(-24*( day - 1));
+        for (i = 0; i < 7 ; i++ ) {
+          var lblDate =  selDate.toLocaleDateString() + ' ' + selDate.toString().split(' ')[0][0];  // should be Monday, but allow for changes later
+          document.getElementById( "lbl-health" + (i+1) ).innerHTML = lblDate
+          //if (typeof stHealthInit !== 'undefined' && typeof stHealthInit.weight !== 'undefined') {  // should not be needed
+              document.getElementById( "health" + (i+1) ).value = getValueDate(stHealthInit, selDate);
+          //}
+          selDate.setHours(24); // add a day - strange behavior around DST
+        }
+        healthOriginal = $("#fieldSThealth input").serialize();
+      }
+
+      function sendSThealth(){
+        // chack what has changed - set to midnight local time
+        var healthdata = {};
+        var metric = $("#healthSel").val();
+        healthdata[metric] = ([]);
+        var index = 0;
+        var selDate = new Date((document.getElementById( "lbl-health1" ).innerHTML).slice(0,-2));
+        for (i = 0; i < 7 ; i++ ) {
+          var boxVal = $.trim(document.getElementById( "health" + (i+1) ).value);  // remove white space from front and back
+          // check for positive values only?
+          if ($.isNumeric(boxVal) || boxVal == '') {
+              if (document.getElementById( "health" + (i+1) ).value != getValueDate(stHealthInit, selDate)) {
+                // different value so add to array
+                if ($.isNumeric(boxVal)) {
+                    healthdata[metric][index] = [ selDate.toISOString().split('.')[0]+"Z",  metric == 'weight' ? (boxVal/KG2LB).toFixed(3) : (boxVal*1.0).toFixed(0) ];
+                } else {
+                    healthdata[metric][index] = [ selDate.toISOString().split('.')[0]+"Z", null ];
+                }
+                index++
+              }
+          } else {
+            // bad data - exit or ignore?
+          }
+          selDate.setHours(24); // add a day - strange behavior around DST
+        }
+        console.log(index, healthdata);
+        if (index > 0) {
+          postSThealth(healthdata);  // if it succeeds then array is updated
+        }
+      }
+
+      function getValueDate(valType, valDate) {
+        var metric = $("#healthSel").val();
+        var valData = '';
+        if (typeof valType[metric] !== 'undefined') {
+          var result = valType[metric].find( function(val) {
+            var isoSel = valDate.toISOString().substring(0,10);
+            return val[0].includes(isoSel);
+          });
+          if (typeof result !== 'undefined') {
+            valData = metric == 'weight' ? (result[1]*KG2LB).toFixed(2) : result[1].toFixed(0);
+          }
+        }
+        return valData;
+      }
+
+      function checkValueDate( valDate ) {
+        var result = '';
+        if (typeof stHealthInit !== 'undefined') {
+            result = getValueDate(stHealthInit, valDate);
+        }
+        return [true, result == '' ? '' : 'healthdataexists', result]
+      }
 
       function getSTdata() {
       	if ($("#fieldSTdata").serialize() != formSTdataOriginal) {
@@ -224,14 +361,14 @@
       			return false;
       		}
       	}
-        //document.getElementById("fieldSTdata").disabled = true;
-        //document.getElementById("locText").innerHTML = "";
-        document.getElementById("infoText").innerHTML = "Getting data...";
+        //document.getElementById("infoText").innerHTML = "Getting data...";
+        $( "#progressSTact" ).show();
         getFitnessActivityIndex( document.getElementById("STindex").value);
       }
 
       function setSTdata() {
-      	if (confirm("Send data to SportTracks?") == true) {
+      	if (confirmUpload == false || confirm("Send data to SportTracks?") == true) {
+          $( "#progressSTact" ).show();
           stActivityUpdate.name = document.getElementById("STname").value;
           stActivityUpdate.location_name = document.getElementById("STloc").value;
           stActivityUpdate.total_distance = document.getElementById("STdistance").value * 1609.34;
@@ -326,7 +463,6 @@
                   //console.log('tick match', i);
                   $( "#checkbox-" + i ).prop('checked',true).checkboxradio('refresh')
                 }
-
               }
           }
         }
@@ -348,11 +484,13 @@
           $( "#recalcButton" ).button( "option", "disabled", typeof stActivity.location === 'undefined' ); // button enabled if GPS data
           $( "#STrevertButton" ).button( "option", "disabled", false ); // enable button (only needed once)
           $( "#STsendButton" ).button( "option", "disabled", false ); // enable button (only needed once)
+          document.getElementById("STloc").title = ""; //remove tooltip
           //$( "#STgetGearButton" ).button( "option", "disabled", false ); // enable button (only needed once)
           document.getElementById("fieldSTdata").disabled = false;
           // default data
           formSTdataOriginal = $("#fieldSTdata").serialize();
-          document.getElementById("infoText").innerHTML = "&nbsp;";
+          //document.getElementById("infoText").innerHTML = "&nbsp;";
+          $( "#progressSTact" ).hide();
       }
 
       function calcGPS(gps) {
