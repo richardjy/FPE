@@ -10,6 +10,7 @@ var CLIENTSEC   =   'ZVA6CTBL68FL6NSK'; // only works with specific website
 var FITNESSURL  =   'https://api.sporttracks.mobi/api/v2/fitnessActivities';
 var GEARURL     =   'https://api.sporttracks.mobi/api/v2/gear';
 var HEALTHURL   =   'https://api.sporttracks.mobi/api/v2/metrics';
+var KG2LB       =   2.20462; //kg to lb conversion (ST uses kg in data)
 
 if (location.host == 'localhost') {
   var REDIRECT    = 'http://localhost/';
@@ -29,12 +30,13 @@ var loggedIn    =   false;  //not used yet
 var stTest = false;
 var stIndex = 1;
 var formSTdataOriginal;  // to check if data has changed
+var healthOriginal;      // ditto for health
 var stActivityInit;      // initial data - used to revert
 var stActivityUpdate;    // updated data (initially same as Init)
 var stGearInit = ([]);   // init list of gear
 var stGearUpdate = ([]); // updated list of gear
 var stHealthInit;        // health data - need to understand format
-var stHealthUpdate;       // uses 'upsert' so only need changed data
+//var stHealthUpdate;       // uses 'upsert' so only need changed data
 var indexSpin = false;   // was the index change from the arrows?
 var getGear = false;     // get Gear is ongoing
 var getActivity = false; // get Activity is ongoing
@@ -43,6 +45,8 @@ var gearIndexPage = 0;   // page being displayed
 var numGearPage = 10;     // number of gear per page
 var stActivityID = 0;     // ID for ST activity
 var progGearCount = 0;
+// preferences
+var confirmUpload = false;
 
 //login(1);
 
@@ -53,7 +57,6 @@ function sportTracksInfo(stDoIt) {
   } else {
     stIndex = stDoIt;
   }
-  formSTdataOriginal = $("#formSTdata").serialize();  // to check if data has changed - where is best place?
   login();
   // if (stReady == true) {
   //   getFitnessActivities();
@@ -190,13 +193,15 @@ function postFitnessActivity(stActivity){
     .fail(function(response) {
         //console.log("response: ", response);
         window.alert("SportTracks send request failed.");
+        $( "#progressSTact" ).hide();
         //stReady = false;
     });
 }
 
 function getSTgearList(){
     if ( getGear == false ) {
-      //document.getElementById("infoTextGear").innerHTML = "Getting gear...";
+      $( "#progressSTgear" ).progressbar("value", false);
+      $( "#progressSTgear" ).show();
       $.ajax({
           type: 'GET',
           url: CORSURL + GEARURL,
@@ -215,8 +220,8 @@ function getSTgearList(){
           gearIndexPage = 0;
           getGear = true;
           progGearCount = 0;
-          $( "#progressSTgear" ).progressbar("value", progGearCount);
           $( "#progressSTgear" ).progressbar("option", "max", data.items.length);
+          $( "#progressSTgear" ).progressbar("value", progGearCount);
           $( "#progressSTgear" ).show();
           for (i = 0; i < data.items.length; i++) {
             getSTgearItem(data.items[i].uri, i);
@@ -224,6 +229,7 @@ function getSTgearList(){
       })
       .fail(function(response) {
           window.alert("SportTracks gear data request failed.");
+          $( "#progressSTgear" ).hide();
       });
   }
 }
@@ -272,8 +278,9 @@ function postSTgearItem(stGear){
     });
 }
 
-function getSThealth(){
-    //document.getElementById("infoTextGear").innerHTML = "Getting health...";
+function getSThealth(metric){
+    // note vo2max/2 = running
+    $( "#progressHealth" ).show();
     $.ajax({
         type: 'GET',
         url: CORSURL + HEALTHURL,
@@ -284,17 +291,63 @@ function getSThealth(){
     })
     .done(function(data, status){
         console.log("data: ", data,  "\nStatus: " + status);
-        stHealthInit = data;
-        displayHealth();
-        $( "#fieldSThealth" ).show();
         // get all health
         // store it somewhere and then display
+        stHealthInit = data;
+        var options = [];
+        $("#healthSel option").each(function(index, option) {
+            $(option).remove();
+        });
+
+        options.push("<option value='weight'>Weight (lb)</option>");
+        options.push("<option value='restingHeartrate'>Resting HR</option>");
+        //options.push("<option value='" + "sleep_time" + "'>" + "Sleep time (hrs)" + "</option>");
+
+
+        //append after populating all options
+        $('#healthSel')
+          .append(options.join(""))
+          .selectmenu();
+        $('#healthSel').selectmenu('enable');
+        if (typeof metric === 'undefined') metric = 'weight';
+        $('#healthSel').val(metric);
+        $('#healthSel').selectmenu('refresh');
+        displayHealth();
+        $( "#fieldSThealth" ).show();
+        $( "#progressHealth" ).hide();
     })
     .fail(function(response) {
+      $( "#progressHealth" ).hide();
         window.alert("SportTracks health metrics request failed.");
     });
-
 }
+
+function postSThealth(stHealth){
+  // upsert - to remove data POST null
+  $( "#progressHealth" ).show();
+  $.ajax({
+      type: 'POST',
+      url: CORSURL + HEALTHURL,
+      data:  JSON.stringify(stHealth),
+      dataType: "json",
+      headers: {
+        'Authorization' : 'Bearer ' + stAccessToken,
+        'Content-Type' : "application/json; charset=utf-8",
+        'Accept' : 'application/json'
+      }
+  })
+  .done(function(response){
+      //console.log("response: ", response);
+      // sort out array - simply get data from ST again to check (less effort)
+      getSThealth($("#healthSel").val());
+  })
+  .fail(function(response) {
+      //console.log("response: ", response);
+      window.alert("SportTracks send request failed.");
+      $( "#progressHealth" ).hide();
+  });
+}
+
 
 //credits: http://www.netlobo.com/url_query_string_javascript.html
 function gup(url, name) {
