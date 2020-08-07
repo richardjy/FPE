@@ -11,6 +11,7 @@ var FITNESSURL  =   'https://api.sporttracks.mobi/api/v2/fitnessActivities';
 var GEARURL     =   'https://api.sporttracks.mobi/api/v2/gear';
 var HEALTHURL   =   'https://api.sporttracks.mobi/api/v2/metrics';
 var KG2LB       =   2.20462; //kg to lb conversion (ST uses kg in data)
+var MI2KM       =   1609.34; //km to miles
 
 if (location.host == 'localhost') {
   var REDIRECT    = 'http://localhost/';
@@ -300,9 +301,9 @@ function getSThealth(metric){
         });
 
         options.push("<option value='weight'>Weight (lb)</option>");
+        options.push("<option value='bodyFat'>Body Fat %</option>");
         options.push("<option value='restingHeartrate'>Resting HR</option>");
         //options.push("<option value='" + "sleep_time" + "'>" + "Sleep time (hrs)" + "</option>");
-
 
         //append after populating all options
         $('#healthSel')
