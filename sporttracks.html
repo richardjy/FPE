@@ -99,17 +99,19 @@
     </p>
   	<p>
       <label for="STdistance">Distance:&nbsp;</label>
-      <input type="text" id="STdistance" name="STname" size="7" style="padding-right:30px; text-align:right;"></input><span style="margin-left:-25px;">mi</span>&nbsp;&nbsp;&nbsp;
+      <input type="text" id="STdistance" name="STname" size="4" style="padding-right:30px; text-align:right;"></input><span style="margin-left:-25px;">mi</span>&nbsp;&nbsp;&nbsp;
   	  <input type="button" id="recalcButton" onclick="calcGPS(stActivityUpdate.location)" value="Recalc"
-          title="Recalculate distance based on simple addition of GPS points">
+          title="Recalculate distance based on simple addition of GPS points">&nbsp;
+      <input type="text" id="STactiveT" name="STactiveT" size="6" readonly style="text-align:center;">&nbsp;
+      <input type="text" id="STactiveP" name="STactiveP" size="3" readonly style="padding-right:33px; text-align:right;"></input><span style="margin-left:-28px;">/mi</span>
   	</p>
     <label for="STnotes">Notes:&nbsp;</label>
-    <textarea rows = "5" cols = "60" id="STnotes" name="STnotes">
+    <textarea rows = "8" cols = "80" id="STnotes" name="STnotes">
     </textarea><br>
   	<br>
     <div >
       <input type="submit" id="STsendButton" onclick="setSTdata()" value="Send to ST">&nbsp;&nbsp;
-  	   <input type="button" id="STrevertButton" onclick="revertSTdata()" value="Revert">&nbsp;&nbsp;
+  	   <input type="button" id="STrevertButton" onclick="revertSTdata()" value="Revert All">&nbsp;&nbsp;
        <div id="progressSTact" style="float: right; width: 40%; right: 15%;"><div class="progress-label">Activity data...</div></div>
      </div>
   	<br><br>
@@ -241,19 +243,23 @@
         $( "#tabs" ).find("*").prop( "disabled", true );
         $( "#healthSel" ).selectmenu( {
               width: 150,
-              change: function() {
-                if ($("#fieldSThealth input").serialize() != healthOriginal) {
-                  // warn it has changed
-                  if (confirm("Health data changed - override?") == false) {
-                    return false;
-                  }
-                }
+              change: function() {  // don't warn about changes - would need way to revert to previous selection
+                // if ($("#fieldSThealth input").serialize() != healthOriginal) {
+                //   // warn it has changed
+                //   if (confirm("Health data changed - override?") == false) {
+                //     return false;
+                //   }
+                // }
                 displayHealth();
               }
         });
         $( "#healthDate" ).datepicker( {
               firstDay: 1,
-              beforeShowDay: checkValueDate
+              beforeShowDay: checkValueDate,
+              showOtherMonths: true,
+              selectOtherMonths: true,
+              showWeek: true,
+              showButtonPanel: true
         } );
         $( "#healthDate" ).change( function() {
           if ($("#fieldSThealth input").serialize() != healthOriginal) {
@@ -285,6 +291,7 @@
         });
       })
 
+
       function displayHealth() {
         var selDate =  new Date($( "#healthDate" ).datepicker('getDate'));
         var day = selDate.getDay() || 7;
@@ -314,7 +321,7 @@
               if (document.getElementById( "health" + (i+1) ).value != getValueDate(stHealthInit, selDate)) {
                 // different value so add to array
                 if ($.isNumeric(boxVal)) {
-                    healthdata[metric][index] = [ selDate.toISOString().split('.')[0]+"Z",  metric == 'weight' ? (boxVal/KG2LB).toFixed(3) : (boxVal*1.0).toFixed(0) ];
+                    healthdata[metric][index] = [ selDate.toISOString().split('.')[0]+"Z",  metric == 'weight' ? (boxVal/KG2LB).toFixed(3) : metric == 'bodyFat' ? (boxVal/100).toFixed(3) : (boxVal*1.0).toFixed(0) ];
                 } else {
                     healthdata[metric][index] = [ selDate.toISOString().split('.')[0]+"Z", null ];
                 }
@@ -340,7 +347,7 @@
             return val[0].includes(isoSel);
           });
           if (typeof result !== 'undefined') {
-            valData = metric == 'weight' ? (result[1]*KG2LB).toFixed(2) : result[1].toFixed(0);
+            valData = metric == 'weight' ? (result[1]*KG2LB).toFixed(2) : metric == 'bodyFat' ? (result[1]*100).toFixed(1) : result[1].toFixed(0);
           }
         }
         return valData;
@@ -371,7 +378,7 @@
           $( "#progressSTact" ).show();
           stActivityUpdate.name = document.getElementById("STname").value;
           stActivityUpdate.location_name = document.getElementById("STloc").value;
-          stActivityUpdate.total_distance = document.getElementById("STdistance").value * 1609.34;
+          stActivityUpdate.total_distance = document.getElementById("STdistance").value * MI2KM;
           stActivityUpdate.notes = document.getElementById("STnotes").value;
           postActGear = true;   // set flag to show activity
           postFitnessActivity(stActivityUpdate);
@@ -478,14 +485,23 @@
           document.getElementById("STactivity").value = stActivity.activity;
           document.getElementById("STname").value = stActivity.name;
           document.getElementById("STloc").value = typeof stActivity.location_name === 'undefined' ? "" : stActivity.location_name;
-          document.getElementById("STdistance").value = (stActivity.total_distance/1609.34).toFixed(2);  // convert to miles, show 2 dp
+          document.getElementById("STdistance").value = (stActivity.total_distance/MI2KM).toFixed(2);  // convert to miles, show 2 dp
+          document.getElementById("STactiveT").value = new Date(stActivity.duration * 1000  + 500).toISOString().substr(11, 8);
+          if (stActivity.total_distance != '0') {
+            var pace = stActivity.duration / stActivity.total_distance * MI2KM;     // seconds per mile
+            var paceSTr = new Date(pace * 1000 + 500).toISOString().substr(14, 5);  //extra 500 ms for correct rounding
+            document.getElementById("STactiveP").value = paceSTr;
+          } else {
+            document.getElementById("STactiveP").value = '';
+          }
           document.getElementById("STnotes").value = typeof stActivity.notes === 'undefined' ? "" : stActivity.notes;
           $( "#getLocButton" ).button( "option", "disabled", typeof stActivity.location === 'undefined' ); // button enabled if GPS data
           $( "#recalcButton" ).button( "option", "disabled", typeof stActivity.location === 'undefined' ); // button enabled if GPS data
           $( "#STrevertButton" ).button( "option", "disabled", false ); // enable button (only needed once)
           $( "#STsendButton" ).button( "option", "disabled", false ); // enable button (only needed once)
           document.getElementById("STloc").title = ""; //remove tooltip
-          //$( "#STgetGearButton" ).button( "option", "disabled", false ); // enable button (only needed once)
+          calcGPSused = false;
+          document.getElementById("recalcButton").value = 'Recalc';
           document.getElementById("fieldSTdata").disabled = false;
           // default data
           formSTdataOriginal = $("#fieldSTdata").serialize();
@@ -493,16 +509,38 @@
           $( "#progressSTact" ).hide();
       }
 
+      var calcGPSused = false;
       function calcGPS(gps) {
-          var dist = 0;
-          for (i = 3; i < gps.length; i=i+2) {
-              dist += map.distance(gps[i-2], gps[i]);
+          var orig_dist_mi = (stActivityInit.total_distance/MI2KM).toFixed(2);
+          var orig_pace = stActivityInit.duration / orig_dist_mi;                               // seconds per mile
+          var orig_paceSTr = new Date(orig_pace * 1000 + 500).toISOString().substr(14, 5);  // extra 500 ms for correct rounding
+          if (calcGPSused == false) {
+            var dist = 0;
+            for (i = 3; i < gps.length; i=i+2) {
+                dist += map.distance(gps[i-2], gps[i]);
+            }
+            var dist_mi = (dist/MI2KM).toFixed(2);                                          // so same as stored value for pace calcs
+            var pace = stActivityInit.duration / dist_mi;                                         // seconds per mile
+            var paceSTr = new Date(pace * 1000 + 500).toISOString().substr(14, 5);            // extra 500 ms for correct rounding
+            var clockRatio = stActivityInit.clock_duration / stActivityInit.duration
+            var elapsedStr = new Date(stActivityInit.clock_duration * 1000  + 500).toISOString().substr(11, 8);
+            var elPaceStr = new Date(pace * 1000 * clockRatio + 500).toISOString().substr(14, 5);
+            var elOrigPaceStr = new Date(orig_pace * 1000 * clockRatio + 500).toISOString().substr(14, 5);
+            var noteStr = "\nSTlink distance: " + dist_mi + " mi @ " + paceSTr + " /mi ";
+            noteStr += "(original " + orig_dist_mi + " mi @ " + orig_paceSTr + " /mi)\n";
+            noteStr += "  Elapsed time: " + elapsedStr + " @ " + elPaceStr + " /mi (original @ " + elOrigPaceStr + " /mi)\n";
+            document.getElementById("STdistance").value = dist_mi;
+            document.getElementById("STactiveP").value = paceSTr;
+            document.getElementById("STnotes").value += noteStr;
+            document.getElementById("recalcButton").value = 'Revert';
+            calcGPSused = true;
+          } else {
+            document.getElementById("STdistance").value = orig_dist_mi;
+            document.getElementById("STactiveP").value = orig_paceSTr;
+            document.getElementById("recalcButton").value = 'Recalc';
+            calcGPSused = false;
           }
-          var dist_mi = dist/1609.34;
-          var orig_dist_mi = stActivityInit.total_distance/1609.34;
-          document.getElementById("STdistance").value = (dist_mi).toFixed(2);
-          document.getElementById("STnotes").value += "\nSTlink distance: " + dist_mi.toFixed(2) + " mi (original: " + orig_dist_mi.toFixed(2) +
-            " mi)\n";
+
       }
 
       function getLocation(gps) {
