@@ -300,36 +300,39 @@
 
 
       function exportData(stActivity) {
-        csv ="\t";
-        lf = "\n";
+        var csv ="\t";
+        var lf = "\n";
         // boolean - save data?
-        bd = true; //distance
-        bh = true; // heart rate
-        be = true; // elevation
-        bp = true; // power
-        bg = true; // ground contact time
-        bt = true; // time stops
+        var bd = true; //distance
+        var bh = true; // heart rate
+        var be = true; // elevation
+        var bp = true; // power
+        var bg = true; // ground contact time
+        var bt = true; // time stops
 
-        // index for data
-        id = 0;
-        ih = 0;
-        ie = 0;
-        ip = 0;
-        ig = 0;
+        var id = 0, ih = 0, ie = 0, ip = 0, ig = 0; // index for data
+        var runData = ([],[]);  //  [0]distance, [1]elevation, [2]power, [3]GCT, [4]heartrate
+        var calcData = ([],[]);  //  [0]stopped/walking/running, [1]delta dist, [2]filtered elev, [3]grade, [4]down -1, level 0, up 1
+
         bd = typeof stActivity.distance === 'undefined' ? false : bd;
         bh = typeof stActivity.heartrate === 'undefined' ? false : bh;
         be = typeof stActivity.elevation === 'undefined' ? false : be;
         bp = typeof stActivity.power === 'undefined' ? false : bp;
         bg = typeof stActivity.ground_contact_time === 'undefined' ? false : bg;
+        bt = typeof stActivity.timer_stops === 'undefined' ? false : bt;
 
-        md = typeof stActivity.distance === 'undefined' ? 0 : stActivity.distance.length;
-        mh = typeof stActivity.heartrate === 'undefined' ? 0 : stActivity.heartrate.length;
-        me = typeof stActivity.elevation === 'undefined' ? 0 : stActivity.elevation.length;
-        mp = typeof stActivity.power === 'undefined' ? 0 : stActivity.power.length;
-        mg = typeof stActivity.ground_contact_time === 'undefined' ? 0 : stActivity.ground_contact_time.length;
+        // max index of each data type
+        var md = typeof stActivity.distance === 'undefined' ? 0 : stActivity.distance.length;
+        var mh = typeof stActivity.heartrate === 'undefined' ? 0 : stActivity.heartrate.length;
+        var me = typeof stActivity.elevation === 'undefined' ? 0 : stActivity.elevation.length;
+        var mp = typeof stActivity.power === 'undefined' ? 0 : stActivity.power.length;
+        var mg = typeof stActivity.ground_contact_time === 'undefined' ? 0 : stActivity.ground_contact_time.length;
+
+        var ld = -1, lh = -1, le = -1, lp = -1, lg = -1;  // last values (when data blank)
+        var dd = 0; // delta distance
+        var itIndex = 0, it0 = 0, it1 = 0, mt = 0; // stopped index values
 
         // timer stops
-        bt = typeof stActivity.timer_stops === 'undefined' ? false : bt;
         if (bt == true) {
             mt = stActivity.timer_stops.length;
             itIndex = 0;
@@ -338,67 +341,84 @@
             //console.log(it0, it1);
         }
 
-
-
-        dataCSV = "time(s)" + csv + "distance(m)" + csv + "elevation(m)" + csv + "ground_contact_time(ms)" +
-              csv + "heartrate(bpm)" + csv + "power(W)" + csv + "stopped" + csv + lf;
+        var sSWR = 0;
 
         for (i = 0; i < stActivity.clock_duration + 1 ; i++ ) {
-        //for (i = 0; i < 30 ; i++ ) {
-          dataCSV += i + csv;
-          if (bd == true) {
-            if (stActivity.distance[id] == i && id < md) {
-              dataCSV += stActivity.distance[id+1];
-              id += 2; // increment by 2
-            }
-          }
-          dataCSV += csv;
-          if (be == true) {
-            if (stActivity.elevation[ie] == i && ie < me) {
-              dataCSV += stActivity.elevation[ie+1];
-              ie += 2; // increment by 2
-            }
-          }
-          dataCSV += csv;
-          if (bg == true) {
-            if (stActivity.ground_contact_time[ig] == i && ig < mg) {
-              dataCSV += stActivity.ground_contact_time[ig+1];
-              ig += 2; // increment by 2
-            }
-          }
-          dataCSV += csv;
-          if (bh == true) {
-            if (stActivity.heartrate[ih] == i && ih < mh) {
-              dataCSV += stActivity.heartrate[ih+1];
-              ih += 2; // increment by 2
-            }
-          }
-          dataCSV += csv;
-          if (bp == true) {
-            if (stActivity.power[ip] == i && ip < mp) {
-              dataCSV += stActivity.power[ip+1];
-              ip += 2; // increment by 2
-            }
-          }
-          dataCSV += csv;
-          sStop = '0';
+          sSWR = 2;
           if (bt == true) {
             if (i > it0) {
               if (i < it1) {
-                sStop = '1';
+                sSWR = 0;
               } else {
-                if (itIndex < mt-1){
+                if (itIndex < mt-1) {
                   itIndex++;
                   it0 = (new Date (stActivity.timer_stops[itIndex][0]) - new Date (stActivity.start_time))/1000;
                   it1 = (new Date (stActivity.timer_stops[itIndex][1]) - new Date (stActivity.start_time))/1000+1;
                 }
               }
-            } 
+            }
           }
-          dataCSV += sStop + csv;
+
+          if (bd == true) {
+            if (stActivity.distance[id] == i && id < md) {
+              dd = (stActivity.distance[id+1] - ld);
+              dd = parseFloat((stActivity.distance[id+1] - ld).toFixed(2));
+              ld = stActivity.distance[id+1];
+              id += 2; // increment by 2
+            }
+          }
+
+          if (be == true) {
+            if (stActivity.elevation[ie] == i && ie < me) {
+              le = stActivity.elevation[ie+1];
+              ie += 2; // increment by 2
+            }
+          }
+
+          if (bp == true) {
+            if (stActivity.power[ip] == i && ip < mp) {
+              lp = stActivity.power[ip+1];
+              ip += 2; // increment by 2
+            }
+            if (sSWR == 0) lp = 0;  // if stopped then power = 0
+            if (lp == 0) sSWR = 0;   // and vice versa
+          }
+
+          if (bg == true) {
+            if (stActivity.ground_contact_time[ig] == i && ig < mg) {
+              lg = stActivity.ground_contact_time[ig+1];
+              ig += 2; // increment by 2
+            }
+            if (lp == 0) lg = 2000;  // stopped
+            if ((parseInt(lg) > 499) && (sSWR != 0)) sSWR = 1;  //walking
+          }
+
+          if (bh == true) {
+            if (stActivity.heartrate[ih] == i && ih < mh) {
+              lh = stActivity.heartrate[ih+1];
+              ih += 2; // increment by 2
+            }
+            // adjust HR if stopped
+          }
+
+          //  [0]distance, [1]elevation, [2]power, [3]GCT, [4]heartrate
+          runData[i] = [ld, le, lp, lg, lh];
+          //  [0]stopped/walking/running, [1]delta dist, [2]filtered elev, [3]grade, [4]down -1, level 0, up 1
+          calcData[i] = [sSWR, dd, 0, 0, 0];
+        }
+
+        // prepare for export (make function)
+        var dataCSV = "time" + csv + "distance" + csv + "elevation" + csv + "power" + csv + "GCT" +
+              csv + "heartrate" + csv + "StopWalkRun" + csv + "delta distance" + csv + lf;
+        dataCSV += "(s)" + csv + "(m)" + csv + "(m)" + csv + "(W)" + csv + "(ms)" + csv + "(bpm)" + csv + "(0/1/2)" + csv + "(m)" + csv + lf;
+        for (i = 0; i < runData.length ; i++ ) {
+          dataCSV += i + csv + runData[i][0] + csv + runData[i][1] + csv + runData[i][2] + csv + runData[i][3] + csv + runData[i][4] + csv;
+          dataCSV += calcData[i][0] + csv + calcData[i][1] + csv;
           dataCSV += lf;
         }
+
         document.getElementById("showData").value = dataCSV;
+        console.log(runData, calcData);
       }
 
 
