@@ -56,9 +56,9 @@
         pre { font-size: 100%; font-family: Arial,Helvetica,sans-serif; }
         textarea {
           font-family: inherit; font-size: inherit;
-          -moz-tab-size : 16;
-          -o-tab-size : 16;
-          tab-size : 16;
+          -moz-tab-size : 18;
+          -o-tab-size : 18;
+          tab-size : 18;
         }
         td.healthdataexists a { background-color: #90EE90 !important; font-weight:bold !important; }
 
@@ -153,9 +153,15 @@
         <input type="text" id="levelGrade" name="levelGrade" size="3" value="1.5" style="padding-right:30px; text-align:right;"></input><span style="margin-left:-25px;">%</span>
       </p>
       <br><br>
-      <input type="button" id="STexportData" onclick="exportData(stActivityInit)" value="Export">
+      <input type="button" id="STexportData" onclick="exportData(stActivityInit)" value="Metrics">&nbsp;&nbsp;
+      <label for="cbMetrics">Show metrics
+        <input type="checkbox" name="cbMetrics" id="cbMetrics" checked>
+      </label>
+      <label for="cbData">Show raw data
+        <input type="checkbox" name="cbData" id="cbData">
+      </label>
       <br><br>
-      <textarea rows = "12" cols = "120" id="showData" name="showData"></textarea><br>
+      <textarea rows = "24" cols = "140" id="showData" name="showData"></textarea><br>
       <div id="dataDisplay">  </div>
     </div>
 		<div id="tab-health">
@@ -265,6 +271,7 @@
         $( "#progressHealth, #progressSTact" ).progressbar("value", false);
         $( "#progressSTgear, #progressHealth, #progressSTact" ).hide();
         $( "#tabs" ).tabs();
+        $( "#cbMetrics, #cbData" ).checkboxradio();
         $( "#tabs" ).find("*").prop( "disabled", true );
         $( "#healthSel" ).selectmenu( {
               width: 150,

@@ -12,6 +12,7 @@ var GEARURL     =   'https://api.sporttracks.mobi/api/v2/gear';
 var HEALTHURL   =   'https://api.sporttracks.mobi/api/v2/metrics';
 var KG2LB       =   2.20462; //kg to lb conversion (ST uses kg in data)
 var MI2KM       =   1609.34; //km to miles
+var M2FT        =   3.28084; //meters to feet
 
 if (location.host == 'localhost') {
   var REDIRECT    = 'http://localhost/';
