@@ -220,13 +220,7 @@ function exportData(stActivity) {
   // display metrics data
 
   //display sparkline
-  //var myvalues = [10,8,5,7,4,4,1];
-  var sparkArray = ([]);
-  for (i = 0; i < iMax ; i++ ) {
-    sparkArray[i] = Math.round(calcData[i][2]*M2FT);
-  }
-  // string should be same as at startup -
-  $('.elevSparkline').sparkline(sparkArray, {width: '600px', height: '30px', lineWidth: 2, tooltipSuffix: ' ft' });
+  showSparkLine();
 
   if ($( "#cbMetrics" )[0].checked) {
     dataCSV += "type" + csv + "time" + csv + "distance" + csv + "pace" + csv + "elev gain" + csv + "grade" + csv + "HR" + csv + "power" + csv + "cadence" + csv + lf;
@@ -273,6 +267,27 @@ function exportData(stActivity) {
   document.getElementById("showData").value = dataCSV;
 
 }
+
+function showSparkLine() {
+  var sparkArray = ([]);
+  if (calcData.length > 0) {
+    sparkI=0;
+    for (i = $( "#timeRange" ).slider( "values", 0); i < $( "#timeRange" ).slider( "values", 1) + 1 ; i++ ) {
+      sparkArray[sparkI] = [i, Math.round(calcData[i][2]*M2FT)];
+      sparkI++;
+    }
+
+  } else {
+    sparkArray = [[$( "#timeRange" ).slider( "values", 0), 0] , [$( "#timeRange" ).slider( "values", 1) ,0]];
+  }
+  $('.elevSparkline').sparkline(sparkArray, { width: '600px', height: '30px', lineWidth: 2,
+    tooltipFormatter: function (sparkline, options, fields) {
+        return "" + fields.y + "ft " + timeHMS(fields.x);
+      }
+  });
+}
+
+
 
 function metricData(sD) {
   return timeHMS(sD[0]) + csv + distMiles(sD[1]).toString().padStart(5," ") + csv + paceMilesHr(sD[6]) + csv + elevFeet(sD[2]).toString().padStart(4, ' ' ) + csv +

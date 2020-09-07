@@ -174,7 +174,7 @@
         <input type="checkbox" name="cbData" id="cbData">
       </label>
       <br><br>
-      <textarea rows = "24" cols = "140" id="showData" name="showData"></textarea><br>
+      <textarea rows = "26" cols = "140" id="showData" name="showData"></textarea><br>
       <div id="dataDisplay">  </div>
     </div>
 		<div id="tab-health">
@@ -288,17 +288,19 @@
         $( "#timeRange" ).slider({
             range: true,
             min: 0,
-            max: 500,
-            values: [ 10, 200 ],
+            max: 600,
+            values: [ 0, 600 ],
             slide: function( event, ui ) {
-              $( "#minTime" ).val( new Date( ui.values[0] * 1000  + 500).toISOString().substr(11, 8) );
-              $( "#maxTime" ).val( new Date( ui.values[1] * 1000  + 500).toISOString().substr(11, 8) );
+              $( "#minTime" ).val( timeHMS(ui.values[0]) );
+              $( "#maxTime" ).val( timeHMS(ui.values[1]) );
+              showSparkLine();
+              //$('.elevSparkline').sparkline( 'html', { chartRangeMinX: ui.values[0] });
             }
         });
         //$( "#minTime" ).val( $( "#timeRange" ).slider( "values", 0));
         //$( "#maxTime" ).val( $( "#timeRange" ).slider( "values", 1));
-
-        $('.elevSparkline').sparkline([0,0,0], {width: '600px', height: '30px', lineWidth: 2, tooltipSuffix: ' ft' });
+        showSparkLine();
+        //$('.elevSparkline').sparkline([0,0,0], {width: '600px', height: '30px', lineWidth: 2, tooltipSuffix: ' ft' });
         // put this after all visible controls
         $( "#tabs" ).find("*").prop( "disabled", true );
         $( "#healthSel" ).selectmenu( {
@@ -548,7 +550,7 @@
           document.getElementById("STname").value = stActivity.name;
           document.getElementById("STloc").value = typeof stActivity.location_name === 'undefined' ? "" : stActivity.location_name;
           document.getElementById("STdistance").value = (stActivity.total_distance/MI2KM).toFixed(2);  // convert to miles, show 2 dp
-          document.getElementById("STactiveT").value = new Date(stActivity.duration * 1000  + 500).toISOString().substr(11, 8);
+          document.getElementById("STactiveT").value = timeHMS(stActivity.duration);
           if (stActivity.total_distance != '0') {
             var pace = stActivity.duration / stActivity.total_distance * MI2KM;     // seconds per mile
             var paceSTr = new Date(pace * 1000 + 500).toISOString().substr(14, 5);  //extra 500 ms for correct rounding
@@ -568,8 +570,8 @@
           $( "#timeRange" ).slider( "option", "min", 0);
           $( "#timeRange" ).slider( "option", "max", stActivity.clock_duration);
           $( "#timeRange" ).slider( "option", "values", [ 0, stActivity.clock_duration ] );
-          $( "#minTime" ).val( new Date( $( "#timeRange" ).slider( "values", 0) * 1000  + 500).toISOString().substr(11, 8) );
-          $( "#maxTime" ).val( new Date( $( "#timeRange" ).slider( "values", 1) * 1000  + 500).toISOString().substr(11, 8) );
+          $( "#minTime" ).val( timeHMS( $( "#timeRange" ).slider( "values", 0)) );
+          $( "#maxTime" ).val( timeHMS( $( "#timeRange" ).slider( "values", 1)) );
           //document.getElementById("tabs").disabled = false;
           // default data
           formSTdataOriginal = $("#fieldSTdata").serialize();
@@ -591,7 +593,7 @@
             var pace = stActivityInit.duration / dist_mi;                                         // seconds per mile
             var paceSTr = new Date(pace * 1000 + 500).toISOString().substr(14, 5);            // extra 500 ms for correct rounding
             var clockRatio = stActivityInit.clock_duration / stActivityInit.duration
-            var elapsedStr = new Date(stActivityInit.clock_duration * 1000  + 500).toISOString().substr(11, 8);
+            var elapsedStr = timeHMS(stActivityInit.clock_duration);
             var elPaceStr = new Date(pace * 1000 * clockRatio + 500).toISOString().substr(14, 5);
             var elOrigPaceStr = new Date(orig_pace * 1000 * clockRatio + 500).toISOString().substr(14, 5);
             var noteStr = "\nSTlink distance: " + dist_mi + " mi @ " + paceSTr + " /mi ";
