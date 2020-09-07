@@ -176,13 +176,13 @@ function exportData(stActivity) {
   // calcData  [0]stopped1/walking2/running3, [1]delta dist, [2]filtered elev, [3]delta elev, [4]grade, [5]down 1, level 2, up 3
   // sumData    first (j)     total0/stopped1/walking2/running3/moving4
   //            second (k)    elev all0/down1/level2/up3
-  //            third         time0/dist1/elev2/avPow3/avHR4/avCadence5/avSpeed6
+  //            third         time0/dist1/elev2/avPow3/avHR4/avCadence5/avSpeed6/avGrade7
   var jNum = 5, kNum = 4;
   // initialize or zero out array
   for (j=0; j < jNum ; j++ ) {
     sumData[j] = [];
     for (k=0; k < kNum; k++ ) {
-      sumData[j][k] = [0, 0, 0, 0, 0, 0];
+      sumData[j][k] = [0, 0, 0, 0, 0, 0, 0, 0];
     }
   }
 
@@ -193,7 +193,7 @@ function exportData(stActivity) {
         if ((j==0 || calcData[i][0]==j || ((j==4)*(calcData[i][0]==2 || calcData[i][0]==3)))*(k==0 || calcData[i][5]==k)) {
           sumData[j][k][0] += 1;  //time
           sumData[j][k][1] += calcData[i][1];  //distance
-          sumData[j][k][2] += calcData[i][3];  //elev
+          sumData[j][k][2] += k==1 ? calcData[i][3] : calcData[i][3]>0 ? calcData[i][3] : 0 ;  // up elev total = only down for negative
           sumData[j][k][3] += runData[i][2];  //power
           sumData[j][k][4] += runData[i][4];  //hr
           sumData[j][k][5] += runData[i][5];  //cadence
@@ -210,6 +210,7 @@ function exportData(stActivity) {
       sumData[j][k][4] = Math.round(sumData[j][k][0] != 0 ? sumData[j][k][4]/sumData[j][k][0] : 0);  // ave hr
       sumData[j][k][5] = Math.round(sumData[j][k][0] != 0 ? sumData[j][k][5]/sumData[j][k][0] : 0);  // ave cadence
       sumData[j][k][6] = parseFloat((sumData[j][k][0] != 0 ? sumData[j][k][1]/sumData[j][k][0] : 0).toFixed(3));  // ave speed
+      sumData[j][k][7] = parseFloat((sumData[j][k][1] != 0 ? 100*sumData[j][k][2]/sumData[j][k][1] : 0).toFixed(2));  // ave gradient
     }
   }
   console.log( sumData);
@@ -217,9 +218,19 @@ function exportData(stActivity) {
   var dataCSV ="";
   dataCSV += "GCT walk threshold = " + walkGCT + " ms; Elevation filter = " + elevFilter + " m; Level threshold = " + levelGrade + " %" + lf + lf;
   // display metrics data
+
+  //display sparkline
+  //var myvalues = [10,8,5,7,4,4,1];
+  var sparkArray = ([]);
+  for (i = 0; i < iMax ; i++ ) {
+    sparkArray[i] = Math.round(calcData[i][2]*M2FT);
+  }
+  // string should be same as at startup -
+  $('.elevSparkline').sparkline(sparkArray, {width: '600px', height: '30px', lineWidth: 2, tooltipSuffix: ' ft' });
+
   if ($( "#cbMetrics" )[0].checked) {
-    dataCSV += "type" + csv + "time" + csv + "distance" + csv + "pace" + csv + "net elev" + csv + "HR" + csv + "power" + csv + "cadence" + csv + lf;
-    dataCSV += ""     + csv + "(h:m:s)" + csv + "(mi)" + csv + "(min/mi)" + csv + "(ft)" + csv + "(bpm)" + csv + "(W)" + csv + "(spm)" + csv + lf;
+    dataCSV += "type" + csv + "time" + csv + "distance" + csv + "pace" + csv + "elev gain" + csv + "grade" + csv + "HR" + csv + "power" + csv + "cadence" + csv + lf;
+    dataCSV += ""     + csv + "(h:m:s)" + csv + "(mi)" + csv + "(min/mi)" + csv + " (ft)" + csv + " (%)" + csv + "(bpm)" + csv + "(W)" + csv + "(spm)" + csv + lf;
 
     // ALL data
     dataCSV += "ALL" + csv + metricData(sumData[0][0]) + lf;
@@ -264,7 +275,8 @@ function exportData(stActivity) {
 }
 
 function metricData(sD) {
-  return timeHMS(sD[0]) + csv + distMiles(sD[1]) + csv + paceMilesHr(sD[6]) + csv + elevFeet(sD[2]) + csv + sD[4] + csv + sD[3] + csv + cadSPM(sD[5]) + csv;
+  return timeHMS(sD[0]) + csv + distMiles(sD[1]).toString().padStart(5," ") + csv + paceMilesHr(sD[6]) + csv + elevFeet(sD[2]).toString().padStart(4, ' ' ) + csv +
+      sD[7].toString().padStart(5, " ") +csv + sD[4].toString().padStart(3," ") + csv + sD[3].toString().padStart(3," ") + csv + cadSPM(sD[5]).toString().padStart(3," ") + csv;
 }
 
 
