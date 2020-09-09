@@ -60,6 +60,8 @@
           -moz-tab-size : 18;
           -o-tab-size : 18;
           tab-size : 18;
+          white-space: pre;
+          overflow-x: auto;
         }
         td.healthdataexists a { background-color: #90EE90 !important; font-weight:bold !important; }
 
@@ -144,16 +146,16 @@
       <div style="display: inline-block; margin-right:20px;">
         <p>
           <label id="labelWalkGCT">GCT walk threshold:&nbsp;</label>
-          <input type="text" id="walkGCT" name="walkGCT" size="3" value="500" style="padding-right:30px; text-align:right;"></input><span style="margin-left:-25px;">ms</span>
+          <input type="text" id="walkGCT" name="textDataInput" size="3" value="500" style="padding-right:30px; text-align:right;"></input><span style="margin-left:-25px;">ms</span>
         </p>
         <p>
           <label id="labelElevFilter">Elevation filter:&nbsp;</label>
-          <input type="text" id="elevFilter" name="elevFilter" size="3" value="20" style="padding-right:30px; text-align:right;"></input><span style="margin-left:-25px;">m</span>
+          <input type="text" id="elevFilter" name="textDataInput" size="3" value="20" style="padding-right:30px; text-align:right;"></input><span style="margin-left:-25px;">m</span>
 
         </p>
         <p>
           <label id="labelLevel">Level threshold:&nbsp;</label>
-          <input type="text" id="levelGrade" name="levelGrade" size="3" value="1.5" style="padding-right:30px; text-align:right;"></input><span style="margin-left:-25px;">%</span>
+          <input type="text" id="levelGrade" name="textDataInput" size="3" value="1.5" style="padding-right:30px; text-align:right;"></input><span style="margin-left:-25px;">%</span>
         </p>
       </div>
         <div style="display: inline-block; vertical-align: top">
@@ -165,14 +167,14 @@
           </div>
         </div>
 
-      <br><br>
-      <input type="button" id="STexportData" onclick="exportData(stActivityInit)" value="Metrics">&nbsp;&nbsp;
+      <br>
       <label for="cbMetrics">Show metrics
-        <input type="checkbox" name="cbMetrics" id="cbMetrics" checked>
+        <input type="checkbox" name="cbMetrics" id="cbMetrics">
       </label>
       <label for="cbData">Show raw data
-        <input type="checkbox" name="cbData" id="cbData">
+        <input type="checkbox" name="cbMetrics" id="cbData">
       </label>
+      &nbsp;&nbsp;<input type="button" id="STmaxData" onclick="maxData()" value="Max">
       <br><br>
       <textarea rows = "26" cols = "140" id="showData" name="showData"></textarea><br>
       <div id="dataDisplay">  </div>
@@ -222,7 +224,7 @@
 
       $(function() {
         $( "#STgetButton, #getLocButton, #recalcButton, #STrevertButton, #STsendButton, #STgetGearButton," +
-            " #STgetHealthButton, #STsendHealthButton, #STexportData" ).button(  );  // { disabled: true }
+            " #STgetHealthButton, #STsendHealthButton, #STmaxData" ).button(  );  // { disabled: true }
         $( document ).tooltip();
         $( "#fieldSTgear" ).controlgroup()  // click on control group
           .on('click', '[type="checkbox"]', function( event, ui ){
@@ -285,6 +287,9 @@
         $( "#progressSTgear, #progressHealth, #progressSTact" ).hide();
         $( "#tabs" ).tabs();
         $( "#cbMetrics, #cbData" ).checkboxradio();
+        // default is metrics checked - using HTML gives caret rather than checkmark
+        $( "#cbMetrics" ).prop('checked',true).checkboxradio('refresh');
+        $( "[name='textDataInput']").on( "change", refreshData );
         $( "#timeRange" ).slider({
             range: true,
             min: 0,
@@ -293,14 +298,18 @@
             slide: function( event, ui ) {
               $( "#minTime" ).val( timeHMS(ui.values[0]) );
               $( "#maxTime" ).val( timeHMS(ui.values[1]) );
-              showSparkLine();
-              //$('.elevSparkline').sparkline( 'html', { chartRangeMinX: ui.values[0] });
+              calcMetrics();  // need to key these off slider values
+              displayMetrics();
+            },
+            stop: function( event, ui ) {
+              $( "#minTime" ).val( timeHMS(ui.values[0]) );
+              $( "#maxTime" ).val( timeHMS(ui.values[1]) );
+              calcMetrics();  // need to key these off slider values
+              displayMetrics();
             }
         });
-        //$( "#minTime" ).val( $( "#timeRange" ).slider( "values", 0));
-        //$( "#maxTime" ).val( $( "#timeRange" ).slider( "values", 1));
         showSparkLine();
-        //$('.elevSparkline').sparkline([0,0,0], {width: '600px', height: '30px', lineWidth: 2, tooltipSuffix: ' ft' });
+        $( "[name='cbMetrics']").on( "change", displayMetrics );
         // put this after all visible controls
         $( "#tabs" ).find("*").prop( "disabled", true );
         $( "#healthSel" ).selectmenu( {
@@ -567,11 +576,14 @@
           calcGPSused = false;
           document.getElementById("recalcButton").value = 'Recalc';
           document.getElementById("fieldSTdata").disabled = false;
+          processData(stActivity);
           $( "#timeRange" ).slider( "option", "min", 0);
-          $( "#timeRange" ).slider( "option", "max", stActivity.clock_duration);
-          $( "#timeRange" ).slider( "option", "values", [ 0, stActivity.clock_duration ] );
+          $( "#timeRange" ).slider( "option", "max", calcData.length - 1);
+          $( "#timeRange" ).slider( "option", "values", [ 0, calcData.length - 1 ] );
           $( "#minTime" ).val( timeHMS( $( "#timeRange" ).slider( "values", 0)) );
           $( "#maxTime" ).val( timeHMS( $( "#timeRange" ).slider( "values", 1)) );
+          calcMetrics();
+          displayMetrics();
           //document.getElementById("tabs").disabled = false;
           // default data
           formSTdataOriginal = $("#fieldSTdata").serialize();
