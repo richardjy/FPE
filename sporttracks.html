@@ -143,7 +143,7 @@
     	<div id="fieldSTgear">  </div>
 		</div>
     <div id="tab-data">
-      <div style="display: inline-block; margin-right:20px;">
+      <div style="display: inline-block; margin-right:40px;">
         <p>
           <label id="labelWalkGCT">GCT walk threshold:&nbsp;</label>
           <input type="text" id="walkGCT" name="textDataInput" size="3" value="500" style="padding-right:30px; text-align:right;"></input><span style="margin-left:-25px;">ms</span>
@@ -158,24 +158,33 @@
           <input type="text" id="levelGrade" name="textDataInput" size="3" value="1.5" style="padding-right:30px; text-align:right;"></input><span style="margin-left:-25px;">%</span>
         </p>
       </div>
-        <div style="display: inline-block; vertical-align: top">
-          <span class="elevSparkline"></span>
-          <div id="timeRange" style="width:600px;"></div>
-          <div style = "text-align: center; width:600px; padding-top:4px;">
-            <input type="text" id="minTime" name="minTime" size="6" readonly style="text-align:center;">&nbsp;&nbsp;&nbsp;to&nbsp;
-            <input type="text" id="maxTime" name="maxTime" size="6" readonly style="text-align:center;">
-          </div>
+      <div style="display: inline-block; vertical-align: top">
+        <span class="elevSparkline"></span>
+        <div id="timeRange" style="width:600px;"></div>
+        <div style = "text-align: center; width:600px; padding-top:4px;">
+          <input type="text" id="minTime" name="minTime" size="6" readonly style="text-align:center;">&nbsp;&nbsp;&nbsp;to&nbsp;
+          <input type="text" id="maxTime" name="maxTime" size="6" readonly style="text-align:center;">
         </div>
+      </div>
 
-      <br>
+      <br><br>
       <label for="cbMetrics">Show metrics
         <input type="checkbox" name="cbMetrics" id="cbMetrics">
       </label>
       <label for="cbData">Show raw data
         <input type="checkbox" name="cbMetrics" id="cbData">
+      </label>&nbsp;&nbsp;&nbsp;&nbsp;
+      <input type="button" id="STmaxData" onclick="maxData()" value="Max">
+      <label for="cbGraphHR">HR
+        <input type="checkbox" name="cbGraph" id="cbGraphHR">
       </label>
-      &nbsp;&nbsp;<input type="button" id="STmaxData" onclick="maxData()" value="Max">
-      <br><br>
+      <label for="cbGraphP">Power
+        <input type="checkbox" name="cbGraph" id="cbGraphP">
+      </label>
+      <label for="cbGraphBig">Enlarge
+        <input type="checkbox" name="cbGraph" id="cbGraphBig">
+      </label>
+      <br>
       <textarea rows = "26" cols = "140" id="showData" name="showData"></textarea><br>
       <div id="dataDisplay">  </div>
     </div>
@@ -286,7 +295,7 @@
         $( "#progressHealth, #progressSTact" ).progressbar("value", false);
         $( "#progressSTgear, #progressHealth, #progressSTact" ).hide();
         $( "#tabs" ).tabs();
-        $( "#cbMetrics, #cbData" ).checkboxradio();
+        $( "#cbMetrics, #cbData, #cbGraphHR, #cbGraphP, #cbGraphBig" ).checkboxradio();
         // default is metrics checked - using HTML gives caret rather than checkmark
         $( "#cbMetrics" ).prop('checked',true).checkboxradio('refresh');
         $( "[name='textDataInput']").on( "change", refreshData );
@@ -310,6 +319,7 @@
         });
         showSparkLine();
         $( "[name='cbMetrics']").on( "change", displayMetrics );
+        $( "[name='cbGraph']").on( "change", showSparkLine );
         // put this after all visible controls
         $( "#tabs" ).find("*").prop( "disabled", true );
         $( "#healthSel" ).selectmenu( {

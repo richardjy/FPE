@@ -303,38 +303,41 @@ function displayMetrics() {
 
 function showSparkLine() {
   var sparkArray = ([]);
-  sparkArray[0] = [0,0], sparkArray[1] = [0,0], sparkArray[2] = [0,0];
+  sparkArray[0] = [0,0], sparkArray[1] = [0,0], sparkArray[2] = [0,0], sparkArray[3] = [0,0];
   var bShowHR = false;
+  var bShowPower = false;
 
   if (calcData.length > 0) {
-    //var bShowHR = (runData[0]<0 ? false : true; // check first HR data
-    //if (bShowHR) sparkArray[2] = [0,0];
-
-
     sparkI=0;
     for (i = $( "#timeRange" ).slider( "values", 0); i < $( "#timeRange" ).slider( "values", 1) + 1 ; i++ ) {
-      sparkArray[0][sparkI] = [i, Math.round(calcData[i][2]*M2FT)];
+      sparkArray[0][sparkI] = [i, (calcData[i][2]*M2FT).toFixed(1)];
       sparkArray[1][sparkI] = [i, calcData[i][0]];
-      if (runData[i][4] > 0) {
+      if (runData[i][4] >= 0) {
           sparkArray[2][sparkI] = [i, runData[i][4]];
           bShowHR = true;
       } else {
           sparkArray[2][sparkI] = [i, null];
       }
+      if (runData[i][2] >= 0) {
+          sparkArray[3][sparkI] = [i, runData[i][2]];
+          bShowPower = true;
+      } else {
+          sparkArray[3][sparkI] = [i, null];
+      }
       sparkI++;
     }
-
   } else {
     sparkArray[0] = [[$( "#timeRange" ).slider( "values", 0), 0] , [$( "#timeRange" ).slider( "values", 1) ,0]];
     sparkArray[1] = [[$( "#timeRange" ).slider( "values", 0), 0] , [$( "#timeRange" ).slider( "values", 1) ,0]];
   }
-  $('.elevSparkline').sparkline(sparkArray[0], { width: '600px', height: '50px', lineWidth: 2, spotColor: false,
+
+  var graphHeight = $( "#cbGraphBig" )[0].checked ? '150px' : '60px';
+  $('.elevSparkline').sparkline(sparkArray[0], { width: '600px', height: graphHeight, lineWidth: 2, spotColor: false,
     tooltipFormatter: function (sparkline, options, fields) {
         return "" + fields.y + "ft " + timeHMS(fields.x) + " (" +
           (typeof runData[fields.x] === 'undefined' ? "N/A" : distMiles(runData[fields.x][0])) + " mi)";
       }
   });
-
   $('.elevSparkline').sparkline(sparkArray[1], { composite: true, lineWidth: 1,
     spotColor: false, minSpotColor: false, maxSpotColor: false,
     fillColor: false, lineColor: 'green', chartRangeMin: 1, chartRangeMax: 3,
@@ -343,18 +346,26 @@ function showSparkLine() {
       levels: $.range_map({ '0': 'No data', '1': 'Stopped', '2': 'Walking', '3' : 'Running' })
     }
   });
-  if (bShowHR) {
+  if ($( "#cbGraphHR" )[0].checked && bShowHR) {
     $('.elevSparkline').sparkline(sparkArray[2], { composite: true, lineWidth: 1,
       spotColor: false,
       fillColor: false, lineColor: 'red',
       tooltipFormat: 'HR {{y}} bpm'
     });
   }
+  if ($( "#cbGraphP" )[0].checked && bShowPower) {
+    $('.elevSparkline').sparkline(sparkArray[3], { composite: true, lineWidth: 1,
+      spotColor: false,
+      fillColor: false, lineColor: 'orange',
+      tooltipFormat: 'Power {{y}} W'
+    });
+  }
 }
 
 function metricData(sD) {
   return timeHMS(sD[0]) + csv + distMiles(sD[1]).toString().padStart(5," ") + csv + paceMilesHr(sD[6]) + csv +
-  elevFeet(sD[2]).toString().padStart(4, ' ' ) + csv + sD[7].toString().padStart(5, " ") +csv + sD[4].toString().padStart(3," ") + csv +
+  elevFeet(sD[2]).toString().padStart(4, ' ' ) + csv + sD[7].toString().padStart(5, " ") + csv +
+  (sD[4]<0 ? '' : sD[4].toString().padStart(3," ")) + csv +
   (sD[3]<0 ? '' : sD[3].toString().padStart(3," ")) + csv +
   (sD[5]<0 ? '' : cadSPM(sD[5]).toString().padStart(3," ")) + csv;
 }
