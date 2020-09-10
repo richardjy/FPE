@@ -294,7 +294,14 @@
         $( "#progressSTgear, #progressHealth, #progressSTact" ).progressbar();
         $( "#progressHealth, #progressSTact" ).progressbar("value", false);
         $( "#progressSTgear, #progressHealth, #progressSTact" ).hide();
-        $( "#tabs" ).tabs();
+        $( "#tabs" ).tabs({
+            activate: function( event, ui ) {
+              //console.log(ui.newTab[0].textContent);
+              // only needed when switching to datatab, but include in case add any more sparklines
+              $.sparkline_display_visible();
+            }
+        });
+
         $( "#cbMetrics, #cbData, #cbGraphHR, #cbGraphP, #cbGraphBig" ).checkboxradio();
         // default is metrics checked - using HTML gives caret rather than checkmark
         $( "#cbMetrics" ).prop('checked',true).checkboxradio('refresh');
