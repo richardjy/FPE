@@ -173,6 +173,9 @@
       </label>
       <label for="cbData">Show raw data
         <input type="checkbox" name="cbMetrics" id="cbData">
+      </label>
+      <label for="cbSIunits">Use meters
+        <input type="checkbox" name="cbMetrics" id="cbSIunits">
       </label>&nbsp;&nbsp;&nbsp;&nbsp;
       <input type="button" id="STmaxData" onclick="maxData()" value="Max">
       <label for="cbGraphHR">HR
@@ -302,7 +305,7 @@
             }
         });
 
-        $( "#cbMetrics, #cbData, #cbGraphHR, #cbGraphP, #cbGraphBig" ).checkboxradio();
+        $( "#cbMetrics, #cbData, #cbSIunits, #cbGraphHR, #cbGraphP, #cbGraphBig" ).checkboxradio();
         // default is metrics checked - using HTML gives caret rather than checkmark
         $( "#cbMetrics" ).prop('checked',true).checkboxradio('refresh');
         $( "[name='textDataInput']").on( "change", refreshData );
@@ -468,7 +471,7 @@
           $( "#progressSTact" ).show();
           stActivityUpdate.name = document.getElementById("STname").value;
           stActivityUpdate.location_name = document.getElementById("STloc").value;
-          stActivityUpdate.total_distance = document.getElementById("STdistance").value * MI2KM;
+          stActivityUpdate.total_distance = document.getElementById("STdistance").value * MI2M;
           stActivityUpdate.notes = document.getElementById("STnotes").value;
           postActGear = true;   // set flag to show activity
           postFitnessActivity(stActivityUpdate);
@@ -575,10 +578,10 @@
           document.getElementById("STactivity").value = stActivity.activity;
           document.getElementById("STname").value = stActivity.name;
           document.getElementById("STloc").value = typeof stActivity.location_name === 'undefined' ? "" : stActivity.location_name;
-          document.getElementById("STdistance").value = (stActivity.total_distance/MI2KM).toFixed(2);  // convert to miles, show 2 dp
+          document.getElementById("STdistance").value = (stActivity.total_distance/MI2M).toFixed(2);  // convert to miles, show 2 dp
           document.getElementById("STactiveT").value = timeHMS(stActivity.duration);
           if (stActivity.total_distance != '0') {
-            var pace = stActivity.duration / stActivity.total_distance * MI2KM;     // seconds per mile
+            var pace = stActivity.duration / stActivity.total_distance * MI2M;     // seconds per mile
             var paceSTr = new Date(pace * 1000 + 500).toISOString().substr(14, 5);  //extra 500 ms for correct rounding
             document.getElementById("STactiveP").value = paceSTr;
           } else {
@@ -610,7 +613,7 @@
 
       var calcGPSused = false;
       function calcGPS(gps) {
-          var orig_dist_mi = (stActivityInit.total_distance/MI2KM).toFixed(2);
+          var orig_dist_mi = (stActivityInit.total_distance/MI2M).toFixed(2);
           var orig_pace = stActivityInit.duration / orig_dist_mi;                               // seconds per mile
           var orig_paceSTr = new Date(orig_pace * 1000 + 500).toISOString().substr(14, 5);  // extra 500 ms for correct rounding
           if (calcGPSused == false) {
@@ -618,7 +621,7 @@
             for (i = 3; i < gps.length; i=i+2) {
                 dist += map.distance(gps[i-2], gps[i]);
             }
-            var dist_mi = (dist/MI2KM).toFixed(2);                                          // so same as stored value for pace calcs
+            var dist_mi = (dist/MI2M).toFixed(2);                                          // so same as stored value for pace calcs
             var pace = stActivityInit.duration / dist_mi;                                         // seconds per mile
             var paceSTr = new Date(pace * 1000 + 500).toISOString().substr(14, 5);            // extra 500 ms for correct rounding
             var clockRatio = stActivityInit.clock_duration / stActivityInit.duration
