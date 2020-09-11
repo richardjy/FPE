@@ -345,8 +345,10 @@ function showSparkLine() {
   var graphHeight = $( "#cbGraphBig" )[0].checked ? '150px' : '60px';
   $('.elevSparkline').sparkline(sparkArray[0], { width: '600px', height: graphHeight, lineWidth: 2, spotColor: false,
     tooltipFormatter: function (sparkline, options, fields) {
-        return "" + fields.y + "ft " + timeHMS(fields.x) + " (" +
-          (typeof runData[fields.x] === 'undefined' ? "N/A" : distMiles(runData[fields.x][0])) + " mi)";
+        var elev = $( "#cbSIunits" )[0].checked ? (fields.y).toFixed(1) + "m  " : elevFeet(fields.y) + "ft  ";
+        var dist = typeof runData[fields.x] === 'undefined' ? "N/A" :
+            $( "#cbSIunits" )[0].checked ?   distKM(runData[fields.x][0]) + "km" : distMiles(runData[fields.x][0]) + "mi";
+        return "" + elev + timeHMS(fields.x) + " (" + dist + ")";
       }
   });
   $('.elevSparkline').sparkline(sparkArray[1], { composite: true, lineWidth: 1,
