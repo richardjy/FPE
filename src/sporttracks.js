@@ -126,6 +126,8 @@ function getFitnessActivityIndex(stIndexNo){   // index is which one to get 1 = 
       //var lastActuri = FITNESSURL + '/' + stIndexNo
       getFitnessActivity(FITNESSURL + '/' + stIndexNo);
     } else { // input was sequence index, 1 = last etc
+      var startDate = new Date($( "#idDate" ).datepicker('getDate'));
+      startDate.setDate(startDate.getDate() + 1); // go to next day so we include selected date in search
       $.ajax({
           type: 'GET',
           url: CORSURL + FITNESSURL,
@@ -135,13 +137,21 @@ function getFitnessActivityIndex(stIndexNo){   // index is which one to get 1 = 
           },
           data: {
             'pageSize' : 1,
-            'page' : (stIndexNo - 1)
+            'page' : (stIndexNo - 1),
+            'noLaterThan' : startDate.toISOString()
           }
       })
       .done(function(data, status){
           //console.log("data: ", data,  "\nStatus: " + status);
           //var lastActuri = data.items[0].uri
-          getFitnessActivity(data.items[0].uri);
+          if (typeof data.items[0] !== 'undefined') {
+            getFitnessActivity(data.items[0].uri);
+          } else {
+            window.alert("SportTracks ID not valid.");
+            //stReady = false;
+            getActivity = false;
+            $( "#progressSTact" ).hide();
+          }
       })
       .fail(function(response) {
           window.alert("SportTracks data request failed.");

@@ -6,6 +6,7 @@ var calcData = ([],[]);     //  [0]watchstop1/paused2/walking3/running4, [1]delt
 var sumData = ([],[],[]);   // see below for details
 var csv ="\t";
 var lf = "\n";
+var maxGraphPts = 2400;  // 4x number of points in the graph - minimize missed info
 
 function maxData() {
   $( "#timeRange" ).slider( "option", "min", 0);
@@ -56,17 +57,22 @@ function processData(stActivity) {
   var itIndex = 0, it0 = 0, it1 = 0, mt = 0; // stopped index values
 
   // get defaults from UI
-  var walkGCT = parseInt(document.getElementById("walkGCT").value);
-  if (isNaN(walkGCT)) walkGCT = 500;
-  document.getElementById("walkGCT").value = walkGCT;
   // value is in meters of travel - average over at least this amount
   var elevFilter = parseInt(document.getElementById("elevFilter").value);
-  if (isNaN(elevFilter)) elevFilter = 20;
+  if (isNaN(elevFilter)) elevFilter = 80;
   document.getElementById("elevFilter").value = elevFilter;
   // threshold for level grade - default 1.5%
   var levelGrade = parseFloat(document.getElementById("levelGrade").value);
   if (isNaN(levelGrade)) levelGrade = 1.5;
   document.getElementById("levelGrade").value = levelGrade;
+  // GCT threshold >= this value => walking
+  var walkGCT = parseInt(document.getElementById("walkGCT").value);
+  if (isNaN(walkGCT)) walkGCT = 500;
+  document.getElementById("walkGCT").value = walkGCT;
+  // Cadence threshold <= this value => walking
+  var walkCad = parseInt(document.getElementById("walkCad").value);
+  if (isNaN(walkCad)) walkCad = 125;
+  document.getElementById("walkCad").value = walkCad;
 
   // timer stops
   if (bt == true) {
@@ -99,27 +105,33 @@ function processData(stActivity) {
       }
     }
 
-    if (bd == true) {
+    if (bd == true) {  // distance calc ld and dd
       if (stActivity.distance[id] == i && id < md) {
-        dd = (stActivity.distance[id+1] - ld);
-        dd = parseFloat((stActivity.distance[id+1] - ld).toFixed(2));
         ld = stActivity.distance[id+1];
         id += 2; // increment by 2
+      } else {  // interpolate
+        // id = index of next time
+        ld = parseFloat(interpolateData(stActivity.distance, id, i).toFixed(2));
       }
+      dd = i>0 ? parseFloat((ld - runData[i-1][0]).toFixed(2)) : 0.00;
       if (sSWR == 1) dd = 0;  // if stopped from watch then delta distance = 0
     }
 
-    if (be == true) {
+    if (be == true) { // elevation
       if (stActivity.elevation[ie] == i && ie < me) {
         le = stActivity.elevation[ie+1];
         ie += 2; // increment by 2
+      } else {  // interpolate
+        le = parseFloat(interpolateData(stActivity.elevation, ie, i).toFixed(2));
       }
     }
 
-    if (bp == true) {
+    if (bp == true) { // power
       if (stActivity.power[ip] == i && ip < mp) {
         lp = stActivity.power[ip+1];
         ip += 2; // increment by 2
+      } else {  // interpolate
+        lp = parseFloat(interpolateData(stActivity.power, ip, i).toFixed(0));
       }
       if (sSWR == 1) {
         lp = 0;  // if stopped from watch then power = 0
@@ -128,29 +140,48 @@ function processData(stActivity) {
       }
     }
 
-    if (bg == true) {
+    if (bg == true) {  // GCT
       if (stActivity.ground_contact_time[ig] == i && ig < mg) {
         lg = stActivity.ground_contact_time[ig+1];
         ig += 2; // increment by 2
+      } else {  // interpolate - but do an extra check first in case stopped
+        if (lp == 0) {
+          lg = 0;
+        } else {
+          lg = parseFloat(interpolateData(stActivity.ground_contact_time, ig, i).toFixed(0));
+        }
       }
-      if (lp == 0) lg = 2000;  // stopped
-      if (parseInt(lg) >= walkGCT && sSWR == 4) sSWR = 3;  //walking
+      if (sSWR == 1) {
+        lg = 2000;  // if stopped from watch then GCT = 2000
+      // may need to also check for GCT = 0 for some monitors? (or perhaps cadence is better check)
+      } else if (parseInt(lg) >= walkGCT && sSWR == 4) {
+         sSWR = 3;   // if GCT>= threshold then walking (don't change if viewed as paused)
+      }
     }
 
-    if (bc == true) {
+    if (bc == true) {  // cadence
       if (stActivity.cadence[ic] == i && ic < mc) {
         lc = stActivity.cadence[ic+1];
         ic += 2; // increment by 2
+      } else {  // interpolate
+        lc = parseFloat(interpolateData(stActivity.cadence, ic, i).toFixed(0));
       }
-      if (lp == 0) lc = 0;  // stopped - could test cadence for walking - needs more experience
+      if (sSWR == 1) {
+        lc = 0;  // if stopped from watch then cadence = 0
+      } else if (lc == 0) {
+        sSWR = 2;  // if cadence = 0 then pause (alternative to P=0) - don't change other value
+      } else if ( (parseInt(lc)*2 <= walkCad) && sSWR == 4) {
+         sSWR = 3;   // if below cadence threshold then walking (don't change if viewed as paused or already stopped)
+      }
     }
 
-    if (bh == true) {
+    if (bh == true) {  // HR
       if (stActivity.heartrate[ih] == i && ih < mh) {
         lh = stActivity.heartrate[ih+1];
         ih += 2; // increment by 2
+      } else {  // interpolate
+        lh = parseFloat(interpolateData(stActivity.heartrate, ih, i).toFixed(0));
       }
-      // adjust HR if stopped
     }
 
     //  [0]distance, [1]elevation, [2]power, [3]GCT, [4]heartrate, [5]cadence
@@ -246,9 +277,10 @@ function calcMetrics() {
 
 function displayMetrics() {
   var dataCSV ="";
-  dataCSV += "GCT walk threshold = " + parseInt(document.getElementById("walkGCT").value) +
-      " ms; Elevation filter = " + parseInt(document.getElementById("elevFilter").value) +
-      " m; Level threshold = " + parseFloat(document.getElementById("levelGrade").value) + " %" + lf;
+  dataCSV += "Elevation filter = " + parseInt(document.getElementById("elevFilter").value) + " m; Level threshold = " +
+      parseFloat(document.getElementById("levelGrade").value) + " %; Walk thresholds: GCT = " +
+      parseInt(document.getElementById("walkGCT").value) + " ms; Cadence  = " +
+      parseInt(document.getElementById("walkCad").value) + " spm" + lf;
   dataCSV += "  Time range: " + $( "#minTime" )[0].value + " to " + $( "#maxTime" )[0].value + lf + lf;
 
   // display metrics data
@@ -296,7 +328,7 @@ function displayMetrics() {
     // display activity data
     if ($( "#cbData" )[0].checked && runData.length > 0) {
       dataCSV += "time" + csv + "distance" + csv + "elevation" + csv + "power" + csv + "GCT" + csv + "heartrate" + csv + "cadence" + csv +
-            "StopPauseWalkRun" + csv + "delta distance" + csv + "filtered elevation" + csv + "grade" + csv + "down-level-up" + csv + lf;
+            "SPW-Run" + csv + "delta dist" + csv + "filter elev" + csv + "grade" + csv + "d-level-u" + csv + lf;
       dataCSV += "(s)" + csv + "(m)" + csv + "(m)" + csv + "(W)" + csv + "(ms)" + csv + "(bpm)" + csv + "(cpm)" +
             csv + "(1/2/3/4)" + csv + "(m)" + csv + "(m)" + csv + "(%)" + csv + "(1/2/3)" + csv + lf;
 
@@ -320,7 +352,13 @@ function showSparkLine() {
 
   if (calcData.length > 0) {
     sparkI=0;
-    for (i = $( "#timeRange" ).slider( "values", 0); i < $( "#timeRange" ).slider( "values", 1) + 1 ; i++ ) {
+    var i0 = $( "#timeRange" ).slider( "values", 0);
+    var i1 = $( "#timeRange" ).slider( "values", 1);
+    var iStep = Math.floor((i1-i0)/maxGraphPts);
+    if (iStep<1) iStep =1;
+    //console.log(iStep, Math.floor((i1-i0)/iStep));
+
+    for (i = i0; i < i1 + 1 ; i+=iStep ) {
       sparkArray[0][sparkI] = [i, calcData[i][2]];
       sparkArray[1][sparkI] = [i, calcData[i][0]];
       if (runData[i][4] >= 0) {
@@ -375,16 +413,30 @@ function showSparkLine() {
   }
 }
 
+function interpolateData(stActData, idV, iV) {
+  // idV = index of next time-data pair, iV is time for data
+  var interP = 0;
+  if (stActData.length > idV+1) {
+    if (idV > 1) {
+      interP = stActData[idV-1] + (iV - stActData[idV-2])*(stActData[idV+1] - stActData[idV-1])/(stActData[idV] - stActData[idV-2]);
+    }
+  } else {
+    interP = stActData[idV-1];
+  }
+  return interP;
+}
+
+
 function metricData(sD) {
   var outStr = "";
   if ($( "#cbSIunits" )[0].checked) {
-    outStr = timeHMS(sD[0]) + csv + distKM(sD[1]).toString().padStart(5," ") + csv + paceKMHr(sD[6]) + csv +
+    outStr = timeHMS(sD[0]) + csv + distKM(sD[1]).toString().padStart(5," ") + csv + paceMinKm(sD[6]) + csv +
     Math.round(sD[2]).toString().padStart(4, ' ' ) + csv + sD[7].toString().padStart(5, " ") + csv +
     (sD[4]<0 ? '' : sD[4].toString().padStart(3," ")) + csv +
     (sD[3]<0 ? '' : sD[3].toString().padStart(3," ")) + csv +
     (sD[5]<0 ? '' : cadSPM(sD[5]).toString().padStart(3," ")) + csv;
   } else {
-    outStr = timeHMS(sD[0]) + csv + distMiles(sD[1]).toString().padStart(5," ") + csv + paceMilesHr(sD[6]) + csv +
+    outStr = timeHMS(sD[0]) + csv + distMiles(sD[1]).toString().padStart(5," ") + csv + paceMinMile(sD[6]) + csv +
     elevFeet(sD[2]).toString().padStart(4, ' ' ) + csv + ftPerMile(sD[7]).toString().padStart(5, " ") + csv +
     (sD[4]<0 ? '' : sD[4].toString().padStart(3," ")) + csv +
     (sD[3]<0 ? '' : sD[3].toString().padStart(3," ")) + csv +
@@ -405,11 +457,11 @@ function distKM(distM) {
   return (distM/1000).toFixed(2);  // convert to KM, show 2 dp
 }
 
-function paceMilesHr(paceMperS) {
+function paceMinMile(paceMperS) {
   return paceMperS == '0' ? '00:00' : new Date(MI2M / paceMperS * 1000 + 500).toISOString().substr(14, 5);  //extra 500 ms for correct rounding
 }
 
-function paceKMHr(paceMperS) {
+function paceMinKm(paceMperS) {
   return paceMperS == '0' ? '00:00' : new Date(1000 / paceMperS * 1000 + 500).toISOString().substr(14, 5);  //extra 500 ms for correct rounding
 }
 
