@@ -74,17 +74,16 @@
 <div id="invisibleMap"></div>
 <div style="display: inline-block"><span id="infoText">SportTrack authorization dialog should appear. If not check Browser Pop-up settings.</span></div>
 <br><br>
-
 <div>
   <fieldset  id="fieldSTindex">
     <legend>Activity Index</legend>
     <input id="STindex" name="STindex" value="1" size="10" style="padding-right:5px; text-align:right;"
-    title="1 = latest activity, 2 = 2nd, etc&#013; or enter STmobi index number">&nbsp;
-    <input type="submit" id="STgetButton" onclick="getSTdata()" value="Get from ST">
+    title="1 = latest activity, 2 = 2nd, etc&#013; (relative to date and earlier)&#013; or enter STmobi index number">&nbsp;
+    <input type="submit" id="STgetButton" onclick="getSTdata()" value="Get from ST">&nbsp;
+    <input type="text" id="idDate" size="10" style="text-align:center;">
   </fieldset>
 </div>
 <br>
-
 <div style="display: inline-block;">
   <fieldset id="fieldSTdata">
     <legend>Activity Overview</legend>
@@ -108,14 +107,19 @@
     </p>
   	<p>
       <label for="STdistance">Distance:&nbsp;</label>
-      <input type="text" id="STdistance" name="STname" size="4" style="padding-right:30px; text-align:right;"></input><span style="margin-left:-25px;">mi</span>&nbsp;&nbsp;&nbsp;
-  	  <input type="button" id="recalcButton" onclick="calcGPS(stActivityUpdate.location)" value="Recalc"
+      <input type="text" id="STdistance" name="STname" size="4" style="padding-right:30px; text-align:right;"></input><span style="margin-left:-25px;">mi</span>&nbsp;&nbsp;
+      <input type="text" id="STactiveT" name="STactiveT" size="6" readonly style="text-align:center;">&nbsp;&nbsp;
+      <input type="button" id="recalcButton" onclick="calcGPS(stActivityUpdate.location)" value="Recalc"
           title="Recalculate distance based on simple addition of GPS points">&nbsp;
-      <input type="text" id="STactiveT" name="STactiveT" size="6" readonly style="text-align:center;">&nbsp;
       <input type="text" id="STactiveP" name="STactiveP" size="3" readonly style="padding-right:33px; text-align:right;"></input><span style="margin-left:-28px;">/mi</span>
   	</p>
+    <p>
+      <label for="STelev">Elevation:&nbsp;</label>
+      <input type="text" id="STelev" name="STelev" size="18" readonly style="text-align:center;">
+    </p>
+    <br>
     <label for="STnotes">Notes:&nbsp;</label>
-    <textarea rows = "8" cols = "80" id="STnotes" name="STnotes"></textarea><br>
+    <textarea rows = "8" cols = "74" id="STnotes" name="STnotes"></textarea><br>
   	<br>
     <div >
       <input type="submit" id="STsendButton" onclick="setSTdata()" value="Send to ST">&nbsp;&nbsp;
@@ -143,19 +147,22 @@
     	<div id="fieldSTgear">  </div>
 		</div>
     <div id="tab-data">
-      <div style="display: inline-block; margin-right:40px;">
-        <p>
-          <label id="labelWalkGCT">GCT walk threshold:&nbsp;</label>
-          <input type="text" id="walkGCT" name="textDataInput" size="3" value="500" style="padding-right:30px; text-align:right;"></input><span style="margin-left:-25px;">ms</span>
-        </p>
+      <div style="display: inline-block; margin-right:20px;">
         <p>
           <label id="labelElevFilter">Elevation filter:&nbsp;</label>
-          <input type="text" id="elevFilter" name="textDataInput" size="3" value="20" style="padding-right:30px; text-align:right;"></input><span style="margin-left:-25px;">m</span>
-
+          <input type="text" id="elevFilter" name="textDataInput" size="3" style="padding-right:30px; text-align:right;"></input><span style="margin-left:-25px;">m</span>
         </p>
         <p>
           <label id="labelLevel">Level threshold:&nbsp;</label>
-          <input type="text" id="levelGrade" name="textDataInput" size="3" value="1.5" style="padding-right:30px; text-align:right;"></input><span style="margin-left:-25px;">%</span>
+          <input type="text" id="levelGrade" name="textDataInput" size="3" style="padding-right:30px; text-align:right;"></input><span style="margin-left:-25px;">%</span>
+        </p>
+        <p>
+          <label id="labelWalkGCT">GCT walk threshold:&nbsp;</label>
+          <input type="text" id="walkGCT" name="textDataInput" size="3" style="padding-right:30px; text-align:right;"></input><span style="margin-left:-25px;">ms</span>
+        </p>
+        <p>
+          <label id="labelWalkCad">Cadence walk threshold:&nbsp;</label>
+          <input type="text" id="walkCad" name="textDataInput" size="2.7" style="padding-right:36px; text-align:right;"></input><span style="margin-left:-31px;">spm</span>
         </p>
       </div>
       <div style="display: inline-block; vertical-align: top">
@@ -173,6 +180,9 @@
       </label>
       <label for="cbData">Show raw data
         <input type="checkbox" name="cbMetrics" id="cbData">
+      </label>
+      <label for="cbSIunits">Use meters
+        <input type="checkbox" name="cbMetrics" id="cbSIunits">
       </label>&nbsp;&nbsp;&nbsp;&nbsp;
       <input type="button" id="STmaxData" onclick="maxData()" value="Max">
       <label for="cbGraphHR">HR
@@ -302,7 +312,7 @@
             }
         });
 
-        $( "#cbMetrics, #cbData, #cbGraphHR, #cbGraphP, #cbGraphBig" ).checkboxradio();
+        $( "#cbMetrics, #cbData, #cbSIunits, #cbGraphHR, #cbGraphP, #cbGraphBig" ).checkboxradio();
         // default is metrics checked - using HTML gives caret rather than checkmark
         $( "#cbMetrics" ).prop('checked',true).checkboxradio('refresh');
         $( "[name='textDataInput']").on( "change", refreshData );
@@ -332,12 +342,6 @@
         $( "#healthSel" ).selectmenu( {
               width: 150,
               change: function() {  // don't warn about changes - would need way to revert to previous selection
-                // if ($("#fieldSThealth input").serialize() != healthOriginal) {
-                //   // warn it has changed
-                //   if (confirm("Health data changed - override?") == false) {
-                //     return false;
-                //   }
-                // }
                 displayHealth();
               }
         });
@@ -350,16 +354,20 @@
               showButtonPanel: true
         } );
         $( "#healthDate" ).change( function() {
-          if ($("#fieldSThealth input").serialize() != healthOriginal) {
-            // warn it has changed - no way to go back, so ignore
-            // if (confirm("Health data changed - override?") == false) {
-            //   return false;
-            // }
-          }
-          displayHealth();
+          if (typeof stHealthInit !== 'undefined') displayHealth();
         })
         $( "#healthDate" ).datepicker( "setDate", "today" );
         $( "#fieldSThealth" ).hide();
+        $( "#idDate" ).datepicker( {
+              firstDay: 1,
+              showOtherMonths: true,
+              selectOtherMonths: true,
+              showWeek: true,
+              showButtonPanel: true,
+              changeMonth: true,
+              changeYear: true
+        } );
+        $( "#idDate" ).datepicker( "setDate", "today" );
 
 				$(document).ajaxStop(function () {  // come here at end of all GET POST etc
             if (getGear == true) {  // only react to one type of completion
@@ -378,9 +386,6 @@
             }
         });
       })
-
-
-
 
       function displayHealth() {
         var selDate =  new Date($( "#healthDate" ).datepicker('getDate'));
@@ -468,7 +473,7 @@
           $( "#progressSTact" ).show();
           stActivityUpdate.name = document.getElementById("STname").value;
           stActivityUpdate.location_name = document.getElementById("STloc").value;
-          stActivityUpdate.total_distance = document.getElementById("STdistance").value * MI2KM;
+          stActivityUpdate.total_distance = document.getElementById("STdistance").value * MI2M;
           stActivityUpdate.notes = document.getElementById("STnotes").value;
           postActGear = true;   // set flag to show activity
           postFitnessActivity(stActivityUpdate);
@@ -571,19 +576,21 @@
           if (stTest == true) {
             window.alert("SportTracks - index " + stIndex + ": \n  " + stActivity.name + " (" + stDate.toLocaleString() + ")\n  " + stActivity.uri);
           }
-          document.getElementById("STtypedate").value = stActivity.type + " (" + stDate.toLocaleString() + ")";
+          document.getElementById("STtypedate").value = stActivity.type + " (" + stDate.toDateString().substr(0,4) + stDate.toLocaleString() + ")";
           document.getElementById("STactivity").value = stActivity.activity;
           document.getElementById("STname").value = stActivity.name;
           document.getElementById("STloc").value = typeof stActivity.location_name === 'undefined' ? "" : stActivity.location_name;
-          document.getElementById("STdistance").value = (stActivity.total_distance/MI2KM).toFixed(2);  // convert to miles, show 2 dp
+          document.getElementById("STdistance").value = (stActivity.total_distance/MI2M).toFixed(2);  // convert to miles, show 2 dp
           document.getElementById("STactiveT").value = timeHMS(stActivity.duration);
           if (stActivity.total_distance != '0') {
-            var pace = stActivity.duration / stActivity.total_distance * MI2KM;     // seconds per mile
+            var pace = stActivity.duration / stActivity.total_distance * MI2M;     // seconds per mile
             var paceSTr = new Date(pace * 1000 + 500).toISOString().substr(14, 5);  //extra 500 ms for correct rounding
-            document.getElementById("STactiveP").value = paceSTr;
+            document.getElementById("STactiveP").value = paceSTr;  // could use functionn
           } else {
             document.getElementById("STactiveP").value = '';
           }
+          $( "#STelev" ).val((typeof stActivity.elevation_gain === 'undefined' ? '' : '+' + elevFeet(stActivity.elevation_gain)) + (typeof stActivity.elevation_loss === 'undefined' ? '' : ' / -' + elevFeet(stActivity.elevation_loss) + ' ft') );
+
           document.getElementById("STnotes").value = typeof stActivity.notes === 'undefined' ? "" : stActivity.notes;
           $( "#getLocButton" ).button( "option", "disabled", typeof stActivity.location === 'undefined' ); // button enabled if GPS data
           $( "#recalcButton" ).button( "option", "disabled", typeof stActivity.location === 'undefined' ); // button enabled if GPS data
@@ -610,7 +617,7 @@
 
       var calcGPSused = false;
       function calcGPS(gps) {
-          var orig_dist_mi = (stActivityInit.total_distance/MI2KM).toFixed(2);
+          var orig_dist_mi = (stActivityInit.total_distance/MI2M).toFixed(2);
           var orig_pace = stActivityInit.duration / orig_dist_mi;                               // seconds per mile
           var orig_paceSTr = new Date(orig_pace * 1000 + 500).toISOString().substr(14, 5);  // extra 500 ms for correct rounding
           if (calcGPSused == false) {
@@ -618,7 +625,7 @@
             for (i = 3; i < gps.length; i=i+2) {
                 dist += map.distance(gps[i-2], gps[i]);
             }
-            var dist_mi = (dist/MI2KM).toFixed(2);                                          // so same as stored value for pace calcs
+            var dist_mi = (dist/MI2M).toFixed(2);                                          // so same as stored value for pace calcs
             var pace = stActivityInit.duration / dist_mi;                                         // seconds per mile
             var paceSTr = new Date(pace * 1000 + 500).toISOString().substr(14, 5);            // extra 500 ms for correct rounding
             var clockRatio = stActivityInit.clock_duration / stActivityInit.duration

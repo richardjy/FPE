@@ -11,8 +11,9 @@ var FITNESSURL  =   'https://api.sporttracks.mobi/api/v2/fitnessActivities';
 var GEARURL     =   'https://api.sporttracks.mobi/api/v2/gear';
 var HEALTHURL   =   'https://api.sporttracks.mobi/api/v2/metrics';
 var KG2LB       =   2.20462; //kg to lb conversion (ST uses kg in data)
-var MI2KM       =   1609.34; //km to miles
+var MI2M        =   1609.344; //miles to meters
 var M2FT        =   3.28084; //meters to feet
+var GRADE2FTPMI =   52.80;   // 1% grade in ft/mile
 
 if (location.host == 'localhost') {
   var REDIRECT    = 'http://localhost/';
@@ -125,6 +126,8 @@ function getFitnessActivityIndex(stIndexNo){   // index is which one to get 1 = 
       //var lastActuri = FITNESSURL + '/' + stIndexNo
       getFitnessActivity(FITNESSURL + '/' + stIndexNo);
     } else { // input was sequence index, 1 = last etc
+      var startDate = new Date($( "#idDate" ).datepicker('getDate'));
+      startDate.setDate(startDate.getDate() + 1); // go to next day so we include selected date in search
       $.ajax({
           type: 'GET',
           url: CORSURL + FITNESSURL,
@@ -134,13 +137,21 @@ function getFitnessActivityIndex(stIndexNo){   // index is which one to get 1 = 
           },
           data: {
             'pageSize' : 1,
-            'page' : (stIndexNo - 1)
+            'page' : (stIndexNo - 1),
+            'noLaterThan' : startDate.toISOString()
           }
       })
       .done(function(data, status){
           //console.log("data: ", data,  "\nStatus: " + status);
           //var lastActuri = data.items[0].uri
-          getFitnessActivity(data.items[0].uri);
+          if (typeof data.items[0] !== 'undefined') {
+            getFitnessActivity(data.items[0].uri);
+          } else {
+            window.alert("SportTracks ID not valid.");
+            //stReady = false;
+            getActivity = false;
+            $( "#progressSTact" ).hide();
+          }
       })
       .fail(function(response) {
           window.alert("SportTracks data request failed.");

@@ -1,10 +1,12 @@
 
 // global variables for now
 var runData = ([],[]);       //  [0]distance, [1]elevation, [2]power, [3]GCT, [4]heartrate, [5]cadence
-var calcData = ([],[]);     //  [0]stopped/walking/running, [1]delta dist, [2]filtered elev, [3]delta elev, [4]grade, [5]down -1, level 0, up 1
-var sumData = ([],[],[]);   //  first index total0/stopped1/walking2/running3/total3; second elev all0/down1/level2/up3; time0/dist1/elev2/avPow3/avHR4/avCadence5/avSpeed6
+var calcData = ([],[]);     //  [0]watchstop1/paused2/walking3/running4, [1]delta dist,
+                            //   [2]filtered elev, [3]delta elev, [4]grade, [5]down 1, level 2, up 3
+var sumData = ([],[],[]);   // see below for details
 var csv ="\t";
 var lf = "\n";
+var maxGraphPts = 2400;  // 4x number of points in the graph - minimize missed info
 
 function maxData() {
   $( "#timeRange" ).slider( "option", "min", 0);
@@ -55,17 +57,22 @@ function processData(stActivity) {
   var itIndex = 0, it0 = 0, it1 = 0, mt = 0; // stopped index values
 
   // get defaults from UI
-  var walkGCT = parseInt(document.getElementById("walkGCT").value);
-  if (isNaN(walkGCT)) walkGCT = 500;
-  document.getElementById("walkGCT").value = walkGCT;
   // value is in meters of travel - average over at least this amount
   var elevFilter = parseInt(document.getElementById("elevFilter").value);
-  if (isNaN(elevFilter)) elevFilter = 20;
+  if (isNaN(elevFilter)) elevFilter = 80;
   document.getElementById("elevFilter").value = elevFilter;
   // threshold for level grade - default 1.5%
   var levelGrade = parseFloat(document.getElementById("levelGrade").value);
   if (isNaN(levelGrade)) levelGrade = 1.5;
   document.getElementById("levelGrade").value = levelGrade;
+  // GCT threshold >= this value => walking
+  var walkGCT = parseInt(document.getElementById("walkGCT").value);
+  if (isNaN(walkGCT)) walkGCT = 500;
+  document.getElementById("walkGCT").value = walkGCT;
+  // Cadence threshold <= this value => walking
+  var walkCad = parseInt(document.getElementById("walkCad").value);
+  if (isNaN(walkCad)) walkCad = 125;
+  document.getElementById("walkCad").value = walkCad;
 
   // timer stops
   if (bt == true) {
@@ -83,11 +90,11 @@ function processData(stActivity) {
   // if no array of distance then set to zero   -              distance list is time then distance
   var iEnd = typeof stActivity.distance === 'undefined' ? 0 : stActivity.distance[stActivity.distance.length-2] + 1;
   for (i = 0; i < iEnd ; i++ ) {
-    var sSWR = 3;
+    var sSWR = 4; // set to running by default
     if (bt == true) {
       if (i > it0) {
         if (i < it1) {
-          sSWR = 1;
+          sSWR = 1;  // watch stop
         } else {
           if (itIndex < mt-1) {
             itIndex++;
@@ -98,60 +105,88 @@ function processData(stActivity) {
       }
     }
 
-    if (bd == true) {
+    if (bd == true) {  // distance calc ld and dd
       if (stActivity.distance[id] == i && id < md) {
-        dd = (stActivity.distance[id+1] - ld);
-        dd = parseFloat((stActivity.distance[id+1] - ld).toFixed(2));
         ld = stActivity.distance[id+1];
         id += 2; // increment by 2
+      } else {  // interpolate
+        // id = index of next time
+        ld = parseFloat(interpolateData(stActivity.distance, id, i).toFixed(2));
       }
+      dd = i>0 ? parseFloat((ld - runData[i-1][0]).toFixed(2)) : 0.00;
       if (sSWR == 1) dd = 0;  // if stopped from watch then delta distance = 0
     }
 
-    if (be == true) {
+    if (be == true) { // elevation
       if (stActivity.elevation[ie] == i && ie < me) {
         le = stActivity.elevation[ie+1];
         ie += 2; // increment by 2
+      } else {  // interpolate
+        le = parseFloat(interpolateData(stActivity.elevation, ie, i).toFixed(2));
       }
     }
 
-    if (bp == true) {
+    if (bp == true) { // power
       if (stActivity.power[ip] == i && ip < mp) {
         lp = stActivity.power[ip+1];
         ip += 2; // increment by 2
+      } else {  // interpolate
+        lp = parseFloat(interpolateData(stActivity.power, ip, i).toFixed(0));
       }
-      if (sSWR == 1) lp = 0;  // if stopped then power = 0
-      if (lp == 0) sSWR = 1;   // and vice versa
+      if (sSWR == 1) {
+        lp = 0;  // if stopped from watch then power = 0
+      } else if (lp == 0) {
+         sSWR = 2;   // if power= 0 then 'paused' (add distance criteria?)
+      }
     }
 
-    if (bg == true) {
+    if (bg == true) {  // GCT
       if (stActivity.ground_contact_time[ig] == i && ig < mg) {
         lg = stActivity.ground_contact_time[ig+1];
         ig += 2; // increment by 2
+      } else {  // interpolate - but do an extra check first in case stopped
+        if (lp == 0) {
+          lg = 0;
+        } else {
+          lg = parseFloat(interpolateData(stActivity.ground_contact_time, ig, i).toFixed(0));
+        }
       }
-      if (lp == 0) lg = 2000;  // stopped
-      if ((parseInt(lg) >= walkGCT) && (sSWR != 1)) sSWR = 2;  //walking
+      if (sSWR == 1) {
+        lg = 2000;  // if stopped from watch then GCT = 2000
+      // may need to also check for GCT = 0 for some monitors? (or perhaps cadence is better check)
+      } else if (parseInt(lg) >= walkGCT && sSWR == 4) {
+         sSWR = 3;   // if GCT>= threshold then walking (don't change if viewed as paused)
+      }
     }
 
-    if (bc == true) {
+    if (bc == true) {  // cadence
       if (stActivity.cadence[ic] == i && ic < mc) {
         lc = stActivity.cadence[ic+1];
         ic += 2; // increment by 2
+      } else {  // interpolate
+        lc = parseFloat(interpolateData(stActivity.cadence, ic, i).toFixed(0));
       }
-      if (lp == 0) lc = 0;  // stopped - could test cadence for walking - needs more experience
+      if (sSWR == 1) {
+        lc = 0;  // if stopped from watch then cadence = 0
+      } else if (lc == 0) {
+        sSWR = 2;  // if cadence = 0 then pause (alternative to P=0) - don't change other value
+      } else if ( (parseInt(lc)*2 <= walkCad) && sSWR == 4) {
+         sSWR = 3;   // if below cadence threshold then walking (don't change if viewed as paused or already stopped)
+      }
     }
 
-    if (bh == true) {
+    if (bh == true) {  // HR
       if (stActivity.heartrate[ih] == i && ih < mh) {
         lh = stActivity.heartrate[ih+1];
         ih += 2; // increment by 2
+      } else {  // interpolate
+        lh = parseFloat(interpolateData(stActivity.heartrate, ih, i).toFixed(0));
       }
-      // adjust HR if stopped
     }
 
     //  [0]distance, [1]elevation, [2]power, [3]GCT, [4]heartrate, [5]cadence
     runData[i] = [ld, le, lp, lg, lh, lc];
-    //  [0]stopped/walking/running, [1]delta dist, [2]filtered elev, [3]delta elev, [4]grade, [5]down -1, level 0, up 1
+    //  [0]watchstop0/pause1/walk2/run3, [1]delta dist, [2]filtered elev, [3]delta elev, [4]grade, [5]down1, level2, up3
     calcData[i] = [sSWR, dd, 0, 0, 0, 0];
   }
 
@@ -191,12 +226,12 @@ function calcMetrics() {
   // make calculations - initialize data
 
   // runData   [0]distance, [1]elevation, [2]power, [3]GCT, [4]heartrate, [5]cadence
-  // calcData  [0]stopped1/walking2/running3, [1]delta dist, [2]filtered elev, [3]delta elev, [4]grade, [5]down 1, level 2, up 3
-  // sumData    first (j)     total0/stopped1/walking2/running3/moving4
+  // calcData  watchstop1/pause2/walk3/run4, [1]delta dist, [2]filtered elev, [3]delta elev, [4]grade, [5]down 1, level 2, up 3
+  // sumData    first (j)     total0/watchstop1/pause2/walk3/run4/moving5
   //            second (k)    elev all0/down1/level2/up3
   //            third         time0/dist1/elev2/avPow3/avHR4/avCadence5/avSpeed6/avGrade7
 
-  var jNum = 5, kNum = 4;
+  var jNum = 6, kNum = 4;
   // initialize or zero out array
   for (j=0; j < jNum ; j++ ) {
     sumData[j] = [];
@@ -212,8 +247,8 @@ function calcMetrics() {
     for (i = iStart; i < iEnd ; i++ ) {
       for (j=0; j < jNum ; j++ ) {
         for (k=0; k < kNum; k++ ) {
-          //   all      stop/walk/run                 moving = walk/run                         All       down/level/up
-          if ((j==0 || calcData[i][0]==j || ((j==4)*(calcData[i][0]==2 || calcData[i][0]==3)))*(k==0 || calcData[i][5]==k)) {
+          //     all   stop/pause/walk/run       moving =     walk    or     run                All       down/level/up
+          if (( j==0||calcData[i][0]==j || ((j==5)*(calcData[i][0]==3 || calcData[i][0]==4)))*(k==0 || calcData[i][5]==k)) {
             sumData[j][k][0] += 1;  //time
             sumData[j][k][1] += calcData[i][1];  //distance
             sumData[j][k][2] += k==1 ? calcData[i][3] : calcData[i][3]>0 ? calcData[i][3] : 0 ;  // up elev total = only down for negative
@@ -229,9 +264,9 @@ function calcMetrics() {
       for (k=0; k < kNum; k++ ) {
         sumData[j][k][1] = parseFloat(sumData[j][k][1].toFixed(2));
         sumData[j][k][2] = parseFloat(sumData[j][k][2].toFixed(2));
-        sumData[j][k][3] = Math.round(sumData[j][k][0] != 0 ? sumData[j][k][3]/sumData[j][k][0] : 0);  // ave power
-        sumData[j][k][4] = Math.round(sumData[j][k][0] != 0 ? sumData[j][k][4]/sumData[j][k][0] : 0);  // ave hr
-        sumData[j][k][5] = Math.round(sumData[j][k][0] != 0 ? sumData[j][k][5]/sumData[j][k][0] : 0);  // ave cadence
+        sumData[j][k][3] = Math.round(sumData[j][k][0] != 0 ? sumData[j][k][3]/sumData[j][k][0] : -1);  // ave power
+        sumData[j][k][4] = Math.round(sumData[j][k][0] != 0 ? sumData[j][k][4]/sumData[j][k][0] : -1);  // ave hr
+        sumData[j][k][5] = Math.round(sumData[j][k][0] != 0 ? sumData[j][k][5]/sumData[j][k][0] : -1);  // ave cadence
         sumData[j][k][6] = parseFloat((sumData[j][k][0] != 0 ? sumData[j][k][1]/sumData[j][k][0] : 0).toFixed(3));  // ave speed
         sumData[j][k][7] = parseFloat((sumData[j][k][1] != 0 ? 100*sumData[j][k][2]/sumData[j][k][1] : 0).toFixed(2));  // ave gradient
       }
@@ -242,9 +277,10 @@ function calcMetrics() {
 
 function displayMetrics() {
   var dataCSV ="";
-  dataCSV += "GCT walk threshold = " + parseInt(document.getElementById("walkGCT").value) +
-      " ms; Elevation filter = " + parseInt(document.getElementById("elevFilter").value) +
-      " m; Level threshold = " + parseFloat(document.getElementById("levelGrade").value) + " %" + lf;
+  dataCSV += "Elevation filter = " + parseInt(document.getElementById("elevFilter").value) + " m; Level threshold = " +
+      parseFloat(document.getElementById("levelGrade").value) + " %; Walk thresholds: GCT = " +
+      parseInt(document.getElementById("walkGCT").value) + " ms; Cadence  = " +
+      parseInt(document.getElementById("walkCad").value) + " spm" + lf;
   dataCSV += "  Time range: " + $( "#minTime" )[0].value + " to " + $( "#maxTime" )[0].value + lf + lf;
 
   // display metrics data
@@ -253,31 +289,38 @@ function displayMetrics() {
   showSparkLine();
   if (sumData.length > 0 && runData.length > 0) {
     if ($( "#cbMetrics" )[0].checked) {
-      dataCSV += "type" + csv + "time" + csv + "distance" + csv + "pace" + csv + "elev gain" + csv + "grade" + csv + "HR" + csv + "power" + csv + "cadence" + csv + lf;
-      dataCSV += ""     + csv + "(h:m:s)" + csv + "(mi)" + csv + "(min/mi)" + csv + " (ft)" + csv + " (%)" + csv + "(bpm)" + csv + "(W)" + csv + "(spm)" + csv + lf;
-
+      dataCSV += "type" + csv + "time" + csv + "distance" + csv + "pace" + csv + "elev gain" + csv + "grade" + csv + "HR" + csv +
+          "power" + csv + "cadence" + csv + lf;
+      if ($( "#cbSIunits" )[0].checked) {
+        dataCSV += ""     + csv + "(h:m:s)" + csv + "(km)" + csv + "(min/km)" + csv + " (m)" + csv + " (%)" + csv + "(bpm)" + csv +
+          "(W)" + csv + "(spm)" + csv + lf;
+      } else {
+          dataCSV += ""     + csv + "(h:m:s)" + csv + "(mi)" + csv + "(min/mi)" + csv + " (ft)" + csv + "(ft/mile)" + csv + "(bpm)" + csv +
+           "(W)" + csv + "(spm)" + csv + lf;
+      }
       // ALL data
       dataCSV += "ALL" + csv + metricData(sumData[0][0]) + lf;
-      dataCSV += "Moving" + csv + metricData(sumData[4][0]) + lf;
-      dataCSV += "Running" + csv + metricData(sumData[3][0]) + lf;
-      dataCSV += "Walking" + csv + metricData(sumData[2][0]) + lf;
+      dataCSV += "Moving" + csv + metricData(sumData[5][0]) + lf;
+      dataCSV += "Running" + csv + metricData(sumData[4][0]) + lf;
+      dataCSV += "Walking" + csv + metricData(sumData[3][0]) + lf;
+      dataCSV += "Paused" + csv + metricData(sumData[2][0]) + lf;
       dataCSV += "Stopped" + csv + metricData(sumData[1][0]) + lf;
       // dataCSV += lf + "ALL" + lf;
       // dataCSV += "Down" + csv + metricData(sumData[0][1]) + lf;
       // dataCSV += "Level" + csv + metricData(sumData[0][2]) + lf;
       // dataCSV += "Up" + csv + metricData(sumData[0][3]) + lf;
       dataCSV += lf + "Moving" + lf;
+      dataCSV += "Down" + csv + metricData(sumData[5][1]) + lf;
+      dataCSV += "Level" + csv + metricData(sumData[5][2]) + lf;
+      dataCSV += "Up" + csv + metricData(sumData[5][3]) + lf;
+      dataCSV += lf + "Running" + lf;
       dataCSV += "Down" + csv + metricData(sumData[4][1]) + lf;
       dataCSV += "Level" + csv + metricData(sumData[4][2]) + lf;
       dataCSV += "Up" + csv + metricData(sumData[4][3]) + lf;
-      dataCSV += lf + "Running" + lf;
+      dataCSV += lf + "Walking" + lf;
       dataCSV += "Down" + csv + metricData(sumData[3][1]) + lf;
       dataCSV += "Level" + csv + metricData(sumData[3][2]) + lf;
       dataCSV += "Up" + csv + metricData(sumData[3][3]) + lf;
-      dataCSV += lf + "Walking" + lf;
-      dataCSV += "Down" + csv + metricData(sumData[2][1]) + lf;
-      dataCSV += "Level" + csv + metricData(sumData[2][2]) + lf;
-      dataCSV += "Up" + csv + metricData(sumData[2][3]) + lf;
       dataCSV += lf;
       //dataCSV += "type" + csv + "time" + csv + "distance" + csv + "pace" + csv + "elevation" + csv + "HR" + csv + "power" + csv + "cadence" + csv + lf;
     }
@@ -285,9 +328,9 @@ function displayMetrics() {
     // display activity data
     if ($( "#cbData" )[0].checked && runData.length > 0) {
       dataCSV += "time" + csv + "distance" + csv + "elevation" + csv + "power" + csv + "GCT" + csv + "heartrate" + csv + "cadence" + csv +
-            "StopWalkRun" + csv + "delta distance" + csv + "filtered elevation" + csv + "grade" + csv + "down-level-up" + csv + lf;
+            "SPW-Run" + csv + "delta dist" + csv + "filter elev" + csv + "grade" + csv + "d-level-u" + csv + lf;
       dataCSV += "(s)" + csv + "(m)" + csv + "(m)" + csv + "(W)" + csv + "(ms)" + csv + "(bpm)" + csv + "(cpm)" +
-            csv + "(1/2/3)" + csv + "(m)" + csv + "(m)" + csv + "(%)" + csv + "(1/2/3)" + csv + lf;
+            csv + "(1/2/3/4)" + csv + "(m)" + csv + "(m)" + csv + "(%)" + csv + "(1/2/3)" + csv + lf;
 
       var iStart = $( "#timeRange" ).slider( "values", 0);
       var iEnd = $( "#timeRange" ).slider( "values", 1) + 1;
@@ -302,15 +345,21 @@ function displayMetrics() {
 }
 
 function showSparkLine() {
-  var sparkArray = ([]);
-  sparkArray[0] = [0,0], sparkArray[1] = [0,0], sparkArray[2] = [0,0], sparkArray[3] = [0,0];
+  var sparkArray = [[0,0],[0,0],[0,0],[0,0]];
+  //sparkArray[0] = [0,0], sparkArray[1] = [0,0], sparkArray[2] = [0,0], sparkArray[3] = [0,0];
   var bShowHR = false;
   var bShowPower = false;
 
   if (calcData.length > 0) {
     sparkI=0;
-    for (i = $( "#timeRange" ).slider( "values", 0); i < $( "#timeRange" ).slider( "values", 1) + 1 ; i++ ) {
-      sparkArray[0][sparkI] = [i, (calcData[i][2]*M2FT).toFixed(1)];
+    var i0 = $( "#timeRange" ).slider( "values", 0);
+    var i1 = $( "#timeRange" ).slider( "values", 1);
+    var iStep = Math.floor((i1-i0)/maxGraphPts);
+    if (iStep<1) iStep =1;
+    //console.log(iStep, Math.floor((i1-i0)/iStep));
+
+    for (i = i0; i < i1 + 1 ; i+=iStep ) {
+      sparkArray[0][sparkI] = [i, calcData[i][2]];
       sparkArray[1][sparkI] = [i, calcData[i][0]];
       if (runData[i][4] >= 0) {
           sparkArray[2][sparkI] = [i, runData[i][4]];
@@ -334,16 +383,18 @@ function showSparkLine() {
   var graphHeight = $( "#cbGraphBig" )[0].checked ? '150px' : '60px';
   $('.elevSparkline').sparkline(sparkArray[0], { width: '600px', height: graphHeight, lineWidth: 2, spotColor: false,
     tooltipFormatter: function (sparkline, options, fields) {
-        return "" + fields.y + "ft " + timeHMS(fields.x) + " (" +
-          (typeof runData[fields.x] === 'undefined' ? "N/A" : distMiles(runData[fields.x][0])) + " mi)";
+        var elev = $( "#cbSIunits" )[0].checked ? (fields.y).toFixed(1) + "m  " : elevFeet(fields.y) + "ft  ";
+        var dist = typeof runData[fields.x] === 'undefined' ? "N/A" :
+            $( "#cbSIunits" )[0].checked ?   distKM(runData[fields.x][0]) + "km" : distMiles(runData[fields.x][0]) + "mi";
+        return "" + elev + timeHMS(fields.x) + " (" + dist + ")";
       }
   });
   $('.elevSparkline').sparkline(sparkArray[1], { composite: true, lineWidth: 1,
     spotColor: false, minSpotColor: false, maxSpotColor: false,
-    fillColor: false, lineColor: 'green', chartRangeMin: 1, chartRangeMax: 3,
+    fillColor: false, lineColor: 'green', chartRangeMin: 1, chartRangeMax: 4,
     tooltipFormat: '{{y:levels}}',
     tooltipValueLookups: {
-      levels: $.range_map({ '0': 'No data', '1': 'Stopped', '2': 'Walking', '3' : 'Running' })
+      levels: $.range_map({ '1': 'Stopped', '2': 'Paused', '3': 'Walking', '4' : 'Running' })
     }
   });
   if ($( "#cbGraphHR" )[0].checked && bShowHR) {
@@ -362,12 +413,36 @@ function showSparkLine() {
   }
 }
 
+function interpolateData(stActData, idV, iV) {
+  // idV = index of next time-data pair, iV is time for data
+  var interP = 0;
+  if (stActData.length > idV+1) {
+    if (idV > 1) {
+      interP = stActData[idV-1] + (iV - stActData[idV-2])*(stActData[idV+1] - stActData[idV-1])/(stActData[idV] - stActData[idV-2]);
+    }
+  } else {
+    interP = stActData[idV-1];
+  }
+  return interP;
+}
+
+
 function metricData(sD) {
-  return timeHMS(sD[0]) + csv + distMiles(sD[1]).toString().padStart(5," ") + csv + paceMilesHr(sD[6]) + csv +
-  elevFeet(sD[2]).toString().padStart(4, ' ' ) + csv + sD[7].toString().padStart(5, " ") + csv +
-  (sD[4]<0 ? '' : sD[4].toString().padStart(3," ")) + csv +
-  (sD[3]<0 ? '' : sD[3].toString().padStart(3," ")) + csv +
-  (sD[5]<0 ? '' : cadSPM(sD[5]).toString().padStart(3," ")) + csv;
+  var outStr = "";
+  if ($( "#cbSIunits" )[0].checked) {
+    outStr = timeHMS(sD[0]) + csv + distKM(sD[1]).toString().padStart(5," ") + csv + paceMinKm(sD[6]) + csv +
+    Math.round(sD[2]).toString().padStart(4, ' ' ) + csv + sD[7].toString().padStart(5, " ") + csv +
+    (sD[4]<0 ? '' : sD[4].toString().padStart(3," ")) + csv +
+    (sD[3]<0 ? '' : sD[3].toString().padStart(3," ")) + csv +
+    (sD[5]<0 ? '' : cadSPM(sD[5]).toString().padStart(3," ")) + csv;
+  } else {
+    outStr = timeHMS(sD[0]) + csv + distMiles(sD[1]).toString().padStart(5," ") + csv + paceMinMile(sD[6]) + csv +
+    elevFeet(sD[2]).toString().padStart(4, ' ' ) + csv + ftPerMile(sD[7]).toString().padStart(5, " ") + csv +
+    (sD[4]<0 ? '' : sD[4].toString().padStart(3," ")) + csv +
+    (sD[3]<0 ? '' : sD[3].toString().padStart(3," ")) + csv +
+    (sD[5]<0 ? '' : cadSPM(sD[5]).toString().padStart(3," ")) + csv;
+  }
+  return outStr;
 }
 
 function timeHMS(timeS) {
@@ -375,19 +450,27 @@ function timeHMS(timeS) {
 }
 
 function distMiles(distM) {
-  return (distM/MI2KM).toFixed(2);  // convert to miles, show 2 dp
+  return (distM/MI2M).toFixed(2);  // convert to miles, show 2 dp
 }
 
-function paceMilesHr(paceMperS) {
-  // var pMPH = '00:00';
-  // if (paceMperS != '0') {
-  //   pMPH = new Date(MI2KM / paceMperS * 1000 + 500).toISOString().substr(14, 5);  //extra 500 ms for correct rounding
-  // }
-  return paceMperS == '0' ? '00:00' : new Date(MI2KM / paceMperS * 1000 + 500).toISOString().substr(14, 5);  //extra 500 ms for correct rounding
+function distKM(distM) {
+  return (distM/1000).toFixed(2);  // convert to KM, show 2 dp
+}
+
+function paceMinMile(paceMperS) {
+  return paceMperS == '0' ? '00:00' : new Date(MI2M / paceMperS * 1000 + 500).toISOString().substr(14, 5);  //extra 500 ms for correct rounding
+}
+
+function paceMinKm(paceMperS) {
+  return paceMperS == '0' ? '00:00' : new Date(1000 / paceMperS * 1000 + 500).toISOString().substr(14, 5);  //extra 500 ms for correct rounding
 }
 
 function elevFeet(elevM) {
   return (elevM * M2FT).toFixed(0);
+}
+
+function ftPerMile(grade) {
+  return (grade * GRADE2FTPMI).toFixed(0);
 }
 
 function cadSPM(cadRPM) {
