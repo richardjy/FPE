@@ -1,12 +1,14 @@
 
 // global variables for now
-var runData = ([],[]);       //  [0]distance, [1]elevation, [2]power, [3]GCT, [4]heartrate, [5]cadence
+var rawData = ([],[]);       //  includes gaps [0]distance, [1]elevation, [2]power, [3]GCT, [4]heartrate, [5]cadence
+var runData = ([],[]);       //  fills gaps    [0]distance, [1]elevation, [2]power, [3]GCT, [4]heartrate, [5]cadence
 var calcData = ([],[]);     //  [0]watchstop1/paused2/walking3/running4, [1]delta dist,
                             //   [2]filtered elev, [3]delta elev, [4]grade, [5]down 1, level 2, up 3
 var sumData = ([],[],[]);   // see below for details
 var csv ="\t";
 var lf = "\n";
 var maxGraphPts = 2400;  // 4x number of points in the graph - minimize missed info
+var ddPause = 0.2; // m/s when considered 'paused' 0.5m/s = 1.1 mph - look at average velocity over say 10s?
 
 function maxData() {
   $( "#timeRange" ).slider( "option", "min", 0);
@@ -41,7 +43,7 @@ function processData(stActivity) {
   be = typeof stActivity.elevation === 'undefined' ? false : be;
   bp = typeof stActivity.power === 'undefined' ? false : bp;
   bg = typeof stActivity.ground_contact_time === 'undefined' ? false : bg;
-  bc = typeof stActivity.ground_contact_time === 'undefined' ? false : bc;
+  bc = typeof stActivity.cadence === 'undefined' ? false : bc;
   bt = typeof stActivity.timer_stops === 'undefined' ? false : bt;
 
   // max index of each data type
@@ -84,6 +86,7 @@ function processData(stActivity) {
   }
 
   // reset arrays
+  rawData.length = 0;
   runData.length = 0;
   calcData.length = 0;
 
@@ -91,6 +94,7 @@ function processData(stActivity) {
   var iEnd = typeof stActivity.distance === 'undefined' ? 0 : stActivity.distance[stActivity.distance.length-2] + 1;
   for (i = 0; i < iEnd ; i++ ) {
     var sSWR = 4; // set to running by default
+    var rd = "", rh = "", re = "", rp = "", rg = "", rc = "";  // raw values from ST object - set to blank each time
     if (bt == true) {
       if (i > it0) {
         if (i < it1) {
@@ -108,18 +112,24 @@ function processData(stActivity) {
     if (bd == true) {  // distance calc ld and dd
       if (stActivity.distance[id] == i && id < md) {
         ld = stActivity.distance[id+1];
+        rd = ld;
         id += 2; // increment by 2
       } else {  // interpolate
         // id = index of next time
         ld = parseFloat(interpolateData(stActivity.distance, id, i).toFixed(2));
       }
       dd = i>0 ? parseFloat((ld - runData[i-1][0]).toFixed(2)) : 0.00;
-      if (sSWR == 1) dd = 0;  // if stopped from watch then delta distance = 0
+      if (sSWR == 1) {
+        dd = 0;  // if stopped from watch then delta distance = 0
+      } else if (dd <= ddPause) {
+        sSWR = 2;  // paused - later test for walking?
+      }
     }
 
     if (be == true) { // elevation
       if (stActivity.elevation[ie] == i && ie < me) {
         le = stActivity.elevation[ie+1];
+        re = le;
         ie += 2; // increment by 2
       } else {  // interpolate
         le = parseFloat(interpolateData(stActivity.elevation, ie, i).toFixed(2));
@@ -129,6 +139,7 @@ function processData(stActivity) {
     if (bp == true) { // power
       if (stActivity.power[ip] == i && ip < mp) {
         lp = stActivity.power[ip+1];
+        rp = lp;
         ip += 2; // increment by 2
       } else {  // interpolate
         lp = parseFloat(interpolateData(stActivity.power, ip, i).toFixed(0));
@@ -143,6 +154,7 @@ function processData(stActivity) {
     if (bg == true) {  // GCT
       if (stActivity.ground_contact_time[ig] == i && ig < mg) {
         lg = stActivity.ground_contact_time[ig+1];
+        rg = lg;
         ig += 2; // increment by 2
       } else {  // interpolate - but do an extra check first in case stopped
         if (lp == 0) {
@@ -162,6 +174,7 @@ function processData(stActivity) {
     if (bc == true) {  // cadence
       if (stActivity.cadence[ic] == i && ic < mc) {
         lc = stActivity.cadence[ic+1];
+        rc = lc;
         ic += 2; // increment by 2
       } else {  // interpolate
         lc = parseFloat(interpolateData(stActivity.cadence, ic, i).toFixed(0));
@@ -178,6 +191,7 @@ function processData(stActivity) {
     if (bh == true) {  // HR
       if (stActivity.heartrate[ih] == i && ih < mh) {
         lh = stActivity.heartrate[ih+1];
+        rh = lh;
         ih += 2; // increment by 2
       } else {  // interpolate
         lh = parseFloat(interpolateData(stActivity.heartrate, ih, i).toFixed(0));
@@ -185,6 +199,7 @@ function processData(stActivity) {
     }
 
     //  [0]distance, [1]elevation, [2]power, [3]GCT, [4]heartrate, [5]cadence
+    rawData[i] = [rd, re, rp, rg, rh, rc];
     runData[i] = [ld, le, lp, lg, lh, lc];
     //  [0]watchstop0/pause1/walk2/run3, [1]delta dist, [2]filtered elev, [3]delta elev, [4]grade, [5]down1, level2, up3
     calcData[i] = [sSWR, dd, 0, 0, 0, 0];
@@ -196,24 +211,25 @@ function processData(stActivity) {
   for (i = 0; i < iMax ; i++ ) {
     var minD = runData[i][0] - eDist;
     var maxD = runData[i][0] + eDist;
-    var eTot = runData[i][1], eNum = 1;
+    var eTot = runData[i][1], eNumB = 1, eNumF = 0;
 
     if (elevFilter > 0) {
       for (j = i - 1; j > -1; j--) { // look backwards
         eTot += runData[j][1];
-        eNum++
-        if (runData[j][0] < minD) break;
+        eNumB++
+        if (runData[j][0] < minD || eNumB > eDist) break; // only include maximum of eDist points (for when speed < 1m/s)
       }
       //console.log(eTot, eNum)
       for (j = i + 1; j < iMax; j++) { // look forwards
         eTot += runData[j][1];
-        eNum++
-        if (runData[j][0] > maxD) break;
+        eNumF++
+        if (runData[j][0] > maxD || eNumF > eDist) break; // only include maximum of eDist points (for when speed < 1m/s)
       }
     }
-    var filElev = parseFloat((eTot / eNum).toFixed(2));
+    var filElev = parseFloat((eTot / (eNumF + eNumB)).toFixed(2));
     var deltaElev = i > 0 ? filElev - calcData[i-1][2] : 0;
-    var grade = parseFloat((100*(calcData[i][1] > 0 ? deltaElev / calcData[i][1] : 0)).toFixed(2));
+    var grade = calcData[i][1] > ddPause ? parseFloat((100*(calcData[i][1] > 0 ? deltaElev / calcData[i][1] : 0)).toFixed(2)) : 0;
+    //if (Math.abs(grade) > 30 ) console.log(i, deltaElev, calcData[i][1], grade, eTot, eNumB, eNumF);
     //console.log(eTot, eNum, filElev)
     calcData[i][2] = filElev;
     calcData[i][3] = parseFloat((deltaElev.toFixed(2)));
@@ -328,15 +344,18 @@ function displayMetrics() {
     // display activity data
     if ($( "#cbData" )[0].checked && runData.length > 0) {
       dataCSV += "time" + csv + "distance" + csv + "elevation" + csv + "power" + csv + "GCT" + csv + "heartrate" + csv + "cadence" + csv +
-            "SPW-Run" + csv + "delta dist" + csv + "filter elev" + csv + "grade" + csv + "d-level-u" + csv + lf;
+            "SPW-Run" + csv + "delta dist" + csv + "filter elev" + csv + "grade" + csv + "d-level-u" + csv +
+            "Raw:" + csv +"distance" + csv + "elevation" + csv + "power" + csv + "GCT" + csv + "heartrate" + csv + "cadence" + csv +lf;
       dataCSV += "(s)" + csv + "(m)" + csv + "(m)" + csv + "(W)" + csv + "(ms)" + csv + "(bpm)" + csv + "(cpm)" +
-            csv + "(1/2/3/4)" + csv + "(m)" + csv + "(m)" + csv + "(%)" + csv + "(1/2/3)" + csv + lf;
+            csv + "(1/2/3/4)" + csv + "(m)" + csv + "(m)" + csv + "(%)" + csv + "(1/2/3)" + csv +
+            "" + csv + "(m)" + csv + "(m)" + csv + "(W)" + csv + "(ms)" + csv + "(bpm)" + csv + "(cpm)" + lf;
 
       var iStart = $( "#timeRange" ).slider( "values", 0);
       var iEnd = $( "#timeRange" ).slider( "values", 1) + 1;
       for (i = iStart; i < iEnd ; i++ ) {
         dataCSV += i + csv + runData[i][0] + csv + runData[i][1] + csv + runData[i][2] + csv + runData[i][3] + csv + runData[i][4] + csv + runData[i][5] + csv;
         dataCSV += calcData[i][0] + csv + calcData[i][1] + csv + calcData[i][2] + csv + calcData[i][4] + csv + calcData[i][5] + csv;
+        dataCSV += "" + csv + rawData[i][0] + csv + rawData[i][1] + csv + rawData[i][2] + csv + rawData[i][3] + csv + rawData[i][4] + csv + rawData[i][5] + csv;
         dataCSV += lf;
       }
     }
@@ -419,6 +438,8 @@ function interpolateData(stActData, idV, iV) {
   if (stActData.length > idV+1) {
     if (idV > 1) {
       interP = stActData[idV-1] + (iV - stActData[idV-2])*(stActData[idV+1] - stActData[idV-1])/(stActData[idV] - stActData[idV-2]);
+    } else {
+      interP = stActData[1]; // use first data value (index [0] = time )
     }
   } else {
     interP = stActData[idV-1];
