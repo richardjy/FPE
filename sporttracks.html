@@ -118,7 +118,12 @@
       <input type="text" id="STelev" name="STelev" size="18" readonly style="text-align:center;">
     </p>
     <br>
-    <label for="STnotes">Notes:&nbsp;</label>
+    <p>
+      <label for="STnotes">Notes:&nbsp;&nbsp;&nbsp;</label>
+      <label for="cbWrap">Wrap text
+        <input type="checkbox" name="cbWrap" id="cbWrap">
+      </label>
+    </p>
     <textarea rows = "8" cols = "74" id="STnotes" name="STnotes"></textarea><br>
   	<br>
     <div >
@@ -312,10 +317,13 @@
             }
         });
 
-        $( "#cbMetrics, #cbData, #cbSIunits, #cbGraphHR, #cbGraphP, #cbGraphBig" ).checkboxradio();
+        $( "#cbWrap, #cbMetrics, #cbData, #cbSIunits, #cbGraphHR, #cbGraphP, #cbGraphBig" ).checkboxradio();
         // default is metrics checked - using HTML gives caret rather than checkmark
         $( "#cbMetrics" ).prop('checked',true).checkboxradio('refresh');
         $( "[name='textDataInput']").on( "change", refreshData );
+        $( "#cbWrap").on( "change",  function () {
+            $( "#STnotes" ).css("white-space", $( "#cbWrap" )[0].checked ? "pre-wrap" : "pre" );
+          });
         $( "#timeRange" ).slider({
             range: true,
             min: 0,
