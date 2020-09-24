@@ -88,13 +88,13 @@
   <fieldset id="fieldSTdata">
     <legend>Activity Overview</legend>
     <p>
-  		<label id="labelSTtypedate">Type:&nbsp;</label>
-  		<input type="text" id="STtypedate" name="STtypedate" size="45" readonly>
+  		<label id="labelSTtypedate" style="line-height:1.7;">Type:&nbsp;</label>
+  		 &nbsp;<span id="STtypedate" name="STtypedate"></span>
   	</p>
-  	<p>
-  		<label id="labelSTactivity">Activity:&nbsp;</label>
-  		<input type="url" id="STactivity" name="STactivity" size="45" readonly>
-  	</p>
+    <p>
+      <label id="labelSTactivity" style="line-height:1.7;">Link:&nbsp;</label>
+      &nbsp;<a href="#" target="_blank" rel="noopener noreferrer" id="STactivity"></a>
+    </p>
     <p>
       <label for="STname" id="labelSTname">Name:&nbsp;</label>
       <input type="text" id="STname" name="STname" size="45">
@@ -107,8 +107,8 @@
     </p>
   	<p>
       <label for="STdistance">Distance:&nbsp;</label>
-      <input type="text" id="STdistance" name="STname" size="4" style="padding-right:30px; text-align:right;"></input><span style="margin-left:-25px;">mi</span>&nbsp;&nbsp;
-      <input type="text" id="STactiveT" name="STactiveT" size="6" readonly style="text-align:center;">&nbsp;&nbsp;
+      <input type="text" id="STdistance" name="STdistance" size="4" style="padding-right:30px; text-align:right;"></input><span style="margin-left:-25px;">mi</span>&nbsp;&nbsp;
+      <input type="text" id="STactiveT" name="STactiveT" size="6" style="text-align:center;">&nbsp;&nbsp;
       <input type="button" id="recalcButton" onclick="calcGPS(stActivityUpdate.location)" value="Recalc"
           title="Recalculate distance based on simple addition of GPS points">&nbsp;
       <input type="text" id="STactiveP" name="STactiveP" size="3" readonly style="padding-right:33px; text-align:right;"></input><span style="margin-left:-28px;">/mi</span>
@@ -321,6 +321,22 @@
         // default is metrics checked - using HTML gives caret rather than checkmark
         $( "#cbMetrics" ).prop('checked',true).checkboxradio('refresh');
         $( "[name='textDataInput']").on( "change", refreshData );
+        $( "#STdistance").on( "change", function () {
+            var checkDist = $( "#STdistance").val();
+            if(isNaN(checkDist) || checkDist<0 || checkDist.trim().length == 0) {
+              alert('Distance is not valid - revert to saved.');
+              $( "#STdistance").val((stActivityUpdate.total_distance/MI2M).toFixed(2));  // convert to miles, show 2 dp
+            }
+            $( "#STactiveP").val(calcUIPace());
+        });
+        $( "#STactiveT").on( "change", function () {
+            var uiTimeS = timeS($( "#STactiveT" ).val());
+            if(uiTimeS == -1) {
+              alert('Time is not valid - revert to saved.');
+              $( "#STactiveT").val(timeHMS(stActivityUpdate.duration));  //
+            }
+            $( "#STactiveP").val(calcUIPace());
+        });
         $( "#cbWrap").on( "change",  function () {
             $( "#STnotes" ).css("white-space", $( "#cbWrap" )[0].checked ? "pre-wrap" : "pre" );
           });
@@ -471,7 +487,6 @@
       			return false;
       		}
       	}
-        //document.getElementById("infoText").innerHTML = "Getting data...";
         $( "#progressSTact" ).show();
         getFitnessActivityIndex( document.getElementById("STindex").value);
       }
@@ -482,6 +497,8 @@
           stActivityUpdate.name = document.getElementById("STname").value;
           stActivityUpdate.location_name = document.getElementById("STloc").value;
           stActivityUpdate.total_distance = document.getElementById("STdistance").value * MI2M;
+          var durS = timeS($( "#STactiveT" ).val());
+          stActivityUpdate.duration = durS != -1 ? durS : stActivityInit.duration ;
           stActivityUpdate.notes = document.getElementById("STnotes").value;
           postActGear = true;   // set flag to show activity
           postFitnessActivity(stActivityUpdate);
@@ -578,25 +595,23 @@
         }
       }
 
+
+
       // populate form
       function populateSTform (stActivity) {
           var stDate = new Date (stActivity.start_time);
           if (stTest == true) {
             window.alert("SportTracks - index " + stIndex + ": \n  " + stActivity.name + " (" + stDate.toLocaleString() + ")\n  " + stActivity.uri);
           }
-          document.getElementById("STtypedate").value = stActivity.type + " (" + stDate.toDateString().substr(0,4) + stDate.toLocaleString() + ")";
-          document.getElementById("STactivity").value = stActivity.activity;
+          document.getElementById("STtypedate").innerHTML = stActivity.type + " (" + stDate.toDateString().substr(0,4) + stDate.toLocaleString() + ")";
+          document.getElementById("STactivity").innerHTML = stActivity.activity;
+          document.getElementById("STactivity").href = stActivity.activity;
           document.getElementById("STname").value = stActivity.name;
           document.getElementById("STloc").value = typeof stActivity.location_name === 'undefined' ? "" : stActivity.location_name;
           document.getElementById("STdistance").value = (stActivity.total_distance/MI2M).toFixed(2);  // convert to miles, show 2 dp
           document.getElementById("STactiveT").value = timeHMS(stActivity.duration);
-          if (stActivity.total_distance != '0') {
-            var pace = stActivity.duration / stActivity.total_distance * MI2M;     // seconds per mile
-            var paceSTr = new Date(pace * 1000 + 500).toISOString().substr(14, 5);  //extra 500 ms for correct rounding
-            document.getElementById("STactiveP").value = paceSTr;  // could use functionn
-          } else {
-            document.getElementById("STactiveP").value = '';
-          }
+          document.getElementById("STactiveP").value = calcUIPace();
+
           $( "#STelev" ).val((typeof stActivity.elevation_gain === 'undefined' ? '' : '+' + elevFeet(stActivity.elevation_gain)) + (typeof stActivity.elevation_loss === 'undefined' ? '' : ' / -' + elevFeet(stActivity.elevation_loss) + ' ft') );
 
           document.getElementById("STnotes").value = typeof stActivity.notes === 'undefined' ? "" : stActivity.notes;
@@ -624,33 +639,35 @@
       }
 
       var calcGPSused = false;
-      function calcGPS(gps) {
-          var orig_dist_mi = (stActivityInit.total_distance/MI2M).toFixed(2);
-          var orig_pace = stActivityInit.duration / orig_dist_mi;                               // seconds per mile
-          var orig_paceSTr = new Date(orig_pace * 1000 + 500).toISOString().substr(14, 5);  // extra 500 ms for correct rounding
+      function calcGPS(gps) {  // review which times to use
+          var orig_dist_mi = (stActivityUpdate.total_distance/MI2M).toFixed(2);
+          var durS = timeS($( "#STactiveT" ).val());
+          if (durS == -1) durS = stActivityUpdate.duration ;
+          var orig_pace = durS / orig_dist_mi;                               // seconds per mile
+          var orig_paceStr = new Date(orig_pace * 1000 + 500).toISOString().substr(14, 5);  // extra 500 ms for correct rounding
           if (calcGPSused == false) {
             var dist = 0;
             for (i = 3; i < gps.length; i=i+2) {
                 dist += map.distance(gps[i-2], gps[i]);
             }
             var dist_mi = (dist/MI2M).toFixed(2);                                          // so same as stored value for pace calcs
-            var pace = stActivityInit.duration / dist_mi;                                         // seconds per mile
-            var paceSTr = new Date(pace * 1000 + 500).toISOString().substr(14, 5);            // extra 500 ms for correct rounding
-            var clockRatio = stActivityInit.clock_duration / stActivityInit.duration
-            var elapsedStr = timeHMS(stActivityInit.clock_duration);
+            var pace = durS / dist_mi;                                         // seconds per mile
+            var paceStr = new Date(pace * 1000 + 500).toISOString().substr(14, 5);            // extra 500 ms for correct rounding
+            var clockRatio = stActivityUpdate.clock_duration / durS
+            var elapsedStr = timeHMS(stActivityUpdate.clock_duration);
             var elPaceStr = new Date(pace * 1000 * clockRatio + 500).toISOString().substr(14, 5);
             var elOrigPaceStr = new Date(orig_pace * 1000 * clockRatio + 500).toISOString().substr(14, 5);
-            var noteStr = "\nSTlink distance: " + dist_mi + " mi @ " + paceSTr + " /mi ";
-            noteStr += "(original " + orig_dist_mi + " mi @ " + orig_paceSTr + " /mi)\n";
+            var noteStr = "\nSTlink distance: " + dist_mi + " mi @ " + paceStr + " /mi ";
+            noteStr += "(original " + orig_dist_mi + " mi @ " + orig_paceStr + " /mi)\n";
             noteStr += "  Elapsed time: " + elapsedStr + " @ " + elPaceStr + " /mi (original @ " + elOrigPaceStr + " /mi)\n";
             document.getElementById("STdistance").value = dist_mi;
-            document.getElementById("STactiveP").value = paceSTr;
+            document.getElementById("STactiveP").value = paceStr;
             document.getElementById("STnotes").value += noteStr;
             document.getElementById("recalcButton").value = 'Revert';
             calcGPSused = true;
           } else {
             document.getElementById("STdistance").value = orig_dist_mi;
-            document.getElementById("STactiveP").value = orig_paceSTr;
+            document.getElementById("STactiveP").value = orig_paceStr;
             document.getElementById("recalcButton").value = 'Recalc';
             calcGPSused = false;
           }
@@ -699,6 +716,18 @@
               window.alert("Geocode request failed.");
             });
           }
+      }
+
+      function calcUIPace() {
+        var uiDistMI = parseFloat($( "#STdistance" ).val());  // should be a valid number due to UI checks
+        var uiTimeS = timeS($( "#STactiveT" ).val());         // should be a valid number due to UI checks, if not =-1
+        var paceStr = "";
+
+        if ( !(isNaN(uiDistMI)) && uiDistMI != 0  && uiTimeS != -1) {
+          var pace = uiTimeS / uiDistMI;     // seconds per mile
+          paceStr = new Date(pace * 1000 + 500).toISOString().substr(14, 5);  //extra 500 ms for correct rounding
+        }
+        return paceStr;
       }
 
     </script>

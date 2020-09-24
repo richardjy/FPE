@@ -466,6 +466,17 @@ function metricData(sD) {
   return outStr;
 }
 
+function timeS(timeHMS) {
+  //check for valid "hh:mm:ss" and return seconds or -1 if not valid
+  var hms = timeHMS.split(':');
+  var sec = -1;
+  if (hms.length == 3) {
+    sec = parseInt(hms[0], 10)*60*60 + parseInt(hms[1], 10)*60 + parseInt(hms[2], 10)
+    if (isNaN(sec)) sec = -1
+  }
+  return sec;
+}
+
 function timeHMS(timeS) {
   return new Date(timeS * 1000  + 500).toISOString().substr(11, 8);
 }
