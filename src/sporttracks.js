@@ -10,6 +10,7 @@ var CLIENTSEC   =   'ZVA6CTBL68FL6NSK'; // only works with specific website
 var FITNESSURL  =   'https://api.sporttracks.mobi/api/v2/fitnessActivities';
 var GEARURL     =   'https://api.sporttracks.mobi/api/v2/gear';
 var HEALTHURL   =   'https://api.sporttracks.mobi/api/v2/metrics';
+var LINKURL     =   'https://sporttracks.mobi/activity/';
 var KG2LB       =   2.20462; //kg to lb conversion (ST uses kg in data)
 var MI2M        =   1609.344; //miles to meters
 var M2FT        =   3.28084; //meters to feet
