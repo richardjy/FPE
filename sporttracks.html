@@ -87,51 +87,53 @@
 <div style="display: inline-block;">
   <fieldset id="fieldSTdata">
     <legend>Activity Overview</legend>
-    <p>
-  		<label id="labelSTtypedate" style="line-height:1.7;">Type:&nbsp;</label>
-  		 &nbsp;<span id="STtypedate" name="STtypedate"></span>
-  	</p>
-    <p>
-      <label id="labelSTactivity" style="line-height:1.7;">Link:&nbsp;</label>
-      &nbsp;<a href="#" target="_blank" rel="noopener noreferrer" id="STactivity"></a>
-    </p>
-    <p>
-      <label for="STname" id="labelSTname">Name:&nbsp;</label>
-      <input type="text" id="STname" name="STname" size="45">
-  	</p>
-    <p>
-      <label for="STloc" id="labelSTloc">Location:&nbsp;</label>
-      <input type="text" id="STloc" name="STloc" size="45">&nbsp;
-      <input type="button" id="getLocButton" onclick="getLocation(stActivityUpdate.location)" value="Get Location"
-          title="Location uses: [name,] city, state/country &#013; (Search by LocationIQ.com)">
-    </p>
-  	<p>
-      <label for="STdistance">Distance:&nbsp;</label>
-      <input type="text" id="STdistance" name="STdistance" size="4" style="padding-right:30px; text-align:right;"></input><span style="margin-left:-25px;">mi</span>&nbsp;&nbsp;
-      <input type="text" id="STactiveT" name="STactiveT" size="6" style="text-align:center;">&nbsp;&nbsp;
-      <input type="button" id="recalcButton" onclick="calcGPS(stActivityUpdate.location)" value="Recalc"
-          title="Recalculate distance based on simple addition of GPS points">&nbsp;
-      <input type="text" id="STactiveP" name="STactiveP" size="3" readonly style="padding-right:33px; text-align:right;"></input><span style="margin-left:-28px;">/mi</span>
-  	</p>
-    <p>
-      <label for="STelev">Elevation:&nbsp;</label>
-      <input type="text" id="STelev" name="STelev" size="18" readonly style="text-align:center;">
-    </p>
-    <br>
-    <p>
-      <label for="STnotes">Notes:&nbsp;&nbsp;&nbsp;</label>
-      <label for="cbWrap">Wrap text
-        <input type="checkbox" name="cbWrap" id="cbWrap">
-      </label>
-    </p>
-    <textarea rows = "8" cols = "74" id="STnotes" name="STnotes"></textarea><br>
-  	<br>
-    <div >
+    <div style="display: table;">
+      <p>
+    		<label id="labelSTtypedate" style="line-height:1.7;">Type:&nbsp;</label>
+    		 &nbsp;<span id="STtypedate" name="STtypedate"></span>
+    	</p>
+      <p>
+        <label id="labelSTactivity" style="line-height:1.7;">Link:&nbsp;</label>
+        &nbsp;<a href="#" target="_blank" rel="noopener noreferrer" id="STactivity"></a>
+      </p>
+      <p>
+        <label for="STname" id="labelSTname">Name:&nbsp;</label>
+        <input type="text" id="STname" name="STname" size="45">
+    	</p>
+      <p>
+        <label for="STloc" id="labelSTloc">Location:&nbsp;</label>
+        <input type="text" id="STloc" name="STloc" size="45">&nbsp;
+        <input type="button" id="getLocButton" onclick="getLocation(stActivityUpdate.location)" value="Get Location"
+            title="Location uses: [name,] city, state/country &#013; (Search by LocationIQ.com)">
+      </p>
+    	<p>
+        <label for="STdistance">Distance:&nbsp;</label>
+        <input type="text" id="STdistance" name="STdistance" size="4" style="padding-right:30px; text-align:right;"></input><span style="margin-left:-25px;">mi</span>&nbsp;&nbsp;
+        <input type="text" id="STactiveT" name="STactiveT" size="6" style="text-align:center;">&nbsp;&nbsp;
+        <input type="button" id="recalcButton" onclick="calcGPS(stActivityUpdate.location)" value="Recalc"
+            title="Recalculate distance based on simple addition of GPS points">&nbsp;
+        <input type="text" id="STactiveP" name="STactiveP" size="3" readonly style="padding-right:33px; text-align:right;"></input><span style="margin-left:-28px;">/mi</span>
+    	</p>
+      <p>
+        <label for="STelev">Elevation:&nbsp;</label>
+        <input type="text" id="STelev" name="STelev" size="18" readonly style="text-align:center;">
+      </p>
+      <br>
+      <p>
+        <label for="STnotes">Notes:&nbsp;&nbsp;&nbsp;</label>
+        <label for="cbWrap">Wrap text
+          <input type="checkbox" name="cbWrap" id="cbWrap">
+        </label>
+      </p>
+    </div>
+    <textarea rows = "8" cols = "74" id="STnotes" name="STnotes" ></textarea>
+    <br><br>
+    <div>
       <input type="submit" id="STsendButton" onclick="setSTdata()" value="Send to ST">&nbsp;&nbsp;
   	   <input type="button" id="STrevertButton" onclick="revertSTdata()" value="Revert All">&nbsp;&nbsp;
        <div id="progressSTact" style="float: right; width: 40%; right: 15%;"><div class="progress-label">Activity data...</div></div>
-     </div>
-  	<br><br>
+    </div>
+    <br><br>
   </fieldset>
 </div>
 
@@ -604,8 +606,10 @@
             window.alert("SportTracks - index " + stIndex + ": \n  " + stActivity.name + " (" + stDate.toLocaleString() + ")\n  " + stActivity.uri);
           }
           document.getElementById("STtypedate").innerHTML = stActivity.type + " (" + stDate.toDateString().substr(0,4) + stDate.toLocaleString() + ")";
-          document.getElementById("STactivity").innerHTML = stActivity.activity;
-          document.getElementById("STactivity").href = stActivity.activity;
+          // link to 'sorttracks.mobi' rather than 'api.sorttracks.mobi'
+          var actURL = LINKURL + stActivity.activity.split("/").pop();
+          document.getElementById("STactivity").innerHTML = actURL;
+          document.getElementById("STactivity").href = actURL;
           document.getElementById("STname").value = stActivity.name;
           document.getElementById("STloc").value = typeof stActivity.location_name === 'undefined' ? "" : stActivity.location_name;
           document.getElementById("STdistance").value = (stActivity.total_distance/MI2M).toFixed(2);  // convert to miles, show 2 dp
