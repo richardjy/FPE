@@ -126,14 +126,14 @@
         </label>
       </p>
     </div>
-    <textarea rows = "8" cols = "74" id="STnotes" name="STnotes" ></textarea>
+    <textarea rows = "10" cols = "70" id="STnotes" name="STnotes" ></textarea>
     <br><br>
     <div>
       <input type="submit" id="STsendButton" onclick="setSTdata()" value="Send to ST">&nbsp;&nbsp;
   	   <input type="button" id="STrevertButton" onclick="revertSTdata()" value="Revert All">&nbsp;&nbsp;
        <div id="progressSTact" style="float: right; width: 40%; right: 15%;"><div class="progress-label">Activity data...</div></div>
     </div>
-    <br><br>
+    <br>
   </fieldset>
 </div>
 
@@ -644,37 +644,50 @@
 
       var calcGPSused = false;
       function calcGPS(gps) {  // review which times to use
-          var orig_dist_mi = (stActivityUpdate.total_distance/MI2M).toFixed(2);
-          var durS = timeS($( "#STactiveT" ).val());
-          if (durS == -1) durS = stActivityUpdate.duration ;
-          var orig_pace = durS / orig_dist_mi;                               // seconds per mile
-          var orig_paceStr = new Date(orig_pace * 1000 + 500).toISOString().substr(14, 5);  // extra 500 ms for correct rounding
+          var orig_dist_mi = (sumData[0][0][1]/MI2M).toFixed(2);
+          //var durS = timeS($( "#STactiveT" ).val());
+          // if (durS == -1) durS = stActivityUpdate.duration ;
+          //var orig_pace = durS / orig_dist_mi;                               // seconds per mile
+          //var orig_paceStr = new Date(orig_pace * 1000 + 500).toISOString().substr(14, 5);  // extra 500 ms for correct rounding
           if (calcGPSused == false) {
             var dist = 0;
             for (i = 3; i < gps.length; i=i+2) {
                 dist += map.distance(gps[i-2], gps[i]);
             }
             var dist_mi = (dist/MI2M).toFixed(2);                                          // so same as stored value for pace calcs
-            var pace = durS / dist_mi;                                         // seconds per mile
-            var paceStr = new Date(pace * 1000 + 500).toISOString().substr(14, 5);            // extra 500 ms for correct rounding
-            var clockRatio = stActivityUpdate.clock_duration / durS
-            var elapsedStr = timeHMS(stActivityUpdate.clock_duration);
-            var elPaceStr = new Date(pace * 1000 * clockRatio + 500).toISOString().substr(14, 5);
-            var elOrigPaceStr = new Date(orig_pace * 1000 * clockRatio + 500).toISOString().substr(14, 5);
-            var noteStr = "\nSTlink distance: " + dist_mi + " mi @ " + paceStr + " /mi ";
-            noteStr += "(original " + orig_dist_mi + " mi @ " + orig_paceStr + " /mi)\n";
-            noteStr += "  Elapsed time: " + elapsedStr + " @ " + elPaceStr + " /mi (original @ " + elOrigPaceStr + " /mi)\n";
+            //var pace = durS / dist_mi;                                         // seconds per mile
+            //var paceStr = new Date(pace * 1000 + 500).toISOString().substr(14, 5);            // extra 500 ms for correct rounding
+            //var clockRatio = stActivityUpdate.clock_duration / durS
+            //var elapsedStr = timeHMS(stActivityUpdate.clock_duration);
+            //var elPaceStr = new Date(pace * 1000 * clockRatio + 500).toISOString().substr(14, 5);
+            //var elOrigPaceStr = new Date(orig_pace * 1000 * clockRatio + 500).toISOString().substr(14, 5);
+            //var noteStr = "\nSTlink distance: " + dist_mi + " mi @ " + paceStr + " /mi ";
+            //noteStr += "(original " + orig_dist_mi + " mi @ " + orig_paceStr + " /mi)\n";
+            //noteStr += "  Elapsed time: " + elapsedStr + " @ " + elPaceStr + " /mi (original @ " + elOrigPaceStr + " /mi)\n";
             document.getElementById("STdistance").value = dist_mi;
-            document.getElementById("STactiveP").value = paceStr;
+            document.getElementById("STactiveP").value = calcUIPace();
+
+            //var noteStr = "\nSTlink distance: " ;//+ dist_mi + " mi @ " + paceStr + " /mi " + lf;
+            var noteStr = lf + "/*STlink:" + csv + "time   " + csv + "dist (mi)" + csv + "pace /mi" + lf;
+            noteStr += "  recalc:" + csv + $( "#STactiveT" ).val() + csv + $( "#STdistance" ).val().padStart(5," ") + csv + $( "#STactiveP" ).val() + lf;
+            noteStr += "  moving:" + csv + timeHMS(sumData[5][0][0]) + csv + distMiles(sumData[5][0][1]).toString().padStart(5," ") + csv + paceMinMile(sumData[5][0][6]) + lf;
+            noteStr += "  watch: " + csv + timeHMS(sumData[6][0][0]) + csv + distMiles(sumData[6][0][1]).toString().padStart(5," ") + csv + paceMinMile(sumData[6][0][6]) + lf;
+            noteStr += "  elapsed:" + csv + timeHMS(sumData[0][0][0]) + csv + distMiles(sumData[0][0][1]).toString().padStart(5," ") + csv + paceMinMile(sumData[0][0][6]) + lf;
+            noteStr += "*/" + lf;
+
+            // look for comment    test.match(/\/\*ST(.*?)\*\/\n/s)  look if \n before and after   (\n)?\/\*ST(.*?)\*\/(\n)?
+
+            
             document.getElementById("STnotes").value += noteStr;
             document.getElementById("recalcButton").value = 'Revert';
             calcGPSused = true;
           } else {
             document.getElementById("STdistance").value = orig_dist_mi;
-            document.getElementById("STactiveP").value = orig_paceStr;
+            document.getElementById("STactiveP").value = calcUIPace();
             document.getElementById("recalcButton").value = 'Recalc';
             calcGPSused = false;
           }
+          document.getElementById("STactiveP").value = calcUIPace();
 
       }
 
