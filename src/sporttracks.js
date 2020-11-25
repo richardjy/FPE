@@ -51,6 +51,7 @@ var stActivityID = 0;     // ID for ST activity
 var progGearCount = 0;
 // preferences
 var confirmUpload = false;
+var useLocalStorage = true;  // whether to store/read access tokens
 
 //login(1);
 
@@ -61,13 +62,17 @@ function sportTracksInfo(stDoIt) {
   } else {
     stIndex = stDoIt;
   }
-  login();
-  // if (stReady == true) {
-  //   getFitnessActivities();
-  // }
+  if (useLocalStorage && typeof localStorage.STlinkRefreshToken !== 'undefined' && localStorage.STlinkRefreshToken !== 'undefined') {
+      stRefreshToken = localStorage.STlinkRefreshToken;
+      stExpiresAt = localStorage.STlinkExpiresAt;
+      refreshToken(stRefreshToken);
+  } else {
+      login();
+  }
 }
 
 function login() {
+    document.getElementById("infoText").innerHTML = "SportTrack authorization dialog should appear. If not check Browser Pop-up settings.";
     var winurl  =  OAUTHURL + CLIENTID + '&redirect_uri=' + REDIRECT + '&state=' + STATE + '&response_type=code';
     var win     =  window.open(winurl, "windowname1", 'width=400, height=300');
     var pollTimer   =   window.setInterval(function() {
@@ -89,7 +94,7 @@ function login() {
 }
 
 function validateToken(token) {
-    document.getElementById("infoText").innerHTML = "Please wait while Server wakes up...";
+    document.getElementById("infoText").innerHTML = "Validate: Please wait while Server wakes up...";
     $.ajax({
         type: 'POST',
         url: CORSURL + VALIDURL,
@@ -103,12 +108,7 @@ function validateToken(token) {
           'redirect_uri' : REDIRECT}
     })
     .done(function(data, status){
-        stExpiresAt = Math.round(Date.now()/1000 + data.expires_in); 			// expiry time for token in seconds
-        stAccessToken = data.access_token;
-        stRefreshToken = data.refresh_token;	// used to get new AccessToken if expired
-        //console.log("data: " , data, "\nExpires at: " + stExpiresAt);
-        stReady = true;
-        enableForm();
+        tokenDone(data);
         if (stTest == true) {
           getFitnessActivityIndex(stIndex);
         }
@@ -119,9 +119,47 @@ function validateToken(token) {
     });
 }
 
+function refreshToken(token) {
+    var timeLeft = stExpiresAt - Date.now()/1000;
+    document.getElementById("infoText").innerHTML = "Refresh(" + Math.round(timeLeft/60) + "min left): Please wait while Server wakes up...";
+    $.ajax({
+        type: 'POST',
+        url: CORSURL + VALIDURL,
+        //headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        //contentType: 'application/x-www-form-urlencoded; charset=utf-8',
+        data: {
+          'client_id' : CLIENTID,
+          'client_secret' : CLIENTSEC,
+          'refresh_token' : token,
+          'grant_type' : 'refresh_token',
+          'redirect_uri' : REDIRECT}
+    })
+    .done(function(data, status){
+        tokenDone(data);  // ignore test loop
+    })
+    .fail(function(response) {
+        window.alert("SportTracks token refresh failed. Authorization will be attempted.");
+        stReady = false;
+        login();
+    });
+}
+
+function tokenDone(data){  // common to validate and refresh
+  stExpiresAt = Math.round(Date.now()/1000 + data.expires_in/1000); // expiry time for token in seconds - calc seems incorrect (value invalid?)
+  stAccessToken = data.access_token;
+  if (typeof data.refresh_token !== 'undefined') stRefreshToken = data.refresh_token;	// used to get new AccessToken if expired
+  //console.log("data: " , data, "\nExpires at: " + stExpiresAt);
+  if (useLocalStorage) {
+    localStorage.setItem("STlinkAccessToken", stAccessToken);  // stored value not used at moment
+    localStorage.setItem("STlinkRefreshToken", stRefreshToken);
+    localStorage.setItem("STlinkExpiresAt", stExpiresAt);
+  }
+  stReady = true;
+  enableForm();
+}
+
 function getFitnessActivityIndex(stIndexNo){   // index is which one to get 1 = last, 2 = second, if large number then try actual
     // to do - check stIndex to see if should try to grab directlty
-
     getActivity = true;
     if (stIndexNo > 9999) { // index was SportTracks ID
       //var lastActuri = FITNESSURL + '/' + stIndexNo
