@@ -243,11 +243,11 @@ function calcMetrics() {
 
   // runData   [0]distance, [1]elevation, [2]power, [3]GCT, [4]heartrate, [5]cadence
   // calcData  watchstop1/pause2/walk3/run4, [1]delta dist, [2]filtered elev, [3]delta elev, [4]grade, [5]down 1, level 2, up 3
-  // sumData    first (j)     total0/watchstop1/pause2/walk3/run4/moving5
+  // sumData    first (j)     total0/watchstop1/pause2/walk3/run4/moving5/watch6    [watch=total-watchstop]
   //            second (k)    elev all0/down1/level2/up3
   //            third         time0/dist1/elev2/avPow3/avHR4/avCadence5/avSpeed6/avGrade7
 
-  var jNum = 6, kNum = 4;
+  var jNum = 7, kNum = 4;
   // initialize or zero out array
   for (j=0; j < jNum ; j++ ) {
     sumData[j] = [];
@@ -263,8 +263,8 @@ function calcMetrics() {
     for (i = iStart; i < iEnd ; i++ ) {
       for (j=0; j < jNum ; j++ ) {
         for (k=0; k < kNum; k++ ) {
-          //     all   stop/pause/walk/run       moving =     walk    or     run                All       down/level/up
-          if (( j==0||calcData[i][0]==j || ((j==5)*(calcData[i][0]==3 || calcData[i][0]==4)))*(k==0 || calcData[i][5]==k)) {
+          //     all   stop/pause/walk/run     All       down/level/up
+          if (( j==0 || calcData[i][0]==j )*( k==0 || calcData[i][5]==k )) {
             sumData[j][k][0] += 1;  //time
             sumData[j][k][1] += calcData[i][1];  //distance
             sumData[j][k][2] += k==1 ? calcData[i][3] : calcData[i][3]>0 ? calcData[i][3] : 0 ;  // up elev total = only down for negative
@@ -275,6 +275,14 @@ function calcMetrics() {
         }
       }
     }
+    // calculate moving and watch data (simpler than summing above)
+    for (k=0; k < kNum; k++ ) {
+      for (l=0; l < 6; l++) {
+          sumData[5][k][l] = sumData[3][k][l] + sumData[4][k][l];
+          sumData[6][k][l] = sumData[0][k][l] - sumData[1][k][l];
+      }
+    }
+
     // calculate average and tidy up arrays with rounding
     for (j=0; j < jNum ; j++) {
       for (k=0; k < kNum; k++ ) {
@@ -315,12 +323,13 @@ function displayMetrics() {
            "(W)" + csv + "(spm)" + csv + lf;
       }
       // ALL data
-      dataCSV += "ALL" + csv + metricData(sumData[0][0]) + lf;
       dataCSV += "Moving" + csv + metricData(sumData[5][0]) + lf;
       dataCSV += "Running" + csv + metricData(sumData[4][0]) + lf;
       dataCSV += "Walking" + csv + metricData(sumData[3][0]) + lf;
       dataCSV += "Paused" + csv + metricData(sumData[2][0]) + lf;
       dataCSV += "Stopped" + csv + metricData(sumData[1][0]) + lf;
+      dataCSV += "Watch" + csv + metricData(sumData[6][0]) + lf;
+      dataCSV += "Elapsed" + csv + metricData(sumData[0][0]) + lf;
       // dataCSV += lf + "ALL" + lf;
       // dataCSV += "Down" + csv + metricData(sumData[0][1]) + lf;
       // dataCSV += "Level" + csv + metricData(sumData[0][2]) + lf;
