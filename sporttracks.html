@@ -25,6 +25,7 @@
 
     <script src="./src/config.js"></script>
     <script src="./src/config_local.js"></script>
+    <script src="./src/stravalink.js"></script>
     <script src='./src/sporttracks.js'></script>
     <script src='./src/stanalysis.js'></script>
     <script src='./src/jquery.sparkline.min.js'></script>
@@ -121,7 +122,9 @@
         <label for="STnotes">Notes:&nbsp;&nbsp;&nbsp;</label>
         <label for="cbWrap">Wrap text
           <input type="checkbox" name="cbWrap" id="cbWrap">
-        </label>
+        </label>&nbsp;&nbsp;&nbsp;
+        <input type="button" id="getStrava" onclick="getStrava()" value="Get Strava"
+            title="Get 'Title' and 'Description' from Strava">
       </p>
     </div>
     <textarea rows = "10" cols = "70" id="STnotes" name="STnotes" ></textarea>
@@ -132,7 +135,7 @@
        <div id="progressSTact" style="float: right; width: 40%; right: 15%;"><div class="progress-label">Activity data...</div></div>
     </div>
     <br>
-    <div id="invisibleMap" style="display: inline-block; width: 300px; height: 150px;"></div>
+    <div id="invisibleMap" style="display: inline-block; width: 300px; height: 200px;"></div>
   </fieldset>
 </div>
 
@@ -232,13 +235,15 @@
       // setup SportTracksLink (if appropriate)
       //stTokens(); // setup tokens at startup - may need to refresh later
     	// where possible keep all references to HTML fields on this page
-      var mapST = L.map('invisibleMap').setView([51.505, -0.09], 13);
+      var mapST = L.map('invisibleMap', {zoomControl: false}).setView([51.505, -0.09], 13);
       var CartoDB_DarkMatterNoLabels = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
         subdomains: 'abcd',
         maxZoom: 19
       }).addTo(mapST);
-
+      L.control.zoom({
+        position: 'topright'
+      }).addTo(mapST);
 
       document.getElementById("fieldSTindex").disabled = true;
       document.getElementById("fieldSTdata").disabled = true; // tabs disabled below
@@ -255,7 +260,7 @@
 
       $(function() {
         $( "#STgetButton, #getLocButton, #recalcButton, #STrevertButton, #STsendButton, #STgetGearButton," +
-            " #STgetHealthButton, #STsendHealthButton, #STmaxData" ).button(  );  // { disabled: true }
+            " #STgetHealthButton, #STsendHealthButton, #STmaxData, #getStrava" ).button(  );  // { disabled: true }
         $( document ).tooltip();
         $( "#fieldSTgear" ).controlgroup()  // click on control group
           .on('click', '[type="checkbox"]', function( event, ui ){
@@ -335,6 +340,9 @@
               $( "#STdistance").val((stActivityUpdate.total_distance/MI2M).toFixed(2));  // convert to miles, show 2 dp
             }
             $( "#STactiveP").val(calcUIPace());
+            // force calc of summary
+            displaySummary();
+
         });
         $( "#STactiveT").on( "change", function () {
             var uiTimeS = timeS($( "#STactiveT" ).val());
@@ -602,8 +610,6 @@
         }
       }
 
-
-
       // populate form
       function populateSTform (stActivity) {
           var stDate = new Date (stActivity.start_time);
@@ -637,7 +643,7 @@
                 stLatLngs[j] = stActivity.location[i];
                 j++;
             }
-            var stGPX = L.polyline(stLatLngs, {color: 'blue'}).addTo(mapST)
+            var stGPX = L.polyline(stLatLngs, {color: 'red'}).addTo(mapST)
             mapST.fitBounds(stGPX.getBounds());
           }
 
@@ -672,7 +678,7 @@
           if (calcGPSused == false) {
             var dist = 0;
             for (i = 3; i < gps.length; i=i+2) {
-                dist += map.distance(gps[i-2], gps[i]);
+                dist += mapST.distance(gps[i-2], gps[i]);
             }
             var dist_mi = (dist/MI2M).toFixed(2);                                          // so same as stored value for pace calcs
             //var pace = durS / dist_mi;                                         // seconds per mile
@@ -687,18 +693,8 @@
             document.getElementById("STdistance").value = dist_mi;
             document.getElementById("STactiveP").value = calcUIPace();
 
-            //var noteStr = "\nSTlink distance: " ;//+ dist_mi + " mi @ " + paceStr + " /mi " + lf;
-            var noteStr = lf + "/*STlink:" + csv + "time   " + csv + "dist (mi)" + csv + "pace /mi" + lf;
-            noteStr += "  recalc:" + csv + $( "#STactiveT" ).val() + csv + $( "#STdistance" ).val().padStart(5," ") + csv + $( "#STactiveP" ).val() + lf;
-            noteStr += "  moving:" + csv + timeHMS(sumData[5][0][0]) + csv + distMiles(sumData[5][0][1]).toString().padStart(5," ") + csv + paceMinMile(sumData[5][0][6]) + lf;
-            noteStr += "  watch: " + csv + timeHMS(sumData[6][0][0]) + csv + distMiles(sumData[6][0][1]).toString().padStart(5," ") + csv + paceMinMile(sumData[6][0][6]) + lf;
-            noteStr += "  elapsed:" + csv + timeHMS(sumData[0][0][0]) + csv + distMiles(sumData[0][0][1]).toString().padStart(5," ") + csv + paceMinMile(sumData[0][0][6]) + lf;
-            noteStr += "*/" + lf;
+            displaySummary();
 
-            // look for comment    test.match(/\/\*ST(.*?)\*\/\n/s)  look if \n before and after   (\n)?\/\*ST(.*?)\*\/(\n)?
-
-
-            document.getElementById("STnotes").value += noteStr;
             document.getElementById("recalcButton").value = 'Revert';
             calcGPSused = true;
           } else {
@@ -709,6 +705,33 @@
           }
           document.getElementById("STactiveP").value = calcUIPace();
 
+      }
+
+      function displaySummary(){
+        //var noteStr = "\nSTlink distance: " ;//+ dist_mi + " mi @ " + paceStr + " /mi " + lf;
+        //  unicode space    http://jkorpela.fi/chars/spaces.html
+        var noteStr = lf + "/*STlink --" + csv + "\xa0\xa0\xa0time\xa0\xa0\xa0" + csv + "\xa0\xa0\xa0dist (mi)\xa0" + csv + "\xa0pace /mi" + lf;
+        noteStr += "\u2002\u2002recalc:\xa0\xa0" + csv + $( "#STactiveT" ).val() + csv +
+            $( "#STdistance" ).val().padStart(7,"\u2002") + csv + "\u2002\u2002\u2002" + $( "#STactiveP" ).val() + lf;
+        noteStr += "\u2005moving:\xa0\xa0" + csv + timeHMS(sumData[5][0][0]) + csv +
+            distMiles(sumData[5][0][1]).toString().padStart(7,"\u2002") + csv + "\u2002\u2002\u2002" + paceMinMile(sumData[5][0][6]) + lf;
+        noteStr += "\u2002\u2002watch:\xa0\xa0 " + csv + timeHMS(sumData[6][0][0]) + csv +
+            distMiles(sumData[6][0][1]).toString().padStart(7,"\u2002") + csv + "\u2002\u2002\u2002" +paceMinMile(sumData[6][0][6]) + lf;
+        noteStr += "\u2006elapsed:\xa0\xa0" + csv + timeHMS(sumData[0][0][0]) + csv +
+            distMiles(sumData[0][0][1]).toString().padStart(7,"\u2002") + csv + "\u2002\u2002\u2002" + paceMinMile(sumData[0][0][6]) + lf;
+        noteStr += "*/" + lf;
+
+        //  look for comment and replace using '/* text */'  test.match(/\/\*ST(.*?)\*\/\n/s)  look if \n before and after   (\n)?\/\*ST(.*?)\*\/(\n)?
+        var regMatch =  document.getElementById("STnotes").value.match(/(\n)?\/\*ST(.*?)\*\/(\n)?/s);
+        if (regMatch != null) {
+          var txtStr = document.getElementById("STnotes").value;
+          var newStr = txtStr.substr(0, regMatch.index) + noteStr;
+          newStr += txtStr.substr(regMatch.index + regMatch[0].length)
+          //console.log(newStr);
+          document.getElementById("STnotes").value = newStr;
+        } else {
+          document.getElementById("STnotes").value += noteStr;
+        }
       }
 
       function getLocation(gps) {

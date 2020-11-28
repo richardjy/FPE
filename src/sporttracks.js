@@ -51,9 +51,8 @@ var stActivityID = 0;     // ID for ST activity
 var progGearCount = 0;
 // preferences
 var confirmUpload = false;
-var useLocalStorage = true;  // whether to store/read access tokens
-
-//login(1);
+var useLocalStorage = true;  // whether to store/read access tokens  - separate variable in FPE - need to rationalize
+var linkStrava = true;  // whether to link to Strava too
 
 function sportTracksInfo(stDoIt) {
   if (stDoIt < 0) {  // negative means show it here
@@ -68,6 +67,14 @@ function sportTracksInfo(stDoIt) {
       refreshToken(stRefreshToken);
   } else {
       login();
+  }
+  if (linkStrava) {
+    if (useLocalStorage && typeof localStorage.stravaRefreshToken !== 'undefined' && localStorage.stravaRefreshToken !== 'undefined') {
+        stravaRefreshToken = localStorage.stravaRefreshToken;
+        stravaRefresh();
+    } else {
+        loginStrava();
+    }
   }
 }
 
@@ -91,6 +98,51 @@ function login() {
         } catch(e) {
         }
     }, 500);
+}
+
+function loginStrava() {
+    document.getElementById("infoText").innerHTML = "Strava authorization dialog should appear. If not check Browser Pop-up settings.";
+    var stravaOAUTHURL = 'https://www.strava.com/oauth/authorize?client_id=31392&response_type=code&redirect_uri='
+    //var winurl  =  OAUTHURL + CLIENTID + '&redirect_uri=' + REDIRECT + '&state=' + STATE + '&response_type=code';
+    var winurl  =  stravaOAUTHURL + REDIRECT + '&approval_prompt=auto&scope=read,activity:read,activity:read_all,activity:write';
+    var win     =  window.open(winurl, "windowname1", 'width=400, height=300');
+    var pollTimer   =   window.setInterval(function() {
+        try {
+            //console.log(win.document.URL);
+            if (win.document.URL.indexOf(REDIRECT) != -1) {
+                window.clearInterval(pollTimer);
+                var url =   win.document.URL;
+                var stravaCode = gup(url, 'code');  // could also do same way as Strava link
+                var stravaScope = gup(url, 'scope');  // could also do same way as Strava link
+                //console.log(stravaCode);
+                win.close();
+                stravaGetToken(stravaCode, false);
+            }
+        } catch(e) {
+        }
+    }, 500);
+}
+
+function getStrava(){
+  var epochT = Math.floor(new Date(stActivityUpdate.start_time)/1000 + stActivityUpdate.clock_duration/2); // go to mid point of activity
+  // look for first activity before midpoint
+  $.get('https://www.strava.com/api/v3/athlete/activities?before=' + epochT + '&page=1&per_page=1&access_token=' + stravaAccessToken, function(data, status){
+    //console.log(data);
+    // get activity data
+    $.get('https://www.strava.com/api/v3/activities/' + data[0].id + '?include_all_efforts=false&access_token=' + stravaAccessToken, function(data, status){
+        //console.log(data);
+        var newDesc = (data.description == undefined ? '' : data.description + '\n') + 'https://www.strava.com/activities/' + data.id + '\n\n';
+        var dialogStr = 'Click OK to use Title and Description: \n\n' + data.name + '\n\n' + newDesc;
+        //console.log(dialogStr);
+        if (window.confirm(dialogStr) == true) {
+          document.getElementById("STname").value = data.name;
+          document.getElementById("STnotes").value = newDesc + document.getElementById("STnotes").value;
+        }
+    })
+    .fail(function(error) {
+      window.alert("Strava Activity not accessible.");
+    });
+  })
 }
 
 function validateToken(token) {
