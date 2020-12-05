@@ -24,14 +24,12 @@ if (location.host == 'localhost') {
   var CORSURL     = 'https://fpe-cors.herokuapp.com/'; // whitelist set for 'https://richardjy.github.io' only
 }
 
-
 // variables for SportTracks authorization codes
 var stExpiresAt = 0; 			// expiry time for token Epoch time
 var stAccessToken = '';		// used to get data
 var stRefreshToken = '';	// used to get new AccessToken if expired
 var stReady = false;			// are SportTracks Tokens etc set up?
 var loggedIn    =   false;  //not used yet
-var stTest = false;
 var stIndex = 1;
 var formSTdataOriginal;  // to check if data has changed
 var healthOriginal;      // ditto for health
@@ -40,7 +38,6 @@ var stActivityUpdate;    // updated data (initially same as Init)
 var stGearInit = ([]);   // init list of gear
 var stGearUpdate = ([]); // updated list of gear
 var stHealthInit;        // health data - need to understand format
-//var stHealthUpdate;       // uses 'upsert' so only need changed data
 var indexSpin = false;   // was the index change from the arrows?
 var getGear = false;     // get Gear is ongoing
 var getActivity = false; // get Activity is ongoing
@@ -54,27 +51,19 @@ var confirmUpload = false;
 var useLocalStorage = true;  // whether to store/read access tokens  - separate variable in FPE - need to rationalize
 var linkStrava = true;  // whether to link to Strava too
 
-function sportTracksInfo(stDoIt) {
-  if (stDoIt < 0) {  // negative means show it here
-    stTest = true;
-    stIndex = -stDoIt;
-  } else {
-    stIndex = stDoIt;
+function sportTracksInfo() {
+  if (linkStrava && useLocalStorage && typeof localStorage.stravaRefreshToken !== 'undefined' && localStorage.stravaRefreshToken !== 'undefined') {
+      stravaRefreshToken = localStorage.stravaRefreshToken;
+      stravaRefresh();
   }
+
   if (useLocalStorage && typeof localStorage.STlinkRefreshToken !== 'undefined' && localStorage.STlinkRefreshToken !== 'undefined') {
       stRefreshToken = localStorage.STlinkRefreshToken;
       stExpiresAt = localStorage.STlinkExpiresAt;
       refreshToken(stRefreshToken);
+      if (linkStrava && stravaRefreshToken == '') loginStrava();
   } else {
-      login();
-  }
-  if (linkStrava) {
-    if (useLocalStorage && typeof localStorage.stravaRefreshToken !== 'undefined' && localStorage.stravaRefreshToken !== 'undefined') {
-        stravaRefreshToken = localStorage.stravaRefreshToken;
-        stravaRefresh();
-    } else {
-        loginStrava();
-    }
+      login();  // loginStrava() within this routine to decouple login dialogs
   }
 }
 
@@ -161,9 +150,7 @@ function validateToken(token) {
     })
     .done(function(data, status){
         tokenDone(data);
-        if (stTest == true) {
-          getFitnessActivityIndex(stIndex);
-        }
+        if (linkStrava && stravaRefreshToken == '') loginStrava();
     })
     .fail(function(response) {
         window.alert("SportTracks token exchange failed.");

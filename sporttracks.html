@@ -247,7 +247,7 @@
 
       document.getElementById("fieldSTindex").disabled = true;
       document.getElementById("fieldSTdata").disabled = true; // tabs disabled below
-      sportTracksInfo(3);  // initialize
+      sportTracksInfo();  // initialize - move to $(function() {   ??
 
       function enableForm() { // ST connection made, enable index area
           document.getElementById("fieldSTindex").disabled = false;
@@ -613,9 +613,6 @@
       // populate form
       function populateSTform (stActivity) {
           var stDate = new Date (stActivity.start_time);
-          if (stTest == true) {
-            window.alert("SportTracks - index " + stIndex + ": \n  " + stActivity.name + " (" + stDate.toLocaleString() + ")\n  " + stActivity.uri);
-          }
           document.getElementById("STtypedate").innerHTML = stActivity.type + " (" + stDate.toDateString().substr(0,4) + stDate.toLocaleString() + ")";
           // link to 'sorttracks.mobi' rather than 'api.sorttracks.mobi'
           var actURL = LINKURL + stActivity.activity.split("/").pop();
