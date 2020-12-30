@@ -93,8 +93,10 @@
     		 &nbsp;<span id="STtypedate" name="STtypedate"></span>
     	</p>
       <p>
-        <label id="labelSTactivity" style="line-height:1.7;">Link:&nbsp;</label>
-        &nbsp;<a href="#" target="_blank" rel="noopener noreferrer" id="STactivity"></a>
+        <label id="labelSTactivity" style="line-height:1.7;">Links:&nbsp;</label>&nbsp;
+        <a href="#" target="_blank" rel="noopener noreferrer" id="linkSTmobiURL"></a>&nbsp;&nbsp;
+        <a href="#" target="_blank" rel="noopener noreferrer" id="linkStravaURL"></a>&nbsp;&nbsp;
+        <a href="#" target="_blank" rel="noopener noreferrer" id="linkFPEURL"></a>
       </p>
       <p>
         <label for="STname" id="labelSTname">Name:&nbsp;</label>
@@ -630,9 +632,11 @@
           var stDate = new Date (stActivity.start_time);
           document.getElementById("STtypedate").innerHTML = stActivity.type + " (" + stDate.toDateString().substr(0,4) + stDate.toLocaleString() + ")";
           // link to 'sorttracks.mobi' rather than 'api.sorttracks.mobi'
-          var actURL = LINKURL + stActivity.activity.split("/").pop();
-          document.getElementById("STactivity").innerHTML = actURL;
-          document.getElementById("STactivity").href = actURL;
+          var stmobiID = stActivity.activity.split("/").pop();
+          //var actURL = STMOBIURL + stActivity.activity.split("/").pop();
+          document.getElementById("linkSTmobiURL").innerHTML = 'STmobi: ' + stmobiID;
+          document.getElementById("linkSTmobiURL").href = STMOBIURL + stmobiID;
+          getStravaLink(stActivity);
           document.getElementById("STname").value = stActivity.name;
           document.getElementById("STloc").value = typeof stActivity.location_name === 'undefined' ? "" : stActivity.location_name;
           document.getElementById("STdistance").value = (stActivity.total_distance/MI2M).toFixed(2);  // convert to miles, show 2 dp

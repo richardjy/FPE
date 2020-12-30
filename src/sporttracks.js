@@ -10,7 +10,8 @@ var CLIENTSEC   =   'ZVA6CTBL68FL6NSK'; // only works with specific website
 var FITNESSURL  =   'https://api.sporttracks.mobi/api/v2/fitnessActivities';
 var GEARURL     =   'https://api.sporttracks.mobi/api/v2/gear';
 var HEALTHURL   =   'https://api.sporttracks.mobi/api/v2/metrics';
-var LINKURL     =   'https://sporttracks.mobi/activity/';
+var STMOBIURL   =   'https://sporttracks.mobi/activity/';
+var STRAVAURL   =   'https://www.strava.com/activities/';
 var KG2LB       =   2.20462; //kg to lb conversion (ST uses kg in data)
 var MI2M        =   1609.344; //miles to meters
 var M2FT        =   3.28084; //meters to feet
@@ -19,9 +20,11 @@ var GRADE2FTPMI =   52.80;   // 1% grade in ft/mile
 if (location.host == 'localhost') {
   var REDIRECT    = 'http://localhost/';
   var CORSURL     = 'http://localhost:5000/';  // assumes cors server ('heroku local' is running (8080 if node server.js)
+  var FPEURL      = 'http://localhost/main?strava=';
 } else {
   var REDIRECT    = 'https://richardjy.github.io/FPE/main.html';
   var CORSURL     = 'https://fpe-cors.herokuapp.com/'; // whitelist set for 'https://richardjy.github.io' only
+  var FPEURL      = 'https://richardjy.github.io/FPE/main?strava=';
 }
 
 // variables for SportTracks authorization codes
@@ -53,9 +56,9 @@ var linkStrava = true;  // whether to link to Strava too
 
 function sportTracksInfo() {
   if (useLocalStorage) {
-    if (localStorage.getItem('useLocalStorage' === null)) {
+    if (localStorage.getItem('useLocalStorage') === null) {
       // show dialog if choice not already stored (use options button to change)
-      if (window.confirm('Store access credentials locally?') == true) {
+      if (window.confirm('Store access credentials locally? (Use "Options" to change later)') == true) {
         localStorage.setItem("useLocalStorage", 'true');
       } else { // wipe out local values, other than flag
         useLocalStorage = false;
@@ -128,6 +131,48 @@ function loginStrava() {
     }, 500);
 }
 
+function getStravaLink(stActivity) {
+  if (stravaReady == true) {
+    var epochT = Math.floor(new Date(stActivity.start_time)/1000 + stActivity.clock_duration/2); // go to mid point of activity
+    // look for first activity before midpoint
+    $.get('https://www.strava.com/api/v3/athlete/activities?before=' + epochT + '&page=1&per_page=1&access_token=' + stravaAccessToken, function(data, status){
+      //console.log(data);
+      // get activity data
+      $.get('https://www.strava.com/api/v3/activities/' + data[0].id + '?include_all_efforts=false&access_token=' + stravaAccessToken, function(data, status){
+          //console.log(data);
+          if (Math.floor(new Date(data.start_date)/1000 + data.elapsed_time) - epochT > 0 ) {  // check finish time is after STmodi midpoint i.e. activities overlap
+            setStravaLink(data.id);
+          } else {
+            //window.alert("No Strava Activity at same time found.");
+            setStravaLink(0);
+          }
+      })
+      .fail(function(error) {
+        // silent
+        //window.alert("Strava Activity not accessible.");
+        setStravaLink(0);
+      });
+    })
+  } else {
+    setStravaLink(0);
+  }
+}
+
+function setStravaLink(id) {
+  stravaActivityID = id;
+  if (id > 0) {
+    document.getElementById("linkStravaURL").innerHTML = 'Strava: ' + id;
+    document.getElementById("linkStravaURL").href = STRAVAURL + id;
+    document.getElementById("linkFPEURL").innerHTML = 'FPE';
+    document.getElementById("linkFPEURL").href = FPEURL + id;
+  } else {
+    document.getElementById("linkStravaURL").innerHTML = 'Strava: default';
+    document.getElementById("linkStravaURL").href = STRAVAURL + id;
+    document.getElementById("linkFPEURL").innerHTML = 'FPE: default';
+    document.getElementById("linkFPEURL").href = FPEURL + id;
+  }
+}
+
 function getStravaInfo(){
   var epochT = Math.floor(new Date(stActivityUpdate.start_time)/1000 + stActivityUpdate.clock_duration/2); // go to mid point of activity
   // look for first activity before midpoint
@@ -140,17 +185,19 @@ function getStravaInfo(){
           var newDesc = (data.description == undefined ? '' : data.description + '\n') + 'https://www.strava.com/activities/' + data.id + '\n\n';
           var dialogStr = 'Click OK to use Title and Description: \n\n' + data.name + '\n\n' + newDesc;
           //console.log(dialogStr);
+          setStravaLink(data.id); // should not have changed, but perhaps changed something on Strava
           if (window.confirm(dialogStr) == true) {
             document.getElementById("STname").value = data.name;
             document.getElementById("STnotes").value = newDesc + document.getElementById("STnotes").value;
           }
-          var urlStrava = location.origin + '/main?strava=' + data.id;
-          console.log(urlStrava);
+
         } else {
+          setStravaLink(0);
           window.alert("No Strava Activity at same time found.");
         }
     })
     .fail(function(error) {
+      setStravaLink(0);
       window.alert("Strava Activity not accessible.");
     });
   })

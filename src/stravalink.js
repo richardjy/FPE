@@ -30,13 +30,11 @@ function stravaTokens() { // handle Strava token, do this early to avoid any asy
     if (linkStrava && useLocalStorage && localStorage.getItem('stravaRefreshToken') !== null) {
         stravaRefreshToken = localStorage.stravaRefreshToken;
         stravaScope = localStorage.stravaScope;
-        stravaReady = true;
         stravaRefresh();
     }
   } else if (typeof authArray.code !== 'undefined' && typeof authArray.scope !== 'undefined') {
     var stravaCode = authArray.code;
     stravaScope = authArray.scope;
-    stravaReady = true;
     stravaGetToken(stravaCode, true);
   } else {
     stravaReady = false;
@@ -46,6 +44,7 @@ function stravaTokens() { // handle Strava token, do this early to avoid any asy
 function stravaGetToken(stravaCode, reTry){
   // now get Tokens
   //console.log(stravaCode);
+  stravaReady = true;
   var postURL = 'https://www.strava.com/oauth/token?client_id=' + stravaClientID + '&client_secret=' +
   stravaAppCode + '&code=' + stravaCode + '&grant_type=authorization_code';
   //console.log(postURL);
@@ -75,6 +74,7 @@ function stravaGetToken(stravaCode, reTry){
 }
 
 function stravaRefresh() { // refresh Strava token, assumes stravaReady is true
+  stravaReady = true;
   var jqPost = $.post('https://www.strava.com/api/v3/oauth/token?client_id=' + stravaClientID + '&client_secret=' +
         stravaAppCode + '&grant_type=refresh_token&refresh_token=' + stravaRefreshToken,
     function(data, status){
@@ -84,7 +84,6 @@ function stravaRefresh() { // refresh Strava token, assumes stravaReady is true
       stravaAccessToken = data.access_token;
       stravaRefreshToken = data.refresh_token;	// used to get new AccessToken if expired
       stravaLocalStore();
-      //stravaReady = true;
       if (stravaActivityID > 0) {
         loadStravaID();
       }
