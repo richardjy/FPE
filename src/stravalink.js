@@ -8,7 +8,7 @@ var stravaRefreshToken = '';	// used to get new AccessToken if expired
 var stravaScope = '';					// returned by redirect
 var stravaReady = false;			// are Strava Tokens etc set up?
 var stravaActivityID = 0;			// current activityID
-var stravaRequest = 'auto&scope=read,activity:read,activity:read_all,activity:write'; // request string
+var stravaRequest = '&approval_prompt=auto&scope=read,activity:read,activity:read_all,activity:write'; // request string
 
 function stravaTokens() { // handle Strava token, do this early to avoid any asynchronicity issue
   // get 'redirect' access code from browser window (if that fails then force reconnect to Strava - how to avoid cycle?)
@@ -23,7 +23,17 @@ function stravaTokens() { // handle Strava token, do this early to avoid any asy
   //console.log(authArray);
   // expect - .scope: "read,activity:read,activity:read_all,activity:write"
   // 					.code = access token
-  if (typeof authArray.code !== 'undefined' && typeof authArray.scope !== 'undefined') {
+  //   alternativelty .strava = numericID
+
+  if (typeof authArray.strava !== 'undefined') { // for now only do refresh with stired data
+    stravaActivityID = parseInt(authArray.strava);
+    if (linkStrava && useLocalStorage && localStorage.getItem('stravaRefreshToken') !== null) {
+        stravaRefreshToken = localStorage.stravaRefreshToken;
+        stravaScope = localStorage.stravaScope;
+        stravaReady = true;
+        stravaRefresh();
+    }
+  } else if (typeof authArray.code !== 'undefined' && typeof authArray.scope !== 'undefined') {
     var stravaCode = authArray.code;
     stravaScope = authArray.scope;
     stravaReady = true;
@@ -31,7 +41,6 @@ function stravaTokens() { // handle Strava token, do this early to avoid any asy
   } else {
     stravaReady = false;
   }
-  return;
 }
 
 function stravaGetToken(stravaCode, reTry){
@@ -47,12 +56,7 @@ function stravaGetToken(stravaCode, reTry){
       stravaExpiresAt = data.expires_at; 			// expiry time for token (epoch time)
       stravaAccessToken = data.access_token;
       stravaRefreshToken = data.refresh_token;	// used to get new AccessToken if expired
-      if (useLocalStorage) {
-        localStorage.setItem("stravaAccessToken", stravaAccessToken);  // stored value not used at moment
-        localStorage.setItem("stravaRefreshToken", stravaRefreshToken);
-        localStorage.setItem("stravaExpiresAt", stravaExpiresAt);
-      }
-
+      stravaLocalStore();
     })
     .fail(function(response) {
       //console.log(response);
@@ -60,8 +64,7 @@ function stravaGetToken(stravaCode, reTry){
       if (reTry) {
         var locHref = 'https://www.strava.com/oauth/authorize?client_id=' + stravaClientID +
           '&response_type=code&redirect_uri=' +
-          location.protocol + '//' + location.host + location.pathname +
-          '&approval_prompt=' + stravaRequest;
+          location.protocol + '//' + location.host + location.pathname + stravaRequest;
         //window.alert("Strava token exchange failed. URL = " + locHref);
         // how to prevent a loop?
         location.href = locHref;
@@ -80,18 +83,31 @@ function stravaRefresh() { // refresh Strava token, assumes stravaReady is true
       stravaExpiresAt = data.expires_at; 			// expiry time for token (epoch time)
       stravaAccessToken = data.access_token;
       stravaRefreshToken = data.refresh_token;	// used to get new AccessToken if expired
-      if (useLocalStorage) {
-        localStorage.setItem("stravaAccessToken", stravaAccessToken);  // stored value not used at moment
-        localStorage.setItem("stravaRefreshToken", stravaRefreshToken);
-        localStorage.setItem("stravaExpiresAt", stravaExpiresAt);
+      stravaLocalStore();
+      //stravaReady = true;
+      if (stravaActivityID > 0) {
+        loadStravaID();
       }
-      stravaReady = true;
     })
     .fail(function(response) {
-      window.alert("Strava token exchange failed (during refresh).");
       stravaReady = false;
+      window.alert("Strava token exchange failed (during refresh).");
     });
   return;
+}
+
+function stravaLocalStore() {
+  if (useLocalStorage) {
+    //localStorage.setItem("stravaAccessToken", stravaAccessToken);  // stored value not used at moment
+    localStorage.setItem("stravaRefreshToken", stravaRefreshToken);
+    localStorage.setItem("stravaScope", stravaScope);
+    //localStorage.setItem("stravaExpiresAt", stravaExpiresAt);
+  } else {  // delete local store items
+    localStorage.removeItem("stravaAccessToken");
+    localStorage.removeItem("stravaRefreshToken");
+    localStorage.removeItem("stravaExpiresAt");
+    localStorage.removeItem("stravaScope");
+  }
 }
 
 function stravaGetActivity(timeBefore, searchIndex){

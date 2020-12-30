@@ -79,7 +79,8 @@
     <input id="STindex" name="STindex" value="1" size="10" style="padding-right:5px; text-align:right;"
     title="1 = latest activity, 2 = 2nd, etc&#013; (relative to date and earlier)&#013; or enter STmobi index number">&nbsp;
     <input type="submit" id="STgetButton" onclick="getSTdata()" value="Get from ST">&nbsp;
-    <input type="text" id="idDate" size="10" style="text-align:center;">
+    <input type="text" id="idDate" size="10" style="text-align:center;">&nbsp;&nbsp;
+    <button id="setUpDialog">Options</button>
   </fieldset>
 </div>
 <br>
@@ -123,7 +124,7 @@
         <label for="cbWrap">Wrap text
           <input type="checkbox" name="cbWrap" id="cbWrap">
         </label>&nbsp;&nbsp;&nbsp;
-        <input type="button" id="getStrava" onclick="getStrava()" value="Get Strava"
+        <input type="button" id="getStravaInfo" onclick="getStravaInfo()" value="Get Strava"
             title="Get 'Title' and 'Description' from Strava">
       </p>
     </div>
@@ -242,12 +243,11 @@
         maxZoom: 19
       }).addTo(mapST);
       L.control.zoom({
-        position: 'topright'
+        position: 'bottomright'
       }).addTo(mapST);
 
       document.getElementById("fieldSTindex").disabled = true;
       document.getElementById("fieldSTdata").disabled = true; // tabs disabled below
-      sportTracksInfo();  // initialize - move to $(function() {   ??
 
       function enableForm() { // ST connection made, enable index area
           document.getElementById("fieldSTindex").disabled = false;
@@ -260,7 +260,7 @@
 
       $(function() {
         $( "#STgetButton, #getLocButton, #recalcButton, #STrevertButton, #STsendButton, #STgetGearButton," +
-            " #STgetHealthButton, #STsendHealthButton, #STmaxData, #getStrava" ).button(  );  // { disabled: true }
+            " #STgetHealthButton, #STsendHealthButton, #STmaxData, #getStravaInfo" ).button(  );  // { disabled: true }
         $( document ).tooltip();
         $( "#fieldSTgear" ).controlgroup()  // click on control group
           .on('click', '[type="checkbox"]', function( event, ui ){
@@ -308,6 +308,20 @@
                 getSTdata();  // allow enter key to also trigger the update
             }
         });
+        $( "#setUpDialog"  ).button( { icon: "ui-icon-gear", showLabel: false } )
+            .on( "click", function( event ) {
+              if (window.confirm('Store access credentials locally?  (Cancel will delete existing)') == true) {
+                useLocalStorage = true;
+                localStorage.setItem("useLocalStorage", 'true');
+                stLocalStore();   // store local values (don't do this on start up as will use default values)
+                stravaLocalStore();
+              } else { // wipe out local values, other than flag
+                useLocalStorage = false;
+                localStorage.setItem("useLocalStorage", 'false');
+                stLocalStore();
+                stravaLocalStore();
+              }
+            });
         $( "#gearLeft"  ).button( { icon: "ui-icon-circle-arrow-w", showLabel: false } )
             .on( "click", function( event ) {
                   gearIndexPage--;
@@ -424,6 +438,7 @@
               //window.alert("Upload successful.");
             }
         });
+        sportTracksInfo();  // initialize - move to $(function() {   ??
       })
 
       function displayHealth() {
@@ -661,7 +676,6 @@
           //document.getElementById("tabs").disabled = false;
           // default data
           formSTdataOriginal = $("#fieldSTdata").serialize();
-          //document.getElementById("infoText").innerHTML = "&nbsp;";
           $( "#progressSTact" ).hide();
       }
 
