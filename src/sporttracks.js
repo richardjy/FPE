@@ -10,7 +10,8 @@ var CLIENTSEC   =   'ZVA6CTBL68FL6NSK'; // only works with specific website
 var FITNESSURL  =   'https://api.sporttracks.mobi/api/v2/fitnessActivities';
 var GEARURL     =   'https://api.sporttracks.mobi/api/v2/gear';
 var HEALTHURL   =   'https://api.sporttracks.mobi/api/v2/metrics';
-var LINKURL     =   'https://sporttracks.mobi/activity/';
+var STMOBIURL   =   'https://sporttracks.mobi/activity/';
+var STRAVAURL   =   'https://www.strava.com/activities/';
 var KG2LB       =   2.20462; //kg to lb conversion (ST uses kg in data)
 var MI2M        =   1609.344; //miles to meters
 var M2FT        =   3.28084; //meters to feet
@@ -19,11 +20,12 @@ var GRADE2FTPMI =   52.80;   // 1% grade in ft/mile
 if (location.host == 'localhost') {
   var REDIRECT    = 'http://localhost/';
   var CORSURL     = 'http://localhost:5000/';  // assumes cors server ('heroku local' is running (8080 if node server.js)
+  var FPEURL      = 'http://localhost/main?strava=';
 } else {
   var REDIRECT    = 'https://richardjy.github.io/FPE/main.html';
   var CORSURL     = 'https://fpe-cors.herokuapp.com/'; // whitelist set for 'https://richardjy.github.io' only
+  var FPEURL      = 'https://richardjy.github.io/FPE/main?strava=';
 }
-
 
 // variables for SportTracks authorization codes
 var stExpiresAt = 0; 			// expiry time for token Epoch time
@@ -31,7 +33,6 @@ var stAccessToken = '';		// used to get data
 var stRefreshToken = '';	// used to get new AccessToken if expired
 var stReady = false;			// are SportTracks Tokens etc set up?
 var loggedIn    =   false;  //not used yet
-var stTest = false;
 var stIndex = 1;
 var formSTdataOriginal;  // to check if data has changed
 var healthOriginal;      // ditto for health
@@ -40,7 +41,6 @@ var stActivityUpdate;    // updated data (initially same as Init)
 var stGearInit = ([]);   // init list of gear
 var stGearUpdate = ([]); // updated list of gear
 var stHealthInit;        // health data - need to understand format
-//var stHealthUpdate;       // uses 'upsert' so only need changed data
 var indexSpin = false;   // was the index change from the arrows?
 var getGear = false;     // get Gear is ongoing
 var getActivity = false; // get Activity is ongoing
@@ -54,31 +54,39 @@ var confirmUpload = false;
 var useLocalStorage = true;  // whether to store/read access tokens  - separate variable in FPE - need to rationalize
 var linkStrava = true;  // whether to link to Strava too
 
-function sportTracksInfo(stDoIt) {
-  if (stDoIt < 0) {  // negative means show it here
-    stTest = true;
-    stIndex = -stDoIt;
-  } else {
-    stIndex = stDoIt;
-  }
-  if (useLocalStorage && typeof localStorage.STlinkRefreshToken !== 'undefined' && localStorage.STlinkRefreshToken !== 'undefined') {
-      stRefreshToken = localStorage.STlinkRefreshToken;
-      stExpiresAt = localStorage.STlinkExpiresAt;
-      refreshToken(stRefreshToken);
-  } else {
-      login();
-  }
-  if (linkStrava) {
-    if (useLocalStorage && typeof localStorage.stravaRefreshToken !== 'undefined' && localStorage.stravaRefreshToken !== 'undefined') {
-        stravaRefreshToken = localStorage.stravaRefreshToken;
-        stravaRefresh();
-    } else {
-        loginStrava();
+function sportTracksInfo() {
+  if (useLocalStorage) {
+    if (localStorage.getItem('useLocalStorage') === null) {
+      // show dialog if choice not already stored (use options button to change)
+      if (window.confirm('Store access credentials locally? (Use "Options" to change later)') == true) {
+        localStorage.setItem("useLocalStorage", 'true');
+      } else { // wipe out local values, other than flag
+        useLocalStorage = false;
+        localStorage.setItem("useLocalStorage", 'false');
+        stLocalStore();
+        stravaLocalStore();
+      }
+    } else if (localStorage.useLocalStorage != 'true')  {
+      useLocalStorage = false;
     }
+  }
+
+  if (linkStrava && useLocalStorage && localStorage.getItem('stravaRefreshToken') !== null) {
+      stravaRefreshToken = localStorage.stravaRefreshToken;
+      stravaScope = localStorage.stravaScope;
+      stravaRefresh();
+  }
+
+  if (useLocalStorage && localStorage.getItem('stravaRefreshToken') !== null) {
+      stRefreshToken = localStorage.STlinkRefreshToken;
+      refreshToken(stRefreshToken);
+      if (linkStrava && stravaRefreshToken == '') loginStrava();
+  } else {
+      loginST();  // loginStrava() within this routine to decouple login dialogs
   }
 }
 
-function login() {
+function loginST() {
     document.getElementById("infoText").innerHTML = "SportTrack authorization dialog should appear. If not check Browser Pop-up settings.";
     var winurl  =  OAUTHURL + CLIENTID + '&redirect_uri=' + REDIRECT + '&state=' + STATE + '&response_type=code';
     var win     =  window.open(winurl, "windowname1", 'width=400, height=300');
@@ -102,9 +110,9 @@ function login() {
 
 function loginStrava() {
     document.getElementById("infoText").innerHTML = "Strava authorization dialog should appear. If not check Browser Pop-up settings.";
-    var stravaOAUTHURL = 'https://www.strava.com/oauth/authorize?client_id=31392&response_type=code&redirect_uri='
+    var stravaOAUTHURL = 'https://www.strava.com/oauth/authorize?client_id=' + stravaClientID + '&response_type=code&redirect_uri='
     //var winurl  =  OAUTHURL + CLIENTID + '&redirect_uri=' + REDIRECT + '&state=' + STATE + '&response_type=code';
-    var winurl  =  stravaOAUTHURL + REDIRECT + '&approval_prompt=auto&scope=read,activity:read,activity:read_all,activity:write';
+    var winurl  =  stravaOAUTHURL + REDIRECT + stravaRequest;
     var win     =  window.open(winurl, "windowname1", 'width=400, height=300');
     var pollTimer   =   window.setInterval(function() {
         try {
@@ -113,7 +121,7 @@ function loginStrava() {
                 window.clearInterval(pollTimer);
                 var url =   win.document.URL;
                 var stravaCode = gup(url, 'code');  // could also do same way as Strava link
-                var stravaScope = gup(url, 'scope');  // could also do same way as Strava link
+                stravaScope = gup(url, 'scope');  // could also do same way as Strava link
                 //console.log(stravaCode);
                 win.close();
                 stravaGetToken(stravaCode, false);
@@ -123,7 +131,49 @@ function loginStrava() {
     }, 500);
 }
 
-function getStrava(){
+function getStravaLink(stActivity) {
+  if (stravaReady == true) {
+    var epochT = Math.floor(new Date(stActivity.start_time)/1000 + stActivity.clock_duration/2); // go to mid point of activity
+    // look for first activity before midpoint
+    $.get('https://www.strava.com/api/v3/athlete/activities?before=' + epochT + '&page=1&per_page=1&access_token=' + stravaAccessToken, function(data, status){
+      //console.log(data);
+      // get activity data
+      $.get('https://www.strava.com/api/v3/activities/' + data[0].id + '?include_all_efforts=false&access_token=' + stravaAccessToken, function(data, status){
+          //console.log(data);
+          if (Math.floor(new Date(data.start_date)/1000 + data.elapsed_time) - epochT > 0 ) {  // check finish time is after STmodi midpoint i.e. activities overlap
+            setStravaLink(data.id);
+          } else {
+            //window.alert("No Strava Activity at same time found.");
+            setStravaLink(0);
+          }
+      })
+      .fail(function(error) {
+        // silent
+        //window.alert("Strava Activity not accessible.");
+        setStravaLink(0);
+      });
+    })
+  } else {
+    setStravaLink(0);
+  }
+}
+
+function setStravaLink(id) {
+  stravaActivityID = id;
+  if (id > 0) {
+    document.getElementById("linkStravaURL").innerHTML = 'Strava: ' + id;
+    document.getElementById("linkStravaURL").href = STRAVAURL + id;
+    document.getElementById("linkFPEURL").innerHTML = 'FPE';
+    document.getElementById("linkFPEURL").href = FPEURL + id;
+  } else {
+    document.getElementById("linkStravaURL").innerHTML = 'Strava: default';
+    document.getElementById("linkStravaURL").href = STRAVAURL + id;
+    document.getElementById("linkFPEURL").innerHTML = 'FPE: default';
+    document.getElementById("linkFPEURL").href = FPEURL + id;
+  }
+}
+
+function getStravaInfo(){
   var epochT = Math.floor(new Date(stActivityUpdate.start_time)/1000 + stActivityUpdate.clock_duration/2); // go to mid point of activity
   // look for first activity before midpoint
   $.get('https://www.strava.com/api/v3/athlete/activities?before=' + epochT + '&page=1&per_page=1&access_token=' + stravaAccessToken, function(data, status){
@@ -131,15 +181,23 @@ function getStrava(){
     // get activity data
     $.get('https://www.strava.com/api/v3/activities/' + data[0].id + '?include_all_efforts=false&access_token=' + stravaAccessToken, function(data, status){
         //console.log(data);
-        var newDesc = (data.description == undefined ? '' : data.description + '\n') + 'https://www.strava.com/activities/' + data.id + '\n\n';
-        var dialogStr = 'Click OK to use Title and Description: \n\n' + data.name + '\n\n' + newDesc;
-        //console.log(dialogStr);
-        if (window.confirm(dialogStr) == true) {
-          document.getElementById("STname").value = data.name;
-          document.getElementById("STnotes").value = newDesc + document.getElementById("STnotes").value;
+        if (Math.floor(new Date(data.start_date)/1000 + data.elapsed_time) - epochT > 0 ) {  // check finish time is after STmodi midpoint i.e. activities overlap
+          var newDesc = (data.description == undefined ? '' : data.description + '\n') + 'https://www.strava.com/activities/' + data.id + '\n\n';
+          var dialogStr = 'Click OK to use Title and Description: \n\n' + data.name + '\n\n' + newDesc;
+          //console.log(dialogStr);
+          setStravaLink(data.id); // should not have changed, but perhaps changed something on Strava
+          if (window.confirm(dialogStr) == true) {
+            document.getElementById("STname").value = data.name;
+            document.getElementById("STnotes").value = newDesc + document.getElementById("STnotes").value;
+          }
+
+        } else {
+          setStravaLink(0);
+          window.alert("No Strava Activity at same time found.");
         }
     })
     .fail(function(error) {
+      setStravaLink(0);
       window.alert("Strava Activity not accessible.");
     });
   })
@@ -160,10 +218,8 @@ function validateToken(token) {
           'redirect_uri' : REDIRECT}
     })
     .done(function(data, status){
+        if (linkStrava && stravaRefreshToken == '') loginStrava();
         tokenDone(data);
-        if (stTest == true) {
-          getFitnessActivityIndex(stIndex);
-        }
     })
     .fail(function(response) {
         window.alert("SportTracks token exchange failed.");
@@ -172,8 +228,7 @@ function validateToken(token) {
 }
 
 function refreshToken(token) {
-    var timeLeft = stExpiresAt - Date.now()/1000;
-    document.getElementById("infoText").innerHTML = "Refresh(" + Math.round(timeLeft/60) + "min left): Please wait while Server wakes up...";
+    document.getElementById("infoText").innerHTML = "Refresh: Please wait while Server wakes up...";
     $.ajax({
         type: 'POST',
         url: CORSURL + VALIDURL,
@@ -192,7 +247,7 @@ function refreshToken(token) {
     .fail(function(response) {
         window.alert("SportTracks token refresh failed. Authorization will be attempted.");
         stReady = false;
-        login();
+        loginST();
     });
 }
 
@@ -201,14 +256,23 @@ function tokenDone(data){  // common to validate and refresh
   stAccessToken = data.access_token;
   if (typeof data.refresh_token !== 'undefined') stRefreshToken = data.refresh_token;	// used to get new AccessToken if expired
   //console.log("data: " , data, "\nExpires at: " + stExpiresAt);
-  if (useLocalStorage) {
-    localStorage.setItem("STlinkAccessToken", stAccessToken);  // stored value not used at moment
-    localStorage.setItem("STlinkRefreshToken", stRefreshToken);
-    localStorage.setItem("STlinkExpiresAt", stExpiresAt);
-  }
+  stLocalStore();
   stReady = true;
   enableForm();
 }
+
+function stLocalStore() {
+  if (useLocalStorage) {
+    //localStorage.setItem("STlinkAccessToken", stAccessToken);  // stored value not used at moment
+    localStorage.setItem("STlinkRefreshToken", stRefreshToken);
+    //localStorage.setItem("STlinkExpiresAt", stExpiresAt);
+  } else {  // delete local store items
+    localStorage.removeItem("STlinkAccessToken");
+    localStorage.removeItem("STlinkRefreshToken");
+    localStorage.removeItem("STlinkExpiresAt");
+  }
+}
+
 
 function getFitnessActivityIndex(stIndexNo){   // index is which one to get 1 = last, 2 = second, if large number then try actual
     // to do - check stIndex to see if should try to grab directlty

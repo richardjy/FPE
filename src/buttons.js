@@ -16,7 +16,7 @@ var gpxToggleButton = L.easyButton({ states: [{
       gpxLoaded = false;
     }
 
-    // check for expired token (6 hours)
+    // check for expired token (6 hours) - DO THIS MORE
     if (stravaReady == true) {
       var timeLeft = stravaExpiresAt - Date.now()/1000;
       if (timeLeft < 1800) { // expires in less than 30 mins
@@ -34,57 +34,7 @@ var gpxToggleButton = L.easyButton({ states: [{
       // Example run - Strava 2933015864
       if (gpxPrompt == 0) gpxPrompt = 2933015864; // if set to zero then grab default run for Richard
       stravaActivityID = Number(gpxPrompt); // if set to < 1000 then look at last 'n' runs
-      // check scope is OK
-      if (stravaReady == true && stravaScope.includes("activity:read")) {
-        // get list of activities - use per_page=1 to get Nth activity (up to N=999), if actual stravaID then just get most recent activity
-        var stravaSearch = (stravaActivityID > 999) ? 1 : stravaActivityID;
-
-        $.get('https://www.strava.com/api/v3/athlete/activities?page=' + stravaSearch + '&per_page=1&access_token='
-          + stravaAccessToken, function(data, status){
-            //console.log(data);
-            // do things with activities
-            if (stravaActivityID < 1000) {
-              stravaActivityID = data[0].id;
-            }
-            // get activity name
-            $.get('https://www.strava.com/api/v3/activities/' + stravaActivityID + '?include_all_efforts=false&access_token='
-              + stravaAccessToken, function(data, status){
-                //console.log(data);
-                gpxRouteName = data.name.replace(/[^\x20-\x7E]/g, '').trim(); //get rid of non-printing characters
-                gpxRouteName = 'Strava: ' + gpxRouteName + ' (' + stravaActivityID +')';
-                // get gpx data
-                $.get('https://www.strava.com/api/v3/activities/' + stravaActivityID + '/streams?keys=latlng&key_by_type=true&access_token='
-                  + stravaAccessToken, function(data, status){
-                    //console.log(data);
-                    //console.log(data.latlng.data);
-                    var stravaGPX = L.Polyline.PolylineEditor(data.latlng.data, {color: 'blue', maxMarkers: 500}).addTo(gpxdata);
-                    // updated line gpxdata.getLayers()[0].toGeoJSON()
-                    //  sizeof  gpxdata.getLayers().length  last = length-1
-                    //L.Polyline.PolylineEditor
-                    //stravaGPX = L.polyline(data.latlng.data, {color: 'blue'}).addTo(gpxdata);
-                    stravaGPX.bindTooltip(gpxRouteName, {sticky: true});
-                    //gpxPoints = stravaGPX.toGeoJSON();  // this is now done at conversion
-                    mymap.fitBounds(stravaGPX.getBounds());
-                    gpxLoaded = true;
-                    gpxCalcButton.enable();
-                })
-                .fail(function(response) {
-                  window.alert("Strava Activity GPX data not accessible.");
-                  //stravaReady = false;
-                });
-            })
-            .fail(function(error) {
-              window.alert("Strava Activity not accessible.");
-              //stravaReady = false;
-            });
-        })
-        .fail(function(response) {
-          window.alert("Strava Activities not accessible.");
-          //stravaReady = false;
-        });
-      } else {
-        window.alert("Strava not authorized with enough access.");
-      }
+      loadStravaID();
     } else { // gpx data pasted in by user
       // load the data - URL to your GPX file (or the GPX itself)
       // Default data for testing:
@@ -110,6 +60,9 @@ var gpxToggleButton = L.easyButton({ states: [{
     }
   }
 }]  })
+
+
+
 
 var gpxCalcButton = L.easyButton({ states: [{
   stateName: 'gpx calc',
@@ -478,6 +431,61 @@ var gpxCalcButton = L.easyButton({ states: [{
     }
   }
 }]  })
+
+function loadStravaID() {
+    // check scope is OK
+    if (stravaReady == true && stravaScope.includes("activity:read")) {
+      // get list of activities - use per_page=1 to get Nth activity (up to N=999), if actual stravaID then just get most recent activity
+      var stravaSearch = (stravaActivityID > 999) ? 1 : stravaActivityID;
+
+      $.get('https://www.strava.com/api/v3/athlete/activities?page=' + stravaSearch + '&per_page=1&access_token='
+        + stravaAccessToken, function(data, status){
+          //console.log(data);
+          // do things with activities
+          if (stravaActivityID < 1000) {
+            stravaActivityID = data[0].id;
+          }
+          // get activity name
+          $.get('https://www.strava.com/api/v3/activities/' + stravaActivityID + '?include_all_efforts=false&access_token='
+            + stravaAccessToken, function(data, status){
+              //console.log(data);
+              gpxRouteName = data.name.replace(/[^\x20-\x7E]/g, '').trim(); //get rid of non-printing characters
+              gpxRouteName = 'Strava: ' + gpxRouteName + ' (' + stravaActivityID +')';
+              // get gpx data
+              $.get('https://www.strava.com/api/v3/activities/' + stravaActivityID + '/streams?keys=latlng&key_by_type=true&access_token='
+                + stravaAccessToken, function(data, status){
+                  //console.log(data);
+                  //console.log(data.latlng.data);
+                  var stravaGPX = L.Polyline.PolylineEditor(data.latlng.data, {color: 'blue', maxMarkers: 500}).addTo(gpxdata);
+                  // updated line gpxdata.getLayers()[0].toGeoJSON()
+                  //  sizeof  gpxdata.getLayers().length  last = length-1
+                  //L.Polyline.PolylineEditor
+                  //stravaGPX = L.polyline(data.latlng.data, {color: 'blue'}).addTo(gpxdata);
+                  stravaGPX.bindTooltip(gpxRouteName, {sticky: true});
+                  //gpxPoints = stravaGPX.toGeoJSON();  // this is now done at conversion
+                  mymap.fitBounds(stravaGPX.getBounds());
+                  gpxLoaded = true;
+                  gpxCalcButton.enable();
+              })
+              .fail(function(response) {
+                window.alert("Strava Activity GPX data not accessible.");
+                //stravaReady = false;
+              });
+          })
+          .fail(function(error) {
+            window.alert("Strava Activity not accessible.");
+            //stravaReady = false;
+          });
+      })
+      .fail(function(response) {
+        window.alert("Strava Activities not accessible.");
+        //stravaReady = false;
+      });
+    } else {
+      window.alert("Strava not authorized with enough access.");
+    }
+}
+
 
 function updateStrava() {
   var stravaDescription = $("#stravadescripTextArea").val();

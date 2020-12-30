@@ -79,7 +79,8 @@
     <input id="STindex" name="STindex" value="1" size="10" style="padding-right:5px; text-align:right;"
     title="1 = latest activity, 2 = 2nd, etc&#013; (relative to date and earlier)&#013; or enter STmobi index number">&nbsp;
     <input type="submit" id="STgetButton" onclick="getSTdata()" value="Get from ST">&nbsp;
-    <input type="text" id="idDate" size="10" style="text-align:center;">
+    <input type="text" id="idDate" size="10" style="text-align:center;">&nbsp;&nbsp;
+    <button id="setUpDialog">Options</button>
   </fieldset>
 </div>
 <br>
@@ -92,8 +93,10 @@
     		 &nbsp;<span id="STtypedate" name="STtypedate"></span>
     	</p>
       <p>
-        <label id="labelSTactivity" style="line-height:1.7;">Link:&nbsp;</label>
-        &nbsp;<a href="#" target="_blank" rel="noopener noreferrer" id="STactivity"></a>
+        <label id="labelSTactivity" style="line-height:1.7;">Links:&nbsp;</label>&nbsp;
+        <a href="#" target="_blank" rel="noopener noreferrer" id="linkSTmobiURL"></a>&nbsp;&nbsp;
+        <a href="#" target="_blank" rel="noopener noreferrer" id="linkStravaURL"></a>&nbsp;&nbsp;
+        <a href="#" target="_blank" rel="noopener noreferrer" id="linkFPEURL"></a>
       </p>
       <p>
         <label for="STname" id="labelSTname">Name:&nbsp;</label>
@@ -123,7 +126,7 @@
         <label for="cbWrap">Wrap text
           <input type="checkbox" name="cbWrap" id="cbWrap">
         </label>&nbsp;&nbsp;&nbsp;
-        <input type="button" id="getStrava" onclick="getStrava()" value="Get Strava"
+        <input type="button" id="getStravaInfo" onclick="getStravaInfo()" value="Get Strava"
             title="Get 'Title' and 'Description' from Strava">
       </p>
     </div>
@@ -242,12 +245,11 @@
         maxZoom: 19
       }).addTo(mapST);
       L.control.zoom({
-        position: 'topright'
+        position: 'bottomright'
       }).addTo(mapST);
 
       document.getElementById("fieldSTindex").disabled = true;
       document.getElementById("fieldSTdata").disabled = true; // tabs disabled below
-      sportTracksInfo(3);  // initialize
 
       function enableForm() { // ST connection made, enable index area
           document.getElementById("fieldSTindex").disabled = false;
@@ -260,7 +262,7 @@
 
       $(function() {
         $( "#STgetButton, #getLocButton, #recalcButton, #STrevertButton, #STsendButton, #STgetGearButton," +
-            " #STgetHealthButton, #STsendHealthButton, #STmaxData, #getStrava" ).button(  );  // { disabled: true }
+            " #STgetHealthButton, #STsendHealthButton, #STmaxData, #getStravaInfo" ).button(  );  // { disabled: true }
         $( document ).tooltip();
         $( "#fieldSTgear" ).controlgroup()  // click on control group
           .on('click', '[type="checkbox"]', function( event, ui ){
@@ -308,6 +310,20 @@
                 getSTdata();  // allow enter key to also trigger the update
             }
         });
+        $( "#setUpDialog"  ).button( { icon: "ui-icon-gear", showLabel: false } )
+            .on( "click", function( event ) {
+              if (window.confirm('Store access credentials locally?  (Cancel will delete existing)') == true) {
+                useLocalStorage = true;
+                localStorage.setItem("useLocalStorage", 'true');
+                stLocalStore();   // store local values (don't do this on start up as will use default values)
+                stravaLocalStore();
+              } else { // wipe out local values, other than flag
+                useLocalStorage = false;
+                localStorage.setItem("useLocalStorage", 'false');
+                stLocalStore();
+                stravaLocalStore();
+              }
+            });
         $( "#gearLeft"  ).button( { icon: "ui-icon-circle-arrow-w", showLabel: false } )
             .on( "click", function( event ) {
                   gearIndexPage--;
@@ -424,6 +440,7 @@
               //window.alert("Upload successful.");
             }
         });
+        sportTracksInfo();  // initialize - move to $(function() {   ??
       })
 
       function displayHealth() {
@@ -613,14 +630,13 @@
       // populate form
       function populateSTform (stActivity) {
           var stDate = new Date (stActivity.start_time);
-          if (stTest == true) {
-            window.alert("SportTracks - index " + stIndex + ": \n  " + stActivity.name + " (" + stDate.toLocaleString() + ")\n  " + stActivity.uri);
-          }
           document.getElementById("STtypedate").innerHTML = stActivity.type + " (" + stDate.toDateString().substr(0,4) + stDate.toLocaleString() + ")";
           // link to 'sorttracks.mobi' rather than 'api.sorttracks.mobi'
-          var actURL = LINKURL + stActivity.activity.split("/").pop();
-          document.getElementById("STactivity").innerHTML = actURL;
-          document.getElementById("STactivity").href = actURL;
+          var stmobiID = stActivity.activity.split("/").pop();
+          //var actURL = STMOBIURL + stActivity.activity.split("/").pop();
+          document.getElementById("linkSTmobiURL").innerHTML = 'STmobi: ' + stmobiID;
+          document.getElementById("linkSTmobiURL").href = STMOBIURL + stmobiID;
+          getStravaLink(stActivity);
           document.getElementById("STname").value = stActivity.name;
           document.getElementById("STloc").value = typeof stActivity.location_name === 'undefined' ? "" : stActivity.location_name;
           document.getElementById("STdistance").value = (stActivity.total_distance/MI2M).toFixed(2);  // convert to miles, show 2 dp
@@ -664,7 +680,6 @@
           //document.getElementById("tabs").disabled = false;
           // default data
           formSTdataOriginal = $("#fieldSTdata").serialize();
-          //document.getElementById("infoText").innerHTML = "&nbsp;";
           $( "#progressSTact" ).hide();
       }
 
