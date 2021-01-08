@@ -189,6 +189,7 @@ function getStravaInfo(){
           if (window.confirm(dialogStr) == true) {
             document.getElementById("STname").value = data.name;
             document.getElementById("STnotes").value = newDesc + document.getElementById("STnotes").value;
+            $( "#fieldSTdata" ).trigger('input');  // check if change
           }
 
         } else {

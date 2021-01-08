@@ -716,9 +716,7 @@
             //noteStr += "  Elapsed time: " + elapsedStr + " @ " + elPaceStr + " /mi (original @ " + elOrigPaceStr + " /mi)\n";
             document.getElementById("STdistance").value = dist_mi;
             document.getElementById("STactiveP").value = calcUIPace();
-
             displaySummary();
-
             document.getElementById("recalcButton").value = 'Revert';
             calcGPSused = true;
           } else {
@@ -728,7 +726,7 @@
             calcGPSused = false;
           }
           document.getElementById("STactiveP").value = calcUIPace();
-
+          $( "#fieldSTdata" ).trigger('input');  // check if change
       }
 
       function displaySummary(){
@@ -795,6 +793,7 @@
                 }
                 document.getElementById("STloc").value = locAddress;
                 document.getElementById("STloc").title = locData;
+                $( "#fieldSTdata" ).trigger('input');  // check if change
             })
             .fail(function(response) {
               window.alert("Geocode request failed.");
