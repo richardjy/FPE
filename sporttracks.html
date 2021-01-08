@@ -368,6 +368,13 @@
             }
             $( "#STactiveP").val(calcUIPace());
         });
+        $( "#fieldSTdata").on( "input", function () {
+          if ($("#fieldSTdata").serialize() != formSTdataOriginal) {
+           	document.getElementById("STnotes").style.color = 'black';
+        	} else {
+            document.getElementById("STnotes").style.color = 'green'
+          }
+        });
         $( "#cbWrap").on( "change",  function () {
             $( "#STnotes" ).css("white-space", $( "#cbWrap" )[0].checked ? "pre-wrap" : "pre" );
           });
@@ -536,6 +543,7 @@
           postFitnessActivity(stActivityUpdate);
           //make new text the baseline
           formSTdataOriginal = $("#fieldSTdata").serialize();
+          document.getElementById("STnotes").style.color = 'green';
           // send changed gear
           // first sort array by activity to match init
           stGearUpdate.sort( function(g1,g2){ return g1.uri < g2.uri ? 1 : -1 } );  // sort based on uri for unique list
@@ -646,6 +654,7 @@
           $( "#STelev" ).val((typeof stActivity.elevation_gain === 'undefined' ? '' : '+' + elevFeet(stActivity.elevation_gain)) + (typeof stActivity.elevation_loss === 'undefined' ? '' : ' / -' + elevFeet(stActivity.elevation_loss) + ' ft') );
 
           document.getElementById("STnotes").value = typeof stActivity.notes === 'undefined' ? "" : stActivity.notes;
+          document.getElementById("STnotes").style.color = 'green';
 
           $( "#getLocButton" ).button( "option", "disabled", typeof stActivity.location === 'undefined' ); // button enabled if GPS data
           $( "#recalcButton" ).button( "option", "disabled", typeof stActivity.location === 'undefined' ); // button enabled if GPS data
