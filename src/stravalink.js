@@ -109,6 +109,43 @@ function stravaLocalStore() {
   }
 }
 
+function strydGetData(id){
+  // test function -
+  //$.get('https://www.stryd.com/b/api/v1/activities/' + id + '??keys=SmoothVelocityStream&access_token='
+  strydBearer = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJFbWFpbCI6InJpY2hhcmRqeTQ0QGdtYWlsLmNvbSIsIlVzZXJOYW1lIjoicmljaGFyZGp5IiwiRmlyc3ROYW1lIjoiUmljaGFyZCAiLCJMYXN0TmFtZSI6IllvdW5nIiwiSUQiOiI0MWYwMDg4MS1kYzk2LTVlMWMtNzgzOS0xNTRkZWI0YWMyZGQiLCJJbWFnZSI6Imh0dHBzJTNBJTJGJTJGc3RvcmFnZS5nb29nbGVhcGlzLmNvbSUyRnN0cnlkX3N0YXRpY19hc3NldHMlMkZwcm9maWxlX2ltYWdlJTJGcHJvZmlsZV9zdHJ5ZF9kZWZhdWx0LnBuZyUzRkV4cGlyZXMlM0Q0MTg5MjQ0NDAwJTI2R29vZ2xlQWNjZXNzSWQlM0Rnb29nbGUtY2xvdWQtc3RvcmFnZSUyNTQwc3RyeWR3ZWIuaWFtLmdzZXJ2aWNlYWNjb3VudC5jb20lMjZTaWduYXR1cmUlM0RweTBNdFFIRlNWa1k2ZHA3MnE2N0pnJTI1MkJhejhBMGxGTzdRbnFwSW44R1NlVTVMbVYzJTI1MkJJWFhDenRTcW9nRWJDZTBkRFZRTllFcGh3VUlaaVQlMjUyQjl1aVZuempKMFhxYkhyeWhqaXdGZjglMjUyQjdTNHFvUVRZc085Y2RBdEhscDQlMjUyQkVJUENVcklnYVJMJTI1MkJrUWN0QWNiTk9GMTJhcUhKMFZobEIzMnlVa3ZNZFFqNDhuOEZDR2hBMUNBc1JSSXRmbWJyVnFFMldtdEQ1V24wJTI1MkI2anYlMjUyQmlzUWE1YVNhVjR0SzBmd3dJNFc4Y2dEVmhhRURtVEs4azh3cnA4QjhUTmZMRlRRb2hWR0tlOFBIaDdQc0ZSM3RmUVclMjUyRiUyNTJCWW56Vml4TnVDUXRvJTI1MkZsciUyNTJGQUo4JTI1MkJuSjllcCUyNTJGNzFERndBdVU1cWlkOE4yRWN3d0swd1QxVmslMjUyRlAxZHlWVkJnYndsS1hUMmclMjUzRCUyNTNEIiwiQWNjZXNzVHlwZXMiOm51bGwsImV4cCI6MTU5Mjg0NTIwMzEzNCwiaXNzIjoic3RyeWQifQ.kODgqSaIZkTYAGzAjslEol3VSP-V7pIps47oNkbNNiU';
+  $.ajax({
+      type: 'GET',
+      url: CORSURL + 'https://www.stryd.com/b/api/v1/activities/' + id,
+      //url: 'https://www.stryd.com/b/api/v1/activities/' + id,
+      headers: {
+        'Authorization' : 'Bearer ' + strydBearer,
+        'Accept' : 'application/json'
+      }
+  })
+  .done(function(data, status){
+      console.log("data: ", data,  "\nStatus: " + status);
+      console.log(data.speed_list);
+  })
+  .fail(function(error) {
+    window.alert("Stryd Activity not accessible.");
+    //stravaReady = false;
+  });
+}
+
+function stravaGetData(id){
+  // test function -
+  $.get('https://www.strava.com/api/v3/activities/' + id + '/streams?keys=SmoothVelocityStream&access_token='
+    + stravaAccessToken, function(data, status){
+      console.log(data);
+      // do things with activities
+
+  })
+  .fail(function(error) {
+    window.alert("Strava Activity not accessible.");
+    //stravaReady = false;
+  });
+}
+
 function stravaGetActivity(timeBefore, searchIndex){
   // test function - link to current ST
   if (timeBefore == '' || timeBefore == 0) timeBefore = Date.now();
