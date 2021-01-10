@@ -28,6 +28,7 @@
     <script src="./src/stravalink.js"></script>
     <script src='./src/sporttracks.js'></script>
     <script src='./src/stanalysis.js'></script>
+    <script src='./src/strydlink.js'></script>
     <script src='./src/jquery.sparkline.min.js'></script>
 
     <style>
@@ -96,7 +97,8 @@
         <label id="labelSTactivity" style="line-height:1.7;">Links:&nbsp;</label>&nbsp;
         <a href="#" target="_blank" rel="noopener noreferrer" id="linkSTmobiURL"></a>&nbsp;&nbsp;
         <a href="#" target="_blank" rel="noopener noreferrer" id="linkStravaURL"></a>&nbsp;&nbsp;
-        <a href="#" target="_blank" rel="noopener noreferrer" id="linkFPEURL"></a>
+        <a href="#" target="_blank" rel="noopener noreferrer" id="linkFPEURL"></a>&nbsp;&nbsp;
+        <a href="#" target="_blank" rel="noopener noreferrer" id="linkStrydURL"></a>
       </p>
       <p>
         <label for="STname" id="labelSTname">Name:&nbsp;</label>
@@ -127,7 +129,9 @@
           <input type="checkbox" name="cbWrap" id="cbWrap">
         </label>&nbsp;&nbsp;&nbsp;
         <input type="button" id="getStravaInfo" onclick="getStravaInfo()" value="Get Strava"
-            title="Get 'Title' and 'Description' from Strava">
+            title="Get 'Title' and 'Description' from Strava">&nbsp;&nbsp;&nbsp;
+        <input type="button" id="getStrydInfo" onclick="getStrydInfo()" value="Get Stryd"
+                title="Get run data from Stryd">
       </p>
     </div>
     <textarea rows = "10" cols = "70" id="STnotes" name="STnotes" ></textarea>
@@ -262,7 +266,7 @@
 
       $(function() {
         $( "#STgetButton, #getLocButton, #recalcButton, #STrevertButton, #STsendButton, #STgetGearButton," +
-            " #STgetHealthButton, #STsendHealthButton, #STmaxData, #getStravaInfo" ).button(  );  // { disabled: true }
+            " #STgetHealthButton, #STsendHealthButton, #STmaxData, #getStravaInfo, #getStrydInfo" ).button(  );  // { disabled: true }
         $( document ).tooltip();
         $( "#fieldSTgear" ).controlgroup()  // click on control group
           .on('click', '[type="checkbox"]', function( event, ui ){
@@ -637,6 +641,7 @@
 
       // populate form
       function populateSTform (stActivity) {
+          setStrydLink(0);
           var stDate = new Date (stActivity.start_time);
           document.getElementById("STtypedate").innerHTML = stActivity.type + " (" + stDate.toDateString().substr(0,4) + stDate.toLocaleString() + ")";
           // link to 'sorttracks.mobi' rather than 'api.sorttracks.mobi'
@@ -645,6 +650,7 @@
           document.getElementById("linkSTmobiURL").innerHTML = 'STmobi: ' + stmobiID;
           document.getElementById("linkSTmobiURL").href = STMOBIURL + stmobiID;
           getStravaLink(stActivity);
+          getStrydLink(stActivity);
           document.getElementById("STname").value = stActivity.name;
           document.getElementById("STloc").value = typeof stActivity.location_name === 'undefined' ? "" : stActivity.location_name;
           document.getElementById("STdistance").value = (stActivity.total_distance/MI2M).toFixed(2);  // convert to miles, show 2 dp

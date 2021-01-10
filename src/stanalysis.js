@@ -1,7 +1,11 @@
 
 // global variables for now
-var rawData = ([],[]);       //  includes gaps [0]distance, [1]elevation, [2]power, [3]GCT, [4]heartrate, [5]cadence
-var runData = ([],[]);       //  fills gaps    [0]distance, [1]elevation, [2]power, [3]GCT, [4]heartrate, [5]cadence
+var rawData = ([],[]);      //  includes gaps [0]distance_from_ST, [1]elevation, [2]power, [3]GCT, [4]heartrate, [5]cadence
+var runData = ([],[]);      //  fills gaps    [0]distance_from_ST, [1]elevation, [2]power, [3]GCT, [4]heartrate, [5]cadence
+var strydData = ([],[]);    //  from stryd    [0]distance_from_watch, [1]distance_from_speed, [2]total_power, [3]GCT, [4]speed, [5]cadence
+    // distance_list (matches fitfile), speed_list, timestamp_list,
+    // cadence_list (spm - different but similar to watch, matches second 'Cadence' in fitFile)
+    // matches ST: heart_rate_list, total_power_list, ground_time_list, elevation_list
 var calcData = ([],[]);     //  [0]watchstop1/paused2/walking3/running4, [1]delta dist,
                             //   [2]filtered elev, [3]delta elev, [4]grade, [5]down 1, level 2, up 3
 var sumData = ([],[],[]);   // see below for details
