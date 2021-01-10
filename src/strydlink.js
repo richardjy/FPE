@@ -154,7 +154,7 @@ function getStrydInfo() {
         // distance_list (matches fitfile), speed_list, timestamp_list,
         // cadence_list (spm - different but similar to watch, matches second 'Cadence' in fitFile)
         // matches ST: heart_rate_list, total_power_list, ground_time_list
-        // strydData = [0]distance_from_watch, [1]distance_from_speed, [2]total_power, [3]GCT, [4]speed, [5]cadence
+        // from stryd [0]distance_from_watch, [1] delta_dist, [2]distance_from_speed, [3]speed, [4]total_power, [5]GCT, [6]cadence
         strydData.length = 0;
 
         // if no array of distance then set to zero   -    distance list is time then distance
@@ -164,16 +164,28 @@ function getStrydInfo() {
         for (i = 0; i < iEnd ; i++ ) {
           if (data.timestamp_list[it+1] - data.start_time == i) {
             it++;
-            distS += +data.speed_list[it];  // avoid annoyingly long
-            strydData[i] = [+data.distance_list[it].toFixed(2), +distS.toFixed(2), data.total_power_list[it],
-                data.ground_time_list[it], +data.speed_list[it].toFixed(2), data.cadence_list[it]];
+            var deltaS = +data.speed_list[it].toFixed(2);  // avoid annoyingly large number of digits, assume 1 sec per data point
+            distS = +(distS + deltaS).toFixed(2);
+            var distW = +data.distance_list[it].toFixed(2);
+            var deltaW = i > 0 ? +(distW - strydData[i-1][0]).toFixed(2) : distW;
+            strydData[i] = [distW, deltaW, distS, deltaS,
+                data.total_power_list[it], data.ground_time_list[it], data.cadence_list[it]];
           } else {
-            strydData[i] = [data.distance_list[it], distS, 0, 0, 2000, 0];
+            strydData[i] = [distW, 0, distS, 0, 0, 2000, 0];
           }
         }
-        console.log(strydData);
+        // data has distance at time zero - zero out deltas for [0] and add to [1]
+        strydData[1][1] = +(strydData[0][1] + strydData[1][1]).toFixed(2);
+        strydData[0][1] = 0;
+        strydData[1][3] = +(strydData[0][3] + strydData[1][3]).toFixed(2);
+        strydData[0][3] = 0;
+        // display data as needed
+        refreshData();
+
+        //console.log(strydData);
         iEnd--;
-        console.log('distance:watch / stryd', strydData[iEnd][0], strydData[iEnd][1], (strydData[iEnd][0]/strydData[iEnd][1]).toFixed(3));
+        console.log('distance:watch / stryd', strydData[iEnd][0], strydData[iEnd][2], (strydData[iEnd][0]/strydData[iEnd][2]).toFixed(3));
+
         $( "#getStrydInfo" ).button( "option", "disabled", false ); // button enabled
     })
     .fail(function(error) {

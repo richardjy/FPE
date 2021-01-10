@@ -642,6 +642,7 @@
       // populate form
       function populateSTform (stActivity) {
           setStrydLink(0);
+          strydData.length = 0; // discard Strd data
           var stDate = new Date (stActivity.start_time);
           document.getElementById("STtypedate").innerHTML = stActivity.type + " (" + stDate.toDateString().substr(0,4) + stDate.toLocaleString() + ")";
           // link to 'sorttracks.mobi' rather than 'api.sorttracks.mobi'
@@ -664,20 +665,7 @@
 
           $( "#getLocButton" ).button( "option", "disabled", typeof stActivity.location === 'undefined' ); // button enabled if GPS data
           $( "#recalcButton" ).button( "option", "disabled", typeof stActivity.location === 'undefined' ); // button enabled if GPS data
-          mapST.eachLayer(function (layer) {
-            if (layer instanceof L.Polyline) mapST.removeLayer(layer);
-          });
-          if (typeof stActivity.location !== 'undefined') {
-            var stLatLngs = [];
-            var j =0;
-            for (i = 1; i < stActivity.location.length; i=i+2) {
-                stLatLngs[j] = stActivity.location[i];
-                j++;
-            }
-            var stGPX = L.polyline(stLatLngs, {color: 'red'}).addTo(mapST)
-            mapST.fitBounds(stGPX.getBounds());
-          }
-
+          showMap(stActivity.location);
           $( "#STrevertButton" ).button( "option", "disabled", false ); // enable button (only needed once)
           $( "#STsendButton" ).button( "option", "disabled", false ); // enable button (only needed once)
           document.getElementById("STloc").title = ""; //remove tooltip
@@ -698,6 +686,22 @@
           $( "#progressSTact" ).hide();
       }
 
+      function showMap(gps) { // end -1 = all
+        mapST.eachLayer(function (layer) {
+          if (layer instanceof L.Polyline) mapST.removeLayer(layer);
+        });
+        if (typeof gps !== 'undefined') {
+          var stLatLngs = [];
+          var j =0;
+          for (i = 1; i < gps.length; i=i+2) {
+              stLatLngs[j] = gps[i];
+              j++;
+          }
+          var stGPX = L.polyline(stLatLngs, {color: 'red'}).addTo(mapST)
+          mapST.fitBounds(stGPX.getBounds());
+        }
+      }
+
       var calcGPSused = false;
       function calcGPS(gps) {  // review which times to use
           var orig_dist_mi = (sumData[0][0][1]/MI2M).toFixed(2);
@@ -710,7 +714,7 @@
             for (i = 3; i < gps.length; i=i+2) {
                 dist += mapST.distance(gps[i-2], gps[i]);
             }
-            var dist_mi = (dist/MI2M).toFixed(2);                                          // so same as stored value for pace calcs
+            var dist_mi = (dist/MI2M).toFixed(2);                                // so same as stored value for pace calcs
             //var pace = durS / dist_mi;                                         // seconds per mile
             //var paceStr = new Date(pace * 1000 + 500).toISOString().substr(14, 5);            // extra 500 ms for correct rounding
             //var clockRatio = stActivityUpdate.clock_duration / durS
