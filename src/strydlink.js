@@ -1,7 +1,7 @@
-var strydReady = true;			// are Stryd Tokens etc set up?
+var strydReady = false;			// are Stryd Tokens etc set up?
 var strydActivityID = 0;			// current activityID
-var strydBearer = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJFbWFpbCI6InJpY2hhcmRqeTQ0QGdtYWlsLmNvbSIsIlVzZXJOYW1lIjoicmljaGFyZGp5IiwiRmlyc3ROYW1lIjoiUmljaGFyZCAiLCJMYXN0TmFtZSI6IllvdW5nIiwiSUQiOiI0MWYwMDg4MS1kYzk2LTVlMWMtNzgzOS0xNTRkZWI0YWMyZGQiLCJJbWFnZSI6Imh0dHBzJTNBJTJGJTJGc3RvcmFnZS5nb29nbGVhcGlzLmNvbSUyRnN0cnlkX3N0YXRpY19hc3NldHMlMkZwcm9maWxlX2ltYWdlJTJGcHJvZmlsZV9zdHJ5ZF9kZWZhdWx0LnBuZyUzRkV4cGlyZXMlM0Q0MTg5MjQ0NDAwJTI2R29vZ2xlQWNjZXNzSWQlM0Rnb29nbGUtY2xvdWQtc3RvcmFnZSUyNTQwc3RyeWR3ZWIuaWFtLmdzZXJ2aWNlYWNjb3VudC5jb20lMjZTaWduYXR1cmUlM0RweTBNdFFIRlNWa1k2ZHA3MnE2N0pnJTI1MkJhejhBMGxGTzdRbnFwSW44R1NlVTVMbVYzJTI1MkJJWFhDenRTcW9nRWJDZTBkRFZRTllFcGh3VUlaaVQlMjUyQjl1aVZuempKMFhxYkhyeWhqaXdGZjglMjUyQjdTNHFvUVRZc085Y2RBdEhscDQlMjUyQkVJUENVcklnYVJMJTI1MkJrUWN0QWNiTk9GMTJhcUhKMFZobEIzMnlVa3ZNZFFqNDhuOEZDR2hBMUNBc1JSSXRmbWJyVnFFMldtdEQ1V24wJTI1MkI2anYlMjUyQmlzUWE1YVNhVjR0SzBmd3dJNFc4Y2dEVmhhRURtVEs4azh3cnA4QjhUTmZMRlRRb2hWR0tlOFBIaDdQc0ZSM3RmUVclMjUyRiUyNTJCWW56Vml4TnVDUXRvJTI1MkZsciUyNTJGQUo4JTI1MkJuSjllcCUyNTJGNzFERndBdVU1cWlkOE4yRWN3d0swd1QxVmslMjUyRlAxZHlWVkJnYndsS1hUMmclMjUzRCUyNTNEIiwiQWNjZXNzVHlwZXMiOm51bGwsImV4cCI6MTU5Mjg0NTIwMzEzNCwiaXNzIjoic3RyeWQifQ.kODgqSaIZkTYAGzAjslEol3VSP-V7pIps47oNkbNNiU';
-var strydUID = '41f00881-dc96-5e1c-7839-154deb4ac2dd';
+var strydBearer = '';
+var strydUID = '';
 
 function strydGetData(aid){
   //test
@@ -59,13 +59,30 @@ function strydLogin(email, pwd){
         'password' : pwd})
   })
   .done(function(data, status){
-      console.log("data: ", data,  "\nStatus: " + status);
-      //console.log(data.speed_list);
+      //console.log("data: ", data,  "\nStatus: " + status);
+      strydBearer = data.token;
+      strydUID = data.id;
+      strydLocalStore();
+      strydReady = true;
+      document.getElementById("getStrydInfo").value = 'Get Stryd';
+      getStrydLink(stActivityInit);
   })
   .fail(function(error) {
     window.alert("Stryd Login not accessible.");
     //stravaReady = false;
   });
+}
+
+function strydLocalStore() {
+  if (useLocalStorage) {
+    //localStorage.setItem("stravaAccessToken", stravaAccessToken);  // stored value not used at moment
+    localStorage.setItem("strydUID", strydUID);
+    localStorage.setItem("strydToken", strydBearer);
+    //localStorage.setItem("stravaExpiresAt", stravaExpiresAt);
+  } else {  // delete local store items
+    localStorage.removeItem("strydUID");
+    localStorage.removeItem("strydToken");
+  }
 }
 
 function strydGetCalendar(calFrom, calTo){
@@ -132,66 +149,70 @@ function setStrydLink(id) {
   } else {
     document.getElementById("linkStrydURL").innerHTML = 'Stryd: default';
     document.getElementById("linkStrydURL").href = STRYDURL;
-    $( "#getStrydInfo" ).button( "option", "disabled", true ); // button disabled
+    $( "#getStrydInfo" ).button( "option", "disabled", strydReady ); // button enabled if login still needed
   }
 }
 
 function getStrydInfo() {
-  if (strydActivityID > 0) {
-    //console.log('get stryd', strydActivityID);
-    $( "#getStrydInfo" ).button( "option", "disabled", true ); // button disabled
-    $.ajax({
-        type: 'GET',
-        url: CORSURL + 'https://www.stryd.com/b/api/v1/activities/' + strydActivityID,
-        headers: {
-          'Authorization' : 'Bearer ' + strydBearer,
-          'Accept' : 'application/json'
-        }
-    })
-    .done(function(data, status){
-        //console.log("data: ", data);
-        //console.log(data.speed_list);
-        // distance_list (matches fitfile), speed_list, timestamp_list,
-        // cadence_list (spm - different but similar to watch, matches second 'Cadence' in fitFile)
-        // matches ST: heart_rate_list, total_power_list, ground_time_list
-        // from stryd [0]distance_from_watch, [1] delta_dist, [2]distance_from_speed, [3]speed, [4]total_power, [5]GCT, [6]cadence
-        strydData.length = 0;
-
-        // if no array of distance then set to zero   -    distance list is time then distance
-        var iEnd = data.timestamp_list[data.timestamp_list.length -1] - data.start_time + 1;
-        var it = -1; // index of times, assume same for all data types, just skip watch stops
-        var distS = 0; // distance from speed (assume all data 1s apart - fix later if not)
-        for (i = 0; i < iEnd ; i++ ) {
-          if (data.timestamp_list[it+1] - data.start_time == i) {
-            it++;
-            var deltaS = +data.speed_list[it].toFixed(2);  // avoid annoyingly large number of digits, assume 1 sec per data point
-            distS = +(distS + deltaS).toFixed(2);
-            var distW = +data.distance_list[it].toFixed(2);
-            var deltaW = i > 0 ? +(distW - strydData[i-1][0]).toFixed(2) : distW;
-            strydData[i] = [distW, deltaW, distS, deltaS,
-                data.total_power_list[it], data.ground_time_list[it], data.cadence_list[it]];
-          } else {
-            strydData[i] = [distW, 0, distS, 0, 0, 2000, 0];
+  if (strydReady == false) {
+    $("#strydLogin").dialog("open");
+  } else {
+    if (strydActivityID > 0) {
+      //console.log('get stryd', strydActivityID);
+      $( "#getStrydInfo" ).button( "option", "disabled", true ); // button disabled
+      $.ajax({
+          type: 'GET',
+          url: CORSURL + 'https://www.stryd.com/b/api/v1/activities/' + strydActivityID,
+          headers: {
+            'Authorization' : 'Bearer ' + strydBearer,
+            'Accept' : 'application/json'
           }
-        }
-        // data has distance at time zero - zero out deltas for [0] and add to [1]
-        strydData[1][1] = +(strydData[0][1] + strydData[1][1]).toFixed(2);
-        strydData[0][1] = 0;
-        strydData[1][3] = +(strydData[0][3] + strydData[1][3]).toFixed(2);
-        strydData[0][3] = 0;
-        // display data as needed
-        refreshData();
+      })
+      .done(function(data, status){
+          //console.log("data: ", data);
+          //console.log(data.speed_list);
+          // distance_list (matches fitfile), speed_list, timestamp_list,
+          // cadence_list (spm - different but similar to watch, matches second 'Cadence' in fitFile)
+          // matches ST: heart_rate_list, total_power_list, ground_time_list
+          // from stryd [0]distance_from_watch, [1] delta_dist, [2]distance_from_speed, [3]speed, [4]total_power, [5]GCT, [6]cadence
+          strydData.length = 0;
 
-        //console.log(strydData);
-        iEnd--;
-        console.log('distance:watch / stryd', strydData[iEnd][0], strydData[iEnd][2], (strydData[iEnd][0]/strydData[iEnd][2]).toFixed(3));
+          // if no array of distance then set to zero   -    distance list is time then distance
+          var iEnd = data.timestamp_list[data.timestamp_list.length -1] - data.start_time + 1;
+          var it = -1; // index of times, assume same for all data types, just skip watch stops
+          var distS = 0; // distance from speed (assume all data 1s apart - fix later if not)
+          for (i = 0; i < iEnd ; i++ ) {
+            if (data.timestamp_list[it+1] - data.start_time == i) {
+              it++;
+              var deltaS = +data.speed_list[it].toFixed(2);  // avoid annoyingly large number of digits, assume 1 sec per data point
+              distS = +(distS + deltaS).toFixed(2);
+              var distW = +data.distance_list[it].toFixed(2);
+              var deltaW = i > 0 ? +(distW - strydData[i-1][0]).toFixed(2) : distW;
+              strydData[i] = [distW, deltaW, distS, deltaS,
+                  data.total_power_list[it], data.ground_time_list[it], data.cadence_list[it]];
+            } else {
+              strydData[i] = [distW, 0, distS, 0, 0, 2000, 0];
+            }
+          }
+          // data has distance at time zero - zero out deltas for [0] and add to [1]
+          strydData[1][1] = +(strydData[0][1] + strydData[1][1]).toFixed(2);
+          strydData[0][1] = 0;
+          strydData[1][3] = +(strydData[0][3] + strydData[1][3]).toFixed(2);
+          strydData[0][3] = 0;
+          // display data as needed
+          refreshData();
 
+          //console.log(strydData);
+          iEnd--;
+          console.log('distance:watch / stryd', strydData[iEnd][0], strydData[iEnd][2], (strydData[iEnd][0]/strydData[iEnd][2]).toFixed(3));
+
+          $( "#getStrydInfo" ).button( "option", "disabled", false ); // button enabled
+      })
+      .fail(function(error) {
+        window.alert("Stryd Activity not accessible.");
         $( "#getStrydInfo" ).button( "option", "disabled", false ); // button enabled
-    })
-    .fail(function(error) {
-      window.alert("Stryd Activity not accessible.");
-      $( "#getStrydInfo" ).button( "option", "disabled", false ); // button enabled
-      //stravaReady = false;
-    });
+        //stravaReady = false;
+      });
+    }
   }
 }

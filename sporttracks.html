@@ -238,7 +238,12 @@
 </div>
 <br>
 <br>
-    <script>
+  <!-- stryd login dialog -->
+  <div id="strydLogin" title="Enter Stryd Credentials">
+    Email:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" id="strydEmail" size="40" /><br>
+    Password: <input type="password" id="strydPwd" size="40" />
+  </div>
+  <script>
       // setup SportTracksLink (if appropriate)
       //stTokens(); // setup tokens at startup - may need to refresh later
     	// where possible keep all references to HTML fields on this page
@@ -262,6 +267,7 @@
           $( "#tabs" ).find("*").prop( "disabled", false );
           formSTdataOriginal = $("#formSTdata").serialize();  // to check if data has changed - where is best place?
           healthOriginal = $("#fieldSThealth input").serialize();
+          document.getElementById("getStrydInfo").value = strydReady == true ? 'Get Stryd' : 'Login Stryd';
       }
 
       $(function() {
@@ -321,11 +327,13 @@
                 localStorage.setItem("useLocalStorage", 'true');
                 stLocalStore();   // store local values (don't do this on start up as will use default values)
                 stravaLocalStore();
+                strydLocalStore();
               } else { // wipe out local values, other than flag
                 useLocalStorage = false;
                 localStorage.setItem("useLocalStorage", 'false');
                 stLocalStore();
                 stravaLocalStore();
+                strydLocalStore();
               }
             });
         $( "#gearLeft"  ).button( { icon: "ui-icon-circle-arrow-w", showLabel: false } )
@@ -434,6 +442,25 @@
               changeYear: true
         } );
         $( "#idDate" ).datepicker( "setDate", "today" );
+        $( "#strydLogin" ).dialog({
+          autoOpen: false,
+          resizable: false,
+          height: "auto",
+          width: 400,
+          modal: true,
+          buttons: {
+            "OK": function() {
+              $( this ).dialog( "close" );
+              //var sEmail = $('#strydEmail').val();
+              //var sPwd = $('#strydPwd').val());
+              // don't validate - just pass along
+              strydLogin($('#strydEmail').val(), $('#strydPwd').val());
+            },
+            Cancel: function() {
+              $( this ).dialog( "close" );
+            }
+          }
+        });
 
 				$(document).ajaxStop(function () {  // come here at end of all GET POST etc
             if (getGear == true) {  // only react to one type of completion

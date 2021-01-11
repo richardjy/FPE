@@ -88,6 +88,13 @@ function sportTracksInfo() {
   } else {
       loginST();  // loginStrava() within this routine to decouple login dialogs
   }
+
+  if (useLocalStorage && localStorage.getItem('strydToken') !== null) {
+      strydUID = localStorage.strydUID;
+      strydBearer = localStorage.strydToken;
+      strydReady = true;
+  }
+
 }
 
 function loginST() {
