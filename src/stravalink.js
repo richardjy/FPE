@@ -109,6 +109,115 @@ function stravaLocalStore() {
   }
 }
 
+function loginStrava() {
+    var stravaOAUTHURL = 'https://www.strava.com/oauth/authorize?client_id=' + stravaClientID + '&response_type=code&redirect_uri='
+    //var winurl  =  OAUTHURL + CLIENTID + '&redirect_uri=' + REDIRECT + '&state=' + STATE + '&response_type=code';
+    var winurl  =  stravaOAUTHURL + REDIRECT + stravaRequest;
+    var win     =  window.open(winurl, "windowname1", 'width=400, height=300');
+    var pollTimer   =   window.setInterval(function() {
+        try {
+            //console.log(win.document.URL);
+            if (win.document.URL.indexOf(REDIRECT) != -1) {
+                window.clearInterval(pollTimer);
+                var url =   win.document.URL;
+                var stravaCode = gup(url, 'code');  // could also do same way as Strava link
+                stravaScope = gup(url, 'scope');  // could also do same way as Strava link
+                //console.log(stravaCode);
+                win.close();
+                stravaGetToken(stravaCode, false);
+            }
+        } catch(e) {
+        }
+    }, 500);
+}
+
+function getStravaLink(stActivity) {
+  if (stravaReady == true) {
+    var epochT = Math.floor(new Date(stActivity.start_time)/1000 + stActivity.clock_duration/2); // go to mid point of activity
+    // look for first activity before midpoint
+    $.get('https://www.strava.com/api/v3/athlete/activities?before=' + epochT + '&page=1&per_page=1&access_token=' + stravaAccessToken, function(data, status){
+      //console.log(data);
+      // get activity data
+      $.get('https://www.strava.com/api/v3/activities/' + data[0].id + '?include_all_efforts=false&access_token=' + stravaAccessToken, function(data, status){
+          //console.log(data);
+          if (Math.floor(new Date(data.start_date)/1000 + data.elapsed_time) - epochT > 0 ) {  // check finish time is after STmodi midpoint i.e. activities overlap
+            setStravaLink(data.id);
+          } else {
+            //window.alert("No Strava Activity at same time found.");
+            setStravaLink(0);
+          }
+      })
+      .fail(function(error) {
+        // silent
+        //window.alert("Strava Activity not accessible.");
+        setStravaLink(0);
+      });
+    })
+  } else {
+    setStravaLink(0);
+  }
+}
+
+function setStravaLink(id) {
+  stravaActivityID = id;
+  if (id > 0) {
+    document.getElementById("linkStravaURL").innerHTML = 'Strava: ' + id;
+    document.getElementById("linkStravaURL").href = STRAVAURL + id;
+    document.getElementById("linkFPEURL").innerHTML = 'FPE';
+    document.getElementById("linkFPEURL").href = FPEURL + id;
+  } else {
+    document.getElementById("linkStravaURL").innerHTML = 'Strava: default';
+    document.getElementById("linkStravaURL").href = STRAVAURL + id;
+    document.getElementById("linkFPEURL").innerHTML = 'FPE: default';
+    document.getElementById("linkFPEURL").href = FPEURL + id;
+  }
+}
+
+function getStravaInfo(){
+  var epochT = Math.floor(new Date(stActivityUpdate.start_time)/1000 + stActivityUpdate.clock_duration/2); // go to mid point of activity
+  // look for first activity before midpoint
+  $.get('https://www.strava.com/api/v3/athlete/activities?before=' + epochT + '&page=1&per_page=1&access_token=' + stravaAccessToken, function(data, status){
+    //console.log(data);
+    // get activity data
+    $.get('https://www.strava.com/api/v3/activities/' + data[0].id + '?include_all_efforts=false&access_token=' + stravaAccessToken, function(data, status){
+        //console.log(data);
+        if (Math.floor(new Date(data.start_date)/1000 + data.elapsed_time) - epochT > 0 ) {  // check finish time is after STmodi midpoint i.e. activities overlap
+          var newDesc = (data.description == undefined ? '' : data.description + '\n') + STRAVAURL + data.id +
+              (strydActivityID > 0 ? '\n' + STRYDURL + 'runs/' + strydActivityID : '') + '\n\n';
+          var dialogStr = 'Click OK to use Title and Description: \n\n' + data.name + '\n\n' + newDesc;
+          //console.log(dialogStr);
+          setStravaLink(data.id); // should not have changed, but perhaps changed something on Strava
+          if (window.confirm(dialogStr) == true) {
+            document.getElementById("STname").value = data.name;
+            document.getElementById("STnotes").value = newDesc + document.getElementById("STnotes").value;
+            $( "#fieldSTdata" ).trigger('input');  // check if change
+          }
+
+        } else {
+          setStravaLink(0);
+          window.alert("No Strava Activity at same time found.");
+        }
+    })
+    .fail(function(error) {
+      setStravaLink(0);
+      window.alert("Strava Activity not accessible.");
+    });
+  })
+}
+
+function stravaGetData(id){
+  // test function for Streams - not used
+  $.get('https://www.strava.com/api/v3/activities/' + id + '/streams?keys=SmoothVelocityStream&access_token='
+    + stravaAccessToken, function(data, status){
+      console.log(data);
+      // do things with activities
+  })
+  .fail(function(error) {
+    window.alert("Strava Activity not accessible.");
+    //stravaReady = false;
+  });
+}
+
 function stravaGetActivity(timeBefore, searchIndex){
   // test function - link to current ST
   if (timeBefore == '' || timeBefore == 0) timeBefore = Date.now();
@@ -127,30 +236,6 @@ function stravaGetActivity(timeBefore, searchIndex){
         + stravaAccessToken, function(data, status){
           console.log(data);
           return data;
-
-          // // FPE only - comment out for now
-          // gpxRouteName = data.name.replace(/[^\x20-\x7E]/g, '').trim(); //get rid of non-printing characters
-          // gpxRouteName = 'Strava: ' + gpxRouteName + ' (' + stravaActivityID +')';
-          // // get gpx data
-          // $.get('https://www.strava.com/api/v3/activities/' + stravaActivityID + '/streams?keys=latlng&key_by_type=true&access_token='
-          //   + stravaAccessToken, function(data, status){
-          //     //console.log(data);
-          //     //console.log(data.latlng.data);
-          //     var stravaGPX = L.Polyline.PolylineEditor(data.latlng.data, {color: 'blue', maxMarkers: 500}).addTo(gpxdata);
-          //     // updated line gpxdata.getLayers()[0].toGeoJSON()
-          //     //  sizeof  gpxdata.getLayers().length  last = length-1
-          //     //L.Polyline.PolylineEditor
-          //     //stravaGPX = L.polyline(data.latlng.data, {color: 'blue'}).addTo(gpxdata);
-          //     stravaGPX.bindTooltip(gpxRouteName, {sticky: true});
-          //     //gpxPoints = stravaGPX.toGeoJSON();  // this is now done at conversion
-          //     mymap.fitBounds(stravaGPX.getBounds());
-          //     gpxLoaded = true;
-          //     gpxCalcButton.enable();
-          // })
-          // .fail(function(response) {
-          //   window.alert("Strava Activity GPX data not accessible.");
-          //   //stravaReady = false;
-          // });
       })
       .fail(function(error) {
         window.alert("Strava Activity not accessible.");

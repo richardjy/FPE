@@ -28,6 +28,7 @@
     <script src="./src/stravalink.js"></script>
     <script src='./src/sporttracks.js'></script>
     <script src='./src/stanalysis.js'></script>
+    <script src='./src/strydlink.js'></script>
     <script src='./src/jquery.sparkline.min.js'></script>
 
     <style>
@@ -96,7 +97,8 @@
         <label id="labelSTactivity" style="line-height:1.7;">Links:&nbsp;</label>&nbsp;
         <a href="#" target="_blank" rel="noopener noreferrer" id="linkSTmobiURL"></a>&nbsp;&nbsp;
         <a href="#" target="_blank" rel="noopener noreferrer" id="linkStravaURL"></a>&nbsp;&nbsp;
-        <a href="#" target="_blank" rel="noopener noreferrer" id="linkFPEURL"></a>
+        <a href="#" target="_blank" rel="noopener noreferrer" id="linkFPEURL"></a>&nbsp;&nbsp;
+        <a href="#" target="_blank" rel="noopener noreferrer" id="linkStrydURL"></a>
       </p>
       <p>
         <label for="STname" id="labelSTname">Name:&nbsp;</label>
@@ -127,7 +129,9 @@
           <input type="checkbox" name="cbWrap" id="cbWrap">
         </label>&nbsp;&nbsp;&nbsp;
         <input type="button" id="getStravaInfo" onclick="getStravaInfo()" value="Get Strava"
-            title="Get 'Title' and 'Description' from Strava">
+            title="Get 'Title' and 'Description' from Strava">&nbsp;&nbsp;&nbsp;
+        <input type="button" id="getStrydInfo" onclick="getStrydInfo()" value="Get Stryd"
+                title="Get run data from Stryd">
       </p>
     </div>
     <textarea rows = "10" cols = "70" id="STnotes" name="STnotes" ></textarea>
@@ -234,7 +238,12 @@
 </div>
 <br>
 <br>
-    <script>
+  <!-- stryd login dialog -->
+  <div id="strydLogin" title="Enter Stryd Credentials">
+    Email:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" id="strydEmail" size="40" /><br>
+    Password: <input type="password" id="strydPwd" size="40" />
+  </div>
+  <script>
       // setup SportTracksLink (if appropriate)
       //stTokens(); // setup tokens at startup - may need to refresh later
     	// where possible keep all references to HTML fields on this page
@@ -258,11 +267,12 @@
           $( "#tabs" ).find("*").prop( "disabled", false );
           formSTdataOriginal = $("#formSTdata").serialize();  // to check if data has changed - where is best place?
           healthOriginal = $("#fieldSThealth input").serialize();
+          document.getElementById("getStrydInfo").value = strydReady == true ? 'Get Stryd' : 'Login Stryd';
       }
 
       $(function() {
         $( "#STgetButton, #getLocButton, #recalcButton, #STrevertButton, #STsendButton, #STgetGearButton," +
-            " #STgetHealthButton, #STsendHealthButton, #STmaxData, #getStravaInfo" ).button(  );  // { disabled: true }
+            " #STgetHealthButton, #STsendHealthButton, #STmaxData, #getStravaInfo, #getStrydInfo" ).button(  );  // { disabled: true }
         $( document ).tooltip();
         $( "#fieldSTgear" ).controlgroup()  // click on control group
           .on('click', '[type="checkbox"]', function( event, ui ){
@@ -317,11 +327,13 @@
                 localStorage.setItem("useLocalStorage", 'true');
                 stLocalStore();   // store local values (don't do this on start up as will use default values)
                 stravaLocalStore();
+                strydLocalStore();
               } else { // wipe out local values, other than flag
                 useLocalStorage = false;
                 localStorage.setItem("useLocalStorage", 'false');
                 stLocalStore();
                 stravaLocalStore();
+                strydLocalStore();
               }
             });
         $( "#gearLeft"  ).button( { icon: "ui-icon-circle-arrow-w", showLabel: false } )
@@ -430,6 +442,25 @@
               changeYear: true
         } );
         $( "#idDate" ).datepicker( "setDate", "today" );
+        $( "#strydLogin" ).dialog({
+          autoOpen: false,
+          resizable: false,
+          height: "auto",
+          width: 400,
+          modal: true,
+          buttons: {
+            "OK": function() {
+              $( this ).dialog( "close" );
+              //var sEmail = $('#strydEmail').val();
+              //var sPwd = $('#strydPwd').val());
+              // don't validate - just pass along
+              strydLogin($('#strydEmail').val(), $('#strydPwd').val());
+            },
+            Cancel: function() {
+              $( this ).dialog( "close" );
+            }
+          }
+        });
 
 				$(document).ajaxStop(function () {  // come here at end of all GET POST etc
             if (getGear == true) {  // only react to one type of completion
@@ -637,6 +668,8 @@
 
       // populate form
       function populateSTform (stActivity) {
+          setStrydLink(0);
+          strydData.length = 0; // discard Strd data
           var stDate = new Date (stActivity.start_time);
           document.getElementById("STtypedate").innerHTML = stActivity.type + " (" + stDate.toDateString().substr(0,4) + stDate.toLocaleString() + ")";
           // link to 'sorttracks.mobi' rather than 'api.sorttracks.mobi'
@@ -645,6 +678,7 @@
           document.getElementById("linkSTmobiURL").innerHTML = 'STmobi: ' + stmobiID;
           document.getElementById("linkSTmobiURL").href = STMOBIURL + stmobiID;
           getStravaLink(stActivity);
+          getStrydLink(stActivity);
           document.getElementById("STname").value = stActivity.name;
           document.getElementById("STloc").value = typeof stActivity.location_name === 'undefined' ? "" : stActivity.location_name;
           document.getElementById("STdistance").value = (stActivity.total_distance/MI2M).toFixed(2);  // convert to miles, show 2 dp
@@ -658,20 +692,7 @@
 
           $( "#getLocButton" ).button( "option", "disabled", typeof stActivity.location === 'undefined' ); // button enabled if GPS data
           $( "#recalcButton" ).button( "option", "disabled", typeof stActivity.location === 'undefined' ); // button enabled if GPS data
-          mapST.eachLayer(function (layer) {
-            if (layer instanceof L.Polyline) mapST.removeLayer(layer);
-          });
-          if (typeof stActivity.location !== 'undefined') {
-            var stLatLngs = [];
-            var j =0;
-            for (i = 1; i < stActivity.location.length; i=i+2) {
-                stLatLngs[j] = stActivity.location[i];
-                j++;
-            }
-            var stGPX = L.polyline(stLatLngs, {color: 'red'}).addTo(mapST)
-            mapST.fitBounds(stGPX.getBounds());
-          }
-
+          showMap(stActivity.location);
           $( "#STrevertButton" ).button( "option", "disabled", false ); // enable button (only needed once)
           $( "#STsendButton" ).button( "option", "disabled", false ); // enable button (only needed once)
           document.getElementById("STloc").title = ""; //remove tooltip
@@ -692,6 +713,22 @@
           $( "#progressSTact" ).hide();
       }
 
+      function showMap(gps) { // end -1 = all
+        mapST.eachLayer(function (layer) {
+          if (layer instanceof L.Polyline) mapST.removeLayer(layer);
+        });
+        if (typeof gps !== 'undefined') {
+          var stLatLngs = [];
+          var j =0;
+          for (i = 1; i < gps.length; i=i+2) {
+              stLatLngs[j] = gps[i];
+              j++;
+          }
+          var stGPX = L.polyline(stLatLngs, {color: 'red'}).addTo(mapST)
+          mapST.fitBounds(stGPX.getBounds());
+        }
+      }
+
       var calcGPSused = false;
       function calcGPS(gps) {  // review which times to use
           var orig_dist_mi = (sumData[0][0][1]/MI2M).toFixed(2);
@@ -704,7 +741,7 @@
             for (i = 3; i < gps.length; i=i+2) {
                 dist += mapST.distance(gps[i-2], gps[i]);
             }
-            var dist_mi = (dist/MI2M).toFixed(2);                                          // so same as stored value for pace calcs
+            var dist_mi = (dist/MI2M).toFixed(2);                                // so same as stored value for pace calcs
             //var pace = durS / dist_mi;                                         // seconds per mile
             //var paceStr = new Date(pace * 1000 + 500).toISOString().substr(14, 5);            // extra 500 ms for correct rounding
             //var clockRatio = stActivityUpdate.clock_duration / durS
