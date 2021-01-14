@@ -184,14 +184,15 @@ function getStrydInfo() {
           for (i = 0; i < iEnd ; i++ ) {
             if (data.timestamp_list[it+1] - data.start_time == i) {
               it++;
-              var deltaS = +data.speed_list[it].toFixed(2);  // avoid annoyingly large number of digits, assume 1 sec per data point
-              distS = +(distS + deltaS).toFixed(2);
-              var distW = +data.distance_list[it].toFixed(2);
-              var deltaW = i > 0 ? +(distW - strydData[i-1][0]).toFixed(2) : distW;
-              strydData[i] = [distW, deltaW, distS, deltaS,
+              var deltaS = data.speed_list[it];  //  assume 1 sec per data point
+              distS += deltaS;
+              var distW = data.distance_list[it];
+              var deltaW = i > 0 ? (distW - strydData[i-1][0]) : distW;
+              // // avoid annoyingly large number of digits
+              strydData[i] = [+distW.toFixed(2), +deltaW.toFixed(2), +distS.toFixed(2), +deltaS.toFixed(2),
                   data.total_power_list[it], data.ground_time_list[it], data.cadence_list[it]];
             } else {
-              strydData[i] = [distW, 0, distS, 0, 0, 2000, 0];
+              strydData[i] = [+distW.toFixed(2), 0, +distS.toFixed(2), 0, 0, 2000, 0];
             }
           }
           // data has distance at time zero - zero out deltas for [0] and add to [1]
@@ -203,8 +204,8 @@ function getStrydInfo() {
           refreshData();
 
           //console.log(strydData);
-          iEnd--;
-          console.log('distance:watch / stryd', strydData[iEnd][0], strydData[iEnd][2], (strydData[iEnd][0]/strydData[iEnd][2]).toFixed(3));
+          // iEnd--;
+          // console.log('distance:watch / stryd', strydData[iEnd][0], strydData[iEnd][2], (strydData[iEnd][0]/strydData[iEnd][2]).toFixed(3));
 
           $( "#getStrydInfo" ).button( "option", "disabled", false ); // button enabled
       })

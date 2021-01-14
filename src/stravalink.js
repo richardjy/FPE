@@ -182,7 +182,8 @@ function getStravaInfo(){
     $.get('https://www.strava.com/api/v3/activities/' + data[0].id + '?include_all_efforts=false&access_token=' + stravaAccessToken, function(data, status){
         //console.log(data);
         if (Math.floor(new Date(data.start_date)/1000 + data.elapsed_time) - epochT > 0 ) {  // check finish time is after STmodi midpoint i.e. activities overlap
-          var newDesc = (data.description == undefined ? '' : data.description + '\n') + 'https://www.strava.com/activities/' + data.id + '\n\n';
+          var newDesc = (data.description == undefined ? '' : data.description + '\n') + STRAVAURL + data.id +
+              (strydActivityID > 0 ? '\n' + STRYDURL + 'runs/' + strydActivityID : '') + '\n\n';
           var dialogStr = 'Click OK to use Title and Description: \n\n' + data.name + '\n\n' + newDesc;
           //console.log(dialogStr);
           setStravaLink(data.id); // should not have changed, but perhaps changed something on Strava
