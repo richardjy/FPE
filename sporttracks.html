@@ -34,6 +34,7 @@
     <script src='./src/stanalysis.js'></script>
     <script src='./src/strydlink.js'></script>
     <script src='./src/jquery.sparkline.min.js'></script>
+    <script src='./src/maplayers.js'></script>
 
     <style>
         body  { font-size: 100%; font-family: Arial,Helvetica,sans-serif; background-color: #7A90AB;}
@@ -70,6 +71,7 @@
           overflow-x: auto;
         }
         td.healthdataexists a { background-color: #90EE90 !important; font-weight:bold !important; }
+        .leaflet-control-layers label { text-align: left; font-style: normal;}
 
   	</style>
 
@@ -253,16 +255,12 @@
       // setup SportTracksLink (if appropriate)
       //stTokens(); // setup tokens at startup - may need to refresh later
     	// where possible keep all references to HTML fields on this page
-      var mapST = L.map('invisibleMap', {zoomControl: false}).setView([51.505, -0.09], 13);
-      var CartoDB_DarkMatterNoLabels = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-        subdomains: 'abcd',
-        maxZoom: 19
-      }).addTo(mapST);
-      L.control.zoom({
-        position: 'topleft'
-      }).addTo(mapST);
 
+      var mapST = L.map('invisibleMap', {
+				center: [51.505, -0.09],
+				zoom: 13,
+				layers: [CartoDB_DarkMatterNoLabels]
+			});
 
       // add scale, add different maps (toggle), auto zoom
       var zoomButton = L.easyButton({ states: [{
@@ -281,8 +279,10 @@
           icon: 'fa fa-expand fa-lg',
           title: 'Expand map',
           onClick: function(btn, map){
-            document.getElementById("invisibleMap").style["width"]="540px";
-            document.getElementById("invisibleMap").style["height"]="360px";
+            document.getElementById("invisibleMap").style["width"]="550px";
+            document.getElementById("invisibleMap").style["height"]="450px";
+            $('.leaflet-control-layers').show();
+            $('.leaflet-control-scale').show();
             mapST.invalidateSize();
             showMap(true);
             btn.state('shrink');
@@ -294,6 +294,8 @@
           onClick: function(btn, map){
             document.getElementById("invisibleMap").style["width"]="300px";
             document.getElementById("invisibleMap").style["height"]="200px";
+            $('.leaflet-control-layers').hide();
+            $('.leaflet-control-scale').hide();
             mapST.invalidateSize();
             showMap(true);
             btn.state('expand');
@@ -303,7 +305,11 @@
 
       var buttonBar = L.easyBar([ zoomButton, expandButton, ]);
       buttonBar.addTo(mapST);
-
+      L.control.scale().addTo(mapST);
+      L.control.layers(baseLayers, overlays, {position: 'topleft'}).addTo(mapST);
+      //$('.leaflet-control-layers label').css({ 'text-align': 'left',  'font-style': 'normal'})
+      $('.leaflet-control-layers').hide();
+      $('.leaflet-control-scale').hide();
 
       document.getElementById("fieldSTindex").disabled = true;
       document.getElementById("fieldSTdata").disabled = true; // tabs disabled below
