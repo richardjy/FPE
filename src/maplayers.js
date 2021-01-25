@@ -59,7 +59,7 @@ var BlankMap = L.tileLayer('', {
   maxZoom: 22
 });
 
-// colrs: hot, blue, redblue, purple, 
+// colrs: hot, blue, redblue, purple,
 var stravaHeatmap = L.tileLayer('https://heatmap-external-{s}.strava.com/tiles-auth/running/purple/{z}/{x}/{y}.png', {
   maxZoom: 20,
   maxNativeZoom: 15,
@@ -67,7 +67,6 @@ var stravaHeatmap = L.tileLayer('https://heatmap-external-{s}.strava.com/tiles-a
 });
 
 var baseLayers = {
-  //"Blank": L.tileLayer(),
   "Mapbox": MapboxMap,
   "Mapbox Sat": MapboxSat,
   "Mapnik": OpenStreetMap_Mapnik,

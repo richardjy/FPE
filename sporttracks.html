@@ -25,7 +25,8 @@
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet-easybutton@2.0.0/src/easy-button.css"/>
   	<script src="https://unpkg.com/leaflet-easybutton@2.0.0/src/easy-button.js"></script>
-  	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"/>
+    <link href="./resources/fontawesome/css/all.min.css" rel="stylesheet"> <!--load all styles -->
+  	<!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"/> -->
 
     <script src="./src/config.js"></script>
     <script src="./src/config_local.js"></script>
@@ -265,7 +266,7 @@
       // add scale, add different maps (toggle), auto zoom
       var zoomButton = L.easyButton({ states: [{
         stateName: 'zoomMap',
-        icon: 'fa fa-square-o fa-lg',
+        icon: 'fas fa-crop-alt fa-lg',
         title: 'Zoom to selection',
         onClick: function(btn, map){
           // zoom to selection
@@ -276,7 +277,7 @@
       var expandButton = L.easyButton({
         states: [{
           stateName: 'expand',
-          icon: 'fa fa-expand fa-lg',
+          icon: 'fas fa-expand-alt fa-lg',
           title: 'Expand map',
           onClick: function(btn, map){
             document.getElementById("invisibleMap").style["width"]="550px";
@@ -286,10 +287,11 @@
             mapST.invalidateSize();
             showMap(true);
             btn.state('shrink');
+            //btn.button.style.backgroundColor = 'tomato';
           }
         }, {
           stateName: 'shrink',
-          icon: 'fa fa-compress fa-lg',
+          icon: 'fas fa-compress-alt fa-lg',
           title: 'Shrink map',
           onClick: function(btn, map){
             document.getElementById("invisibleMap").style["width"]="300px";
@@ -299,10 +301,12 @@
             mapST.invalidateSize();
             showMap(true);
             btn.state('expand');
+            //btn.button.style.backgroundColor = 'tomato';
           }
         }]
       });
 
+      // expandButton.button.style.backgroundColor = 'tomato';
       var buttonBar = L.easyBar([ zoomButton, expandButton, ]);
       buttonBar.addTo(mapST);
       L.control.scale().addTo(mapST);
