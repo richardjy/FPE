@@ -75,7 +75,3 @@ var baseLayers = {
   "Dark Matter": CartoDB_DarkMatterNoLabels,
   "Blank": BlankMap
 };
-
-var overlays = {
-  "Strava Heatmap":stravaHeatmap
-};

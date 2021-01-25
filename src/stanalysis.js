@@ -15,6 +15,7 @@ var csv ="\t";
 var lf = "\n";
 var maxGraphPts = 2400;  // 4x number of points in the graph - minimize missed info
 var ddPause = 0.2; // m/s when considered 'paused' 0.5m/s = 1.1 mph - look at average velocity over say 10s?
+var stGPX = '';
 
 function maxData() {
   $( "#timeRange" ).slider( "option", "min", 0);
@@ -29,14 +30,15 @@ function maxData() {
 function showMap(zoomOut = false) {
   mapST.eachLayer(function (layer) {
     if (layer instanceof L.Polyline) mapST.removeLayer(layer);
+    stGPX = '';
   });
   if (gpsData.length > 0) {
       var iStart = $( "#timeRange" ).slider( "values", 0);
       var iEnd = $( "#timeRange" ).slider( "values", 1);
       L.polyline(gpsData, {color: 'blue'}).addTo(mapST);
       //var gpsSegment = gpsData.slice(gpsStart, gpsEnd);
-      var stGPX = L.polyline(gpsData.slice(iStart, iEnd), {color: 'red'}).addTo(mapST);
-      if (zoomOut) mapST.fitBounds(stGPX.getBounds());
+      stGPX = L.polyline(gpsData.slice(iStart, iEnd), {color: 'red'}).addTo(mapST);
+      if (zoomOut || mapST.hasLayer(autoZoom)) mapST.fitBounds(stGPX.getBounds());
   }
 }
 

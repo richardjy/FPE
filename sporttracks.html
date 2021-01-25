@@ -36,6 +36,7 @@
     <script src='./src/strydlink.js'></script>
     <script src='./src/jquery.sparkline.min.js'></script>
     <script src='./src/maplayers.js'></script>
+    <script src='./resources/textpath/leaflet.textpath.js'></script>
 
     <style>
         body  { font-size: 100%; font-family: Arial,Helvetica,sans-serif; background-color: #7A90AB;}
@@ -305,6 +306,36 @@
           }
         }]
       });
+
+      var autoZoom =  new L.LayerGroup();  // Dummy layer to flag whether autoZoom (default off)
+      var showArrows =  new L.LayerGroup();  //
+      var overlays = {
+        "Strava Heatmap":stravaHeatmap,
+        "Auto Zoom": autoZoom,
+        "Direction arrows": showArrows
+      };
+
+      mapST.on('overlayadd', function(eventlayer){
+        //console.log(eventlayer.layer);
+        if (eventlayer.layer===autoZoom) {
+          zoomButton.button.style.backgroundColor = 'tomato';
+        } else if (eventlayer.layer===showArrows && stGPX != '') {
+          stGPX.setText('     ➜     ', {
+            repeat: true,
+            attributes: {
+              fill: stGPX.options.color,
+              dy: '5px',
+              'font-size': '14px',  // after gpxstudio
+              style: 'text-shadow: 1px 1px 0 white, -1px 1px 0 white, 1px -1px 0 white, -1px -1px 0 white, 0px 1px 0 white, 0px -1px 0 white, -1px 0px 0 white, 1px 0px 0 white, 2px 2px 0 white, -2px 2px 0 white, 2px -2px 0 white, -2px -2px 0 white, 0px 2px 0 white, 0px -2px 0 white, -2px 0px 0 white, 2px 0px 0 white, 1px 2px 0 white, -1px 2px 0 white, 1px -2px 0 white, -1px -2px 0 white, 2px 1px 0 white, -2px 1px 0 white, 2px -1px 0 white, -2px -1px 0 white; -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;'
+            }});
+        }
+      });   //
+
+      mapST.on('overlayremove', function(eventlayer){
+        //console.log(eventlayer.layer);
+        if(eventlayer.layer===autoZoom) {
+          zoomButton.button.style.backgroundColor = '';
+      }});
 
       // expandButton.button.style.backgroundColor = 'tomato';
       var buttonBar = L.easyBar([ zoomButton, expandButton, ]);
