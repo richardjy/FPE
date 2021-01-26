@@ -36,9 +36,27 @@ function showMap(zoomOut = false) {
       var iStart = $( "#timeRange" ).slider( "values", 0);
       var iEnd = $( "#timeRange" ).slider( "values", 1);
       L.polyline(gpsData, {color: 'blue'}).addTo(mapST);
-      //var gpsSegment = gpsData.slice(gpsStart, gpsEnd);
       stGPX = L.polyline(gpsData.slice(iStart, iEnd), {color: 'red'}).addTo(mapST);
+      if (mapST.hasLayer(showArrows)) drawArrows(true);
       if (zoomOut || mapST.hasLayer(autoZoom)) mapST.fitBounds(stGPX.getBounds());
+  }
+}
+
+function drawArrows(showA = false) {
+  if (stGPX != '') {
+    if (showA) {
+      stGPX.setText('     ➜     ', {
+        repeat: true,
+        attributes: {
+          fill: stGPX.options.color,
+          dy: '5px',
+          'font-size': '14px',  // after gpxstudio
+          style: 'text-shadow: 1px 1px 0 white, -1px 1px 0 white, 1px -1px 0 white, -1px -1px 0 white, 0px 1px 0 white, 0px -1px 0 white, -1px 0px 0 white, 1px 0px 0 white, 2px 2px 0 white, -2px 2px 0 white, 2px -2px 0 white, -2px -2px 0 white, 0px 2px 0 white, 0px -2px 0 white, -2px 0px 0 white, 2px 0px 0 white, 1px 2px 0 white, -1px 2px 0 white, 1px -2px 0 white, -1px -2px 0 white, 2px 1px 0 white, -2px 1px 0 white, 2px -1px 0 white, -2px -1px 0 white; -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;'
+        }
+      });
+    } else {
+        stGPX.setText(null);
+    }
   }
 }
 

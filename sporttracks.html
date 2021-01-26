@@ -281,14 +281,13 @@
           icon: 'fas fa-expand-alt fa-lg',
           title: 'Expand map',
           onClick: function(btn, map){
-            document.getElementById("invisibleMap").style["width"]="550px";
+            document.getElementById("invisibleMap").style["width"]="600px";
             document.getElementById("invisibleMap").style["height"]="450px";
             $('.leaflet-control-layers').show();
             $('.leaflet-control-scale').show();
             mapST.invalidateSize();
             showMap(true);
             btn.state('shrink');
-            //btn.button.style.backgroundColor = 'tomato';
           }
         }, {
           stateName: 'shrink',
@@ -302,7 +301,6 @@
             mapST.invalidateSize();
             showMap(true);
             btn.state('expand');
-            //btn.button.style.backgroundColor = 'tomato';
           }
         }]
       });
@@ -319,23 +317,18 @@
         //console.log(eventlayer.layer);
         if (eventlayer.layer===autoZoom) {
           zoomButton.button.style.backgroundColor = 'tomato';
-        } else if (eventlayer.layer===showArrows && stGPX != '') {
-          stGPX.setText('     ➜     ', {
-            repeat: true,
-            attributes: {
-              fill: stGPX.options.color,
-              dy: '5px',
-              'font-size': '14px',  // after gpxstudio
-              style: 'text-shadow: 1px 1px 0 white, -1px 1px 0 white, 1px -1px 0 white, -1px -1px 0 white, 0px 1px 0 white, 0px -1px 0 white, -1px 0px 0 white, 1px 0px 0 white, 2px 2px 0 white, -2px 2px 0 white, 2px -2px 0 white, -2px -2px 0 white, 0px 2px 0 white, 0px -2px 0 white, -2px 0px 0 white, 2px 0px 0 white, 1px 2px 0 white, -1px 2px 0 white, 1px -2px 0 white, -1px -2px 0 white, 2px 1px 0 white, -2px 1px 0 white, 2px -1px 0 white, -2px -1px 0 white; -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;'
-            }});
+        } else if (eventlayer.layer===showArrows) {
+          drawArrows(true);
         }
-      });   //
-
+      });
       mapST.on('overlayremove', function(eventlayer){
         //console.log(eventlayer.layer);
         if(eventlayer.layer===autoZoom) {
           zoomButton.button.style.backgroundColor = '';
-      }});
+        } else if (eventlayer.layer===showArrows) {
+          drawArrows();
+        }
+      });
 
       // expandButton.button.style.backgroundColor = 'tomato';
       var buttonBar = L.easyBar([ zoomButton, expandButton, ]);
