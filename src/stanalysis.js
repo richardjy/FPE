@@ -10,10 +10,12 @@ var calcData = ([],[]);     //  [0]watchstop1/paused2/walking3/running4, [1]delt
                             //   [2]filtered elev, [3]delta elev, [4]grade, [5]down 1, level 2, up 3
 var sumData = ([],[],[]);   // see below for details
 var sumStryd = ([],[],[]);  // see below for details
+var gpsData = [];
 var csv ="\t";
 var lf = "\n";
 var maxGraphPts = 2400;  // 4x number of points in the graph - minimize missed info
 var ddPause = 0.2; // m/s when considered 'paused' 0.5m/s = 1.1 mph - look at average velocity over say 10s?
+var stGPX = '';
 
 function maxData() {
   $( "#timeRange" ).slider( "option", "min", 0);
@@ -22,7 +24,40 @@ function maxData() {
   $( "#minTime" ).val( timeHMS( $( "#timeRange" ).slider( "values", 0)) );
   $( "#maxTime" ).val( timeHMS( $( "#timeRange" ).slider( "values", 1)) );
   calcMetrics();
-  displayMetrics();
+  displayMetrics(true);
+}
+
+function showMap(zoomOut = false) {
+  mapST.eachLayer(function (layer) {
+    if (layer instanceof L.Polyline) mapST.removeLayer(layer);
+    stGPX = '';
+  });
+  if (gpsData.length > 0) {
+      var iStart = $( "#timeRange" ).slider( "values", 0);
+      var iEnd = $( "#timeRange" ).slider( "values", 1);
+      L.polyline(gpsData, {color: 'blue'}).addTo(mapST);
+      stGPX = L.polyline(gpsData.slice(iStart, iEnd), {color: 'red'}).addTo(mapST);
+      if (mapST.hasLayer(showArrows)) drawArrows(true);
+      if (zoomOut || mapST.hasLayer(autoZoom)) mapST.fitBounds(stGPX.getBounds());
+  }
+}
+
+function drawArrows(showA = false) {
+  if (stGPX != '') {
+    if (showA) {
+      stGPX.setText('     ➜     ', {
+        repeat: true,
+        attributes: {
+          fill: stGPX.options.color,
+          dy: '5px',
+          'font-size': '14px',  // after gpxstudio
+          style: 'text-shadow: 1px 1px 0 white, -1px 1px 0 white, 1px -1px 0 white, -1px -1px 0 white, 0px 1px 0 white, 0px -1px 0 white, -1px 0px 0 white, 1px 0px 0 white, 2px 2px 0 white, -2px 2px 0 white, 2px -2px 0 white, -2px -2px 0 white, 0px 2px 0 white, 0px -2px 0 white, -2px 0px 0 white, 2px 0px 0 white, 1px 2px 0 white, -1px 2px 0 white, 1px -2px 0 white, -1px -2px 0 white, 2px 1px 0 white, -2px 1px 0 white, 2px -1px 0 white, -2px -1px 0 white; -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;'
+        }
+      });
+    } else {
+        stGPX.setText(null);
+    }
+  }
 }
 
 function refreshData() {
@@ -40,8 +75,9 @@ function processData(stActivity) {
   var bg = true; // ground contact time (ms)
   var bc = true; // cadence (full cycles per min)
   var bt = true; // time stops
+  var bm = true; // map data (gps)
 
-  var id = 0, ih = 0, ie = 0, ip = 0, ig = 0, ic = 0;// index for data
+  var id = 0, ih = 0, ie = 0, ip = 0, ig = 0, ic = 0, im = 0; // index for data
 
   bd = typeof stActivity.distance === 'undefined' ? false : bd;
   bh = typeof stActivity.heartrate === 'undefined' ? false : bh;
@@ -50,6 +86,7 @@ function processData(stActivity) {
   bg = typeof stActivity.ground_contact_time === 'undefined' ? false : bg;
   bc = typeof stActivity.cadence === 'undefined' ? false : bc;
   bt = typeof stActivity.timer_stops === 'undefined' ? false : bt;
+  bm = typeof stActivity.location === 'undefined' ? false : bm;
 
   // max index of each data type
   var md = typeof stActivity.distance === 'undefined' ? 0 : stActivity.distance.length;
@@ -58,6 +95,7 @@ function processData(stActivity) {
   var mp = typeof stActivity.power === 'undefined' ? 0 : stActivity.power.length;
   var mg = typeof stActivity.ground_contact_time === 'undefined' ? 0 : stActivity.ground_contact_time.length;
   var mc = typeof stActivity.cadence === 'undefined' ? 0 : stActivity.cadence.length;
+  var mm = typeof stActivity.location === 'undefined' ? 0 : stActivity.location.length;
 
   var ld = -1, lh = -1, le = -1, lp = -1, lg = -1, lc = -1;  // last values (when data blank)
   var dd = 0; // delta distance
@@ -94,6 +132,7 @@ function processData(stActivity) {
   rawData.length = 0;
   runData.length = 0;
   calcData.length = 0;
+  gpsData.length = 0;
 
   // if no array of distance then set to zero   -              distance list is time then distance
   var iEnd = typeof stActivity.distance === 'undefined' ? 0 : stActivity.distance[stActivity.distance.length-2] + 1;
@@ -200,6 +239,15 @@ function processData(stActivity) {
         ih += 2; // increment by 2
       } else {  // interpolate
         lh = parseFloat(interpolateData(stActivity.heartrate, ih, i).toFixed(0));
+      }
+    }
+
+    if (bm == true) {  // gps data for Map
+      if (stActivity.location[im] == i && im < mm) {
+        gpsData[i] = stActivity.location[im+1];
+        im += 2; // increment by 2
+      } else {  // use last point
+          gpsData[i] = gpsData[i-1];  // assume there is data for i=0
       }
     }
 
@@ -327,7 +375,7 @@ function calcMetrics() {
   }
 }
 
-function displayMetrics() {
+function displayMetrics(zoomOut = false) {
   var dataCSV ="";
   dataCSV += "Elevation filter = " + parseInt(document.getElementById("elevFilter").value) + " m; Level threshold = " +
       parseFloat(document.getElementById("levelGrade").value) + " %; Walk thresholds: GCT = " +
@@ -340,6 +388,8 @@ function displayMetrics() {
   //display sparkline
   showSparkLine();
   var bStryd = strydData.length > 0 ? true : false;
+  var iStart = $( "#timeRange" ).slider( "values", 0);
+  var iEnd = $( "#timeRange" ).slider( "values", 1) + 1;
   if (sumData.length > 0 && runData.length > 0) {
     if ($( "#cbMetrics" )[0].checked) {
       dataCSV += "type" + csv + "time" + csv + "distance" + csv + "pace" + csv + "elev gain" + csv + "grade" + csv + "HR" + csv +
@@ -394,8 +444,6 @@ function displayMetrics() {
       }
       dataCSV += "" + csv + "(m)" + csv + "(m)" + csv + "(W)" + csv + "(ms)" + csv + "(bpm)" + csv + "(cpm)" + lf;
 
-      var iStart = $( "#timeRange" ).slider( "values", 0);
-      var iEnd = $( "#timeRange" ).slider( "values", 1) + 1;
       for (i = iStart; i < iEnd ; i++ ) {
         dataCSV += i + csv + runData[i][0] + csv + runData[i][1] + csv + runData[i][2] + csv + runData[i][3] + csv + runData[i][4] + csv + runData[i][5] + csv;
         dataCSV += calcData[i][0] + csv + calcData[i][1] + csv + calcData[i][2] + csv + calcData[i][4] + csv + calcData[i][5] + csv;
@@ -408,6 +456,7 @@ function displayMetrics() {
     }
   }
   document.getElementById("showData").value = dataCSV;
+  showMap(zoomOut);
 }
 
 function showSparkLine() {

@@ -142,6 +142,8 @@ function getStrydLink(stActivity) {
 
 function setStrydLink(id) {
   strydActivityID = id;
+  $( "#getStrydInfo" ).css("background","");  // background color default
+  $( "#getStrydInfo" ).button()[0].title = "Get run data from Stryd";
   if (id > 0) {
     document.getElementById("linkStrydURL").innerHTML = 'Stryd: link';
     document.getElementById("linkStrydURL").href = STRYDURL + 'runs/' + id;
@@ -203,11 +205,15 @@ function getStrydInfo() {
           // display data as needed
           refreshData();
 
-          //console.log(strydData);
-          // iEnd--;
-          // console.log('distance:watch / stryd', strydData[iEnd][0], strydData[iEnd][2], (strydData[iEnd][0]/strydData[iEnd][2]).toFixed(3));
-
+          var dist_mi = distMiles(sumStryd[0][0][1]);  // so same as stored value for pace calcs
           $( "#getStrydInfo" ).button( "option", "disabled", false ); // button enabled
+          $( "#getStrydInfo" ).button()[0].title = "Stryd dist: " + dist_mi + " mi";
+          $( "#getStrydInfo" ).css("background","LightGreen");
+          if ( dist_mi >= document.getElementById("STdistance").value ) { // only update if >= to distance
+            document.getElementById("STdistance").value = dist_mi;
+            document.getElementById("STactiveP").value = calcUIPace();
+          }
+          displaySummary();
       })
       .fail(function(error) {
         window.alert("Stryd Activity not accessible.");
