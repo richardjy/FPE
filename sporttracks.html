@@ -51,7 +51,7 @@
         .ui-widget { font-size: 90%; }
         .ui-state-default, .ui-widget-content { background-color: #d1dae5; }
         .ui-tabs, .ui-tabs-nav { background-color: #7A90AB; }
-        .ui-tooltip { white-space: pre-line; }
+        .ui-tooltip, .leaflet-tooltip { white-space: pre-line; font-size: 80%; padding: 4px; }
         .ui-progressbar-value { background-color: #7A90AB; }
         .ui-progressbar { position: relative;  }
         .progress-label {
@@ -73,7 +73,8 @@
           overflow-x: auto;
         }
         td.healthdataexists a { background-color: #90EE90 !important; font-weight:bold !important; }
-        .leaflet-control-layers label { text-align: left; font-style: normal;}
+        .leaflet-control-layers label { text-align: left; font-style: normal; }
+        .leaflet-control-attribution { font-size: 9px !important; }
 
   	</style>
 
@@ -140,8 +141,7 @@
         </label>&nbsp;&nbsp;&nbsp;
         <input type="button" id="getStravaInfo" onclick="getStravaInfo()" value="Get Strava"
             title="Get 'Title' and 'Description' from Strava">&nbsp;&nbsp;&nbsp;
-        <input type="button" id="getStrydInfo" onclick="getStrydInfo()" value="Get Stryd"
-                title="Get run data from Stryd">
+        <input type="button" id="getStrydInfo" onclick="getStrydInfo()" value="Get Stryd">
       </p>
     </div>
     <textarea rows = "10" cols = "70" id="STnotes" name="STnotes" ></textarea>
@@ -268,10 +268,11 @@
       var zoomButton = L.easyButton({ states: [{
         stateName: 'zoomMap',
         icon: 'fas fa-crop-alt fa-lg',
-        title: 'Zoom to selection',
+        title: 'Zoom to route/selection',
         onClick: function(btn, map){
           // zoom to selection
           showMap(true);
+          document.getElementById("invisibleMap").scrollIntoView({behavior: "smooth", block: "nearest"});
         }
       }]  });
 
@@ -283,6 +284,7 @@
           onClick: function(btn, map){
             document.getElementById("invisibleMap").style["width"]="600px";
             document.getElementById("invisibleMap").style["height"]="450px";
+            document.getElementById("invisibleMap").scrollIntoView({behavior: "smooth", block: "nearest"});
             $('.leaflet-control-layers').show();
             $('.leaflet-control-scale').show();
             mapST.invalidateSize();
@@ -296,6 +298,7 @@
           onClick: function(btn, map){
             document.getElementById("invisibleMap").style["width"]="300px";
             document.getElementById("invisibleMap").style["height"]="200px";
+            document.getElementById("invisibleMap").scrollIntoView({behavior: "smooth", block: "nearest"});
             $('.leaflet-control-layers').hide();
             $('.leaflet-control-scale').hide();
             mapST.invalidateSize();
@@ -308,8 +311,9 @@
       var autoZoom =  new L.LayerGroup();  // Dummy layer to flag whether autoZoom (default off)
       var showArrows =  new L.LayerGroup();  //
       var overlays = {
-        "Strava Heatmap":stravaHeatmap,
-        "Auto Zoom": autoZoom,
+        "Strava heatmap":stravaHeatmap,
+        "Waymarked trails": WaymarkedTrails_hiking,
+        "Auto zoom": autoZoom,
         "Direction arrows": showArrows
       };
 
@@ -797,7 +801,7 @@
 
       var calcGPSused = false;
       function calcGPS(gps) {  // review which times to use
-          var orig_dist_mi = (sumData[0][0][1]/MI2M).toFixed(2);
+          var orig_dist_mi = distMiles(sumData[0][0][1]);
           //var durS = timeS($( "#STactiveT" ).val());
           // if (durS == -1) durS = stActivityUpdate.duration ;
           //var orig_pace = durS / orig_dist_mi;                               // seconds per mile
@@ -807,16 +811,7 @@
             for (i = 3; i < gps.length; i=i+2) {
                 dist += mapST.distance(gps[i-2], gps[i]);
             }
-            var dist_mi = (dist/MI2M).toFixed(2);                                // so same as stored value for pace calcs
-            //var pace = durS / dist_mi;                                         // seconds per mile
-            //var paceStr = new Date(pace * 1000 + 500).toISOString().substr(14, 5);            // extra 500 ms for correct rounding
-            //var clockRatio = stActivityUpdate.clock_duration / durS
-            //var elapsedStr = timeHMS(stActivityUpdate.clock_duration);
-            //var elPaceStr = new Date(pace * 1000 * clockRatio + 500).toISOString().substr(14, 5);
-            //var elOrigPaceStr = new Date(orig_pace * 1000 * clockRatio + 500).toISOString().substr(14, 5);
-            //var noteStr = "\nSTlink distance: " + dist_mi + " mi @ " + paceStr + " /mi ";
-            //noteStr += "(original " + orig_dist_mi + " mi @ " + orig_paceStr + " /mi)\n";
-            //noteStr += "  Elapsed time: " + elapsedStr + " @ " + elPaceStr + " /mi (original @ " + elOrigPaceStr + " /mi)\n";
+            var dist_mi = distMiles(dist);  // so same as stored value for pace calcs
             document.getElementById("STdistance").value = dist_mi;
             document.getElementById("STactiveP").value = calcUIPace();
             displaySummary();
@@ -840,10 +835,14 @@
             $( "#STdistance" ).val().padStart(7,"\u2002") + csv + "\u2002\u2002\u2002" + $( "#STactiveP" ).val() + lf;
         noteStr += "\u2005moving:\xa0\xa0" + csv + timeHMS(sumData[5][0][0]) + csv +
             distMiles(sumData[5][0][1]).toString().padStart(7,"\u2002") + csv + "\u2002\u2002\u2002" + paceMinMile(sumData[5][0][6]) + lf;
-        noteStr += "\u2002\u2002watch:\xa0\xa0 " + csv + timeHMS(sumData[6][0][0]) + csv +
+        noteStr += "\u2002\u2002watch:\xa0\xa0" + csv + timeHMS(sumData[6][0][0]) + csv +
             distMiles(sumData[6][0][1]).toString().padStart(7,"\u2002") + csv + "\u2002\u2002\u2002" +paceMinMile(sumData[6][0][6]) + lf;
         noteStr += "\u2006elapsed:\xa0\xa0" + csv + timeHMS(sumData[0][0][0]) + csv +
             distMiles(sumData[0][0][1]).toString().padStart(7,"\u2002") + csv + "\u2002\u2002\u2002" + paceMinMile(sumData[0][0][6]) + lf;
+        if (sumStryd[0][0][0] != 0) {
+          noteStr += "\u2002\u2002\u2002stryd:\xa0\xa0" + csv + timeHMS(sumData[0][0][0]) + csv +
+              distMiles(sumStryd[0][0][1]).toString().padStart(7,"\u2002") + csv + "\u2002\u2002\u2002" + paceMinMile(sumStryd[0][0][2]) + lf;
+        }
         noteStr += "*/" + lf;
 
         //  look for comment and replace using '/* text */'  test.match(/\/\*ST(.*?)\*\/\n/s)  look if \n before and after   (\n)?\/\*ST(.*?)\*\/(\n)?
@@ -857,6 +856,7 @@
         } else {
           document.getElementById("STnotes").value += noteStr;
         }
+         $( "#fieldSTdata").trigger("input"); // force data area to see it as an update
       }
 
       function getLocation(gps) {
