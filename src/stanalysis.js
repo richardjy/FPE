@@ -247,7 +247,7 @@ function processData(stActivity) {
         gpsData[i] = stActivity.location[im+1];
         im += 2; // increment by 2
       } else {  // use last point
-          gpsData[i] = gpsData[i-1];  // assume there is data for i=0
+          gpsData[i] = i>0 ? gpsData[i-1] : stActivity.location[1];  // use last point, or it i=0 then use first location
       }
     }
 
