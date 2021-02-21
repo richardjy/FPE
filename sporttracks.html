@@ -76,9 +76,20 @@
         .leaflet-control-layers label { text-align: left; font-style: normal; }
         .leaflet-control-attribution { font-size: 9px !important; }
 
+        table, th, td {
+            border: 1px solid #dddddd;
+            background-color: #d1dae5;
+            border-collapse: collapse;
+            padding-left: 10px;
+            padding-right: 10px;
+            padding-top: 5px;
+            padding-bottom: 5px;
+        }
+        tr:nth-child(odd) td { background-color: white; }
+        td:nth-child(1)    { background-color: white; text-align: center; padding: 0px; }
+        td:nth-child(3)    { text-align: right; }
+        td:nth-child(n+6)  { text-align: center; }
   	</style>
-
-
 
 </head>
 <body>
@@ -155,97 +166,110 @@
     <div id="invisibleMap" style="display: inline-block; width: 300px; height: 200px;"></div>
   </fieldset>
 </div>
-
+<!-- tabbed area -->
 <div id="tabs"  style="display: inline-block; vertical-align: top">
 		<ul>
 			<li><a href="#tab-gear">Gear</a></li>
       <li><a href="#tab-data">Data</a></li>
 			<li><a href="#tab-health">Health</a></li>
+      <li><a href="#tab-activities">Activities</a></li>
 		</ul>
 		<div id="tab-gear">
-    	<div class="arrowButtons">
-        <input type="button" id="STgetGearButton" onclick="getSTgearList()" value="Get Gear">&nbsp;&nbsp;
-        <button id="gearLeft">Change Gear page</button>
-        <button id="gearRight">Change Gear page</button>
-        <br><br>
-    	</div>
-      <div id="progressSTgear"><div class="progress-label">Getting gear...</div></div>
-    	<div id="fieldSTgear">  </div>
+      	<div class="arrowButtons">
+          <input type="button" id="STgetGearButton" onclick="getSTgearList()" value="Get Gear">&nbsp;&nbsp;
+          <button id="gearLeft">Change Gear page</button>
+          <button id="gearRight">Change Gear page</button>&nbsp;&nbsp;
+          <label for="cbAllGear">All Gear
+            <input type="checkbox" name="cbAllGear" id="cbAllGear">
+          </label>
+          <br><br>
+      	</div>
+        <div id="progressSTgear"><div class="progress-label">Getting gear...</div></div>
+      	<div id="fieldSTgear">  </div>
 		</div>
     <div id="tab-data">
-      <div style="display: inline-block; margin-right:20px;">
-        <p>
-          <label id="labelElevFilter">Elevation filter:&nbsp;</label>
-          <input type="text" id="elevFilter" name="textDataInput" size="3" style="padding-right:30px; text-align:right;"></input><span style="margin-left:-25px;">m</span>
-        </p>
-        <p>
-          <label id="labelLevel">Level threshold:&nbsp;</label>
-          <input type="text" id="levelGrade" name="textDataInput" size="3" style="padding-right:30px; text-align:right;"></input><span style="margin-left:-25px;">%</span>
-        </p>
-        <p>
-          <label id="labelWalkGCT">GCT walk threshold:&nbsp;</label>
-          <input type="text" id="walkGCT" name="textDataInput" size="3" style="padding-right:30px; text-align:right;"></input><span style="margin-left:-25px;">ms</span>
-        </p>
-        <p>
-          <label id="labelWalkCad">Cadence walk threshold:&nbsp;</label>
-          <input type="text" id="walkCad" name="textDataInput" size="2.7" style="padding-right:36px; text-align:right;"></input><span style="margin-left:-31px;">spm</span>
-        </p>
-      </div>
-      <div style="display: inline-block; vertical-align: top">
-        <span class="elevSparkline"></span>
-        <div id="timeRange" style="width:600px;"></div>
-        <div style = "text-align: center; width:600px; padding-top:4px;">
-          <input type="text" id="minTime" name="minTime" size="6" readonly style="text-align:center;">&nbsp;&nbsp;&nbsp;to&nbsp;
-          <input type="text" id="maxTime" name="maxTime" size="6" readonly style="text-align:center;">
+        <div style="display: inline-block; margin-right:20px;">
+          <p>
+            <label id="labelElevFilter">Elevation filter:&nbsp;</label>
+            <input type="text" id="elevFilter" name="textDataInput" size="3" style="padding-right:30px; text-align:right;"></input><span style="margin-left:-25px;">m</span>
+          </p>
+          <p>
+            <label id="labelLevel">Level threshold:&nbsp;</label>
+            <input type="text" id="levelGrade" name="textDataInput" size="3" style="padding-right:30px; text-align:right;"></input><span style="margin-left:-25px;">%</span>
+          </p>
+          <p>
+            <label id="labelWalkGCT">GCT walk threshold:&nbsp;</label>
+            <input type="text" id="walkGCT" name="textDataInput" size="3" style="padding-right:30px; text-align:right;"></input><span style="margin-left:-25px;">ms</span>
+          </p>
+          <p>
+            <label id="labelWalkCad">Cadence walk threshold:&nbsp;</label>
+            <input type="text" id="walkCad" name="textDataInput" size="2.7" style="padding-right:36px; text-align:right;"></input><span style="margin-left:-31px;">spm</span>
+          </p>
         </div>
-      </div>
+        <div style="display: inline-block; vertical-align: top">
+          <span class="elevSparkline"></span>
+          <div id="timeRange" style="width:600px;"></div>
+          <div style = "text-align: center; width:600px; padding-top:4px;">
+            <input type="text" id="minTime" name="minTime" size="6" readonly style="text-align:center;">&nbsp;&nbsp;&nbsp;to&nbsp;
+            <input type="text" id="maxTime" name="maxTime" size="6" readonly style="text-align:center;">
+          </div>
+        </div>
 
-      <br><br>
-      <label for="cbMetrics">Show metrics
-        <input type="checkbox" name="cbMetrics" id="cbMetrics">
-      </label>
-      <label for="cbData">Show raw data
-        <input type="checkbox" name="cbMetrics" id="cbData">
-      </label>
-      <label for="cbSIunits">Use meters
-        <input type="checkbox" name="cbMetrics" id="cbSIunits">
-      </label>&nbsp;&nbsp;&nbsp;&nbsp;
-      <input type="button" id="STmaxData" onclick="maxData()" value="Max">
-      <label for="cbGraphHR">HR
-        <input type="checkbox" name="cbGraph" id="cbGraphHR">
-      </label>
-      <label for="cbGraphP">Power
-        <input type="checkbox" name="cbGraph" id="cbGraphP">
-      </label>
-      <label for="cbGraphBig">Enlarge
-        <input type="checkbox" name="cbGraph" id="cbGraphBig">
-      </label>
-      <br>
-      <textarea rows = "26" cols = "140" id="showData" name="showData"></textarea><br>
-      <div id="dataDisplay">  </div>
+        <br><br>
+        <label for="cbMetrics">Show metrics
+          <input type="checkbox" name="cbMetrics" id="cbMetrics">
+        </label>
+        <label for="cbData">Show raw data
+          <input type="checkbox" name="cbMetrics" id="cbData">
+        </label>
+        <label for="cbSIunits">Use meters
+          <input type="checkbox" name="cbMetrics" id="cbSIunits">
+        </label>&nbsp;&nbsp;&nbsp;&nbsp;
+        <input type="button" id="STmaxData" onclick="maxData()" value="Max">
+        <label for="cbGraphHR">HR
+          <input type="checkbox" name="cbGraph" id="cbGraphHR">
+        </label>
+        <label for="cbGraphP">Power
+          <input type="checkbox" name="cbGraph" id="cbGraphP">
+        </label>
+        <label for="cbGraphBig">Enlarge
+          <input type="checkbox" name="cbGraph" id="cbGraphBig">
+        </label>
+        <br>
+        <textarea rows = "26" cols = "140" id="showData" name="showData"></textarea><br>
+        <div id="dataDisplay">  </div>
     </div>
 		<div id="tab-health">
-			<div>
-        <button id="STgetHealthButton" onclick="getSThealth()">Get Health</button>&nbsp;&nbsp;
-        <input type="text" id="healthDate" size="10" style="text-align:center;">
-        <br><br>
-    	</div>
-    	<div id="fieldSThealth" >
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<select id="healthSel" name="healthSel" style="text-align:center;"></select>
-        <p><label for="health1" id="lbl-health1" size="10"></label>&nbsp;<input type="text" id="health1" name="health1" size="8" style="text-align:center;"></p>
-        <p><label for="health2" id="lbl-health2" size="10"></label>&nbsp;<input type="text" id="health2" name="health2" size="8" style="text-align:center;"></p>
-        <p><label for="health3" id="lbl-health3" size="10"></label>&nbsp;<input type="text" id="health3" name="health3" size="8" style="text-align:center;"></p>
-        <p><label for="health4" id="lbl-health4" size="10"></label>&nbsp;<input type="text" id="health4" name="health4" size="8" style="text-align:center;"></p>
-        <p><label for="health5" id="lbl-health5" size="10"></label>&nbsp;<input type="text" id="health5" name="health5" size="8" style="text-align:center;"></p>
-        <p><label for="health6" id="lbl-health6" size="10"></label>&nbsp;<input type="text" id="health6" name="health6" size="8" style="text-align:center;"></p>
-        <p><label for="health7" id="lbl-health7" size="10"></label>&nbsp;<input type="text" id="health7" name="health7" size="8" style="text-align:center;"></p>
+  			<div>
+          <button id="STgetHealthButton" onclick="getSThealth()">Get Health</button>&nbsp;&nbsp;
+          <input type="text" id="healthDate" size="10" style="text-align:center;">
+          <br><br>
+      	</div>
+      	<div id="fieldSThealth" >
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<select id="healthSel" name="healthSel" style="text-align:center;"></select>
+          <p><label for="health1" id="lbl-health1" size="10"></label>&nbsp;<input type="text" id="health1" name="health1" size="8" style="text-align:center;"></p>
+          <p><label for="health2" id="lbl-health2" size="10"></label>&nbsp;<input type="text" id="health2" name="health2" size="8" style="text-align:center;"></p>
+          <p><label for="health3" id="lbl-health3" size="10"></label>&nbsp;<input type="text" id="health3" name="health3" size="8" style="text-align:center;"></p>
+          <p><label for="health4" id="lbl-health4" size="10"></label>&nbsp;<input type="text" id="health4" name="health4" size="8" style="text-align:center;"></p>
+          <p><label for="health5" id="lbl-health5" size="10"></label>&nbsp;<input type="text" id="health5" name="health5" size="8" style="text-align:center;"></p>
+          <p><label for="health6" id="lbl-health6" size="10"></label>&nbsp;<input type="text" id="health6" name="health6" size="8" style="text-align:center;"></p>
+          <p><label for="health7" id="lbl-health7" size="10"></label>&nbsp;<input type="text" id="health7" name="health7" size="8" style="text-align:center;"></p>
+          <br>
+          <button id="STsendHealthButton" onclick="sendSThealth()">Upload Health</button>
+        </div>
         <br>
-        <button id="STsendHealthButton" onclick="sendSThealth()">Upload Health</button>
-      </div>
-      <br>
-      <div id="progressHealth"><div class="progress-label">Health data...</div></div>
+        <div id="progressHealth"><div class="progress-label">Health data...</div></div>
+		</div>
+    <div id="tab-activities">
+      	<div >
+          <button id="getActivities" onclick="getActivities()">Get Activities</button>&nbsp;&nbsp;
+          <br><br>
+      	</div>
+        <div id="progressActivities"><div class="progress-label">Getting activities...</div></div>
+      	<table id="tableActivities">  </table>
 		</div>
 </div>
+
 <br>
 <br>
   <!-- stryd login dialog -->
@@ -282,6 +306,7 @@
           icon: 'fas fa-expand-alt fa-lg',
           title: 'Expand map',
           onClick: function(btn, map){
+            $('.ui-tooltip').hide();
             document.getElementById("invisibleMap").style["width"]="600px";
             document.getElementById("invisibleMap").style["height"]="450px";
             document.getElementById("invisibleMap").scrollIntoView({behavior: "smooth", block: "nearest"});
@@ -296,6 +321,7 @@
           icon: 'fas fa-compress-alt fa-lg',
           title: 'Shrink map',
           onClick: function(btn, map){
+            $('.ui-tooltip').hide();
             document.getElementById("invisibleMap").style["width"]="300px";
             document.getElementById("invisibleMap").style["height"]="200px";
             document.getElementById("invisibleMap").scrollIntoView({behavior: "smooth", block: "nearest"});
@@ -358,8 +384,11 @@
 
       $(function() {
         $( "#STgetButton, #getLocButton, #recalcButton, #STrevertButton, #STsendButton, #STgetGearButton," +
-            " #STgetHealthButton, #STsendHealthButton, #STmaxData, #getStravaInfo, #getStrydInfo" ).button(  );  // { disabled: true }
+            " #STgetHealthButton, #STsendHealthButton, #STmaxData, #getStravaInfo, #getStrydInfo, #getActivities" ).button(  );  // { disabled: true }
         $( document ).tooltip();
+         $( document ).tooltip().click(function() {
+            $('.ui-tooltip').hide();
+        });
         $( "#fieldSTgear" ).controlgroup()  // click on control group
           .on('click', '[type="checkbox"]', function( event, ui ){
               if (stActivityID != 0) {
@@ -432,9 +461,9 @@
                   gearIndexPage++;
                   showSTgear();
             });
-        $( "#progressSTgear, #progressHealth, #progressSTact" ).progressbar();
+        $( "#progressSTgear, #progressHealth, #progressSTact, #progressActivities" ).progressbar();
         $( "#progressHealth, #progressSTact" ).progressbar("value", false);
-        $( "#progressSTgear, #progressHealth, #progressSTact" ).hide();
+        $( "#progressSTgear, #progressHealth, #progressSTact, #progressActivities" ).hide();
         $( "#tabs" ).tabs({
             activate: function( event, ui ) {
               //console.log(ui.newTab[0].textContent);
@@ -443,7 +472,7 @@
             }
         });
 
-        $( "#cbWrap, #cbMetrics, #cbData, #cbSIunits, #cbGraphHR, #cbGraphP, #cbGraphBig" ).checkboxradio();
+        $( "#cbWrap, #cbAllGear, #cbMetrics, #cbData, #cbSIunits, #cbGraphHR, #cbGraphP, #cbGraphBig" ).checkboxradio();
         // default is metrics checked - using HTML gives caret rather than checkmark
         $( "#cbMetrics" ).prop('checked',true).checkboxradio('refresh');
         $( "[name='textDataInput']").on( "change", refreshData );
@@ -548,10 +577,18 @@
           }
         });
 
+        $(document).on('click','.tableID',function(e){
+            //console.log(this);
+            document.getElementById("STindex").value = this.innerHTML;
+            getSTdata();
+        });
+
 				$(document).ajaxStop(function () {  // come here at end of all GET POST etc
             if (getGear == true) {  // only react to one type of completion
-              var filterGear = stGearInit.filter( function(g){ return g.status == "ACTIVE" } );
-              stGearInit = filterGear; // not sure if can do in one step
+              if ($( "#cbAllGear" )[0].checked == false) { // filter by active
+                var filterGear = stGearInit.filter( function(g){ return g.status == "ACTIVE" } );
+                stGearInit = filterGear; // not sure if can do in one step
+              }
               stGearInit.sort( function(g1,g2){ return g1.uri < g2.uri ? 1 : -1 } );  // sort based on uri for unique list
               stGearUpdate = JSON.parse(JSON.stringify(stGearInit));  // cloned copy
               getGear = false;

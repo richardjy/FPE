@@ -448,3 +448,78 @@ function gup(url, name) {
     else
         return results[1];
 }
+
+function getActivities( numAct = 15 ) {
+    // later add filters and limit - initially get 15 Activities
+    var startDate = new Date($( "#idDate" ).datepicker('getDate'));
+    startDate.setDate(startDate.getDate() + 1); // go to next day so we include selected date in search
+    $( "#progressActivities" ).progressbar("value", false);
+    $( "#progressActivities" ).show();
+    $.ajax({
+        type: 'GET',
+        url: CORSURL + FITNESSURL,
+        headers: {
+          'Authorization' : 'Bearer ' + stAccessToken,
+          'Accept' : 'application/json'
+        },
+        data: {
+          'pageSize' : numAct,
+          'page' : 0,
+          'noLaterThan' : startDate.toISOString()
+        }
+    })
+    .done(function(data, status){
+        //console.log("data: ", data,  "\nStatus: " + status);
+        $( "#tableActivities" ).html("");
+        var table = document.querySelector("#tableActivities");
+        var i=1;
+        for (var element of data.items) {
+          var row = table.insertRow();
+          var startT = new Date (element.start_time);
+          //var startDayT = startT.toDateString().substr(0,4) + startT.toLocaleString();
+
+          var button = document.createElement("button");
+          button.setAttribute("class","tableID");
+          button.innerHTML = i;
+          row.insertCell().appendChild(button);
+          row.insertCell().appendChild(document.createTextNode(startT.toDateString()));
+          row.insertCell().appendChild(document.createTextNode(startT.toLocaleTimeString()));
+          row.insertCell().appendChild(document.createTextNode(element.type));
+          row.insertCell().appendChild(document.createTextNode(element.name));
+          row.insertCell().appendChild(document.createTextNode(timeHMS(element.duration)));
+          row.insertCell().appendChild(document.createTextNode(distMiles(element.total_distance)));
+
+          var gearNum = -1;
+          if (stGearUpdate.length > 0) {
+            gearNum=0;
+            var actID = element.uri.substring(element.uri.lastIndexOf('/')+1);
+            for (j=0; j < stGearUpdate.length; j++ ) {
+              if ( stGearUpdate[j].activities.indexOf(parseInt(actID)) > -1 ) {
+                gearNum++;
+              }
+            }
+          }
+          row.insertCell().appendChild(document.createTextNode( gearNum == -1 ? "-" : gearNum));
+          i++
+        }
+
+        // header
+        var thead = table.createTHead();
+        //var row = thead.insertRow();
+        table.appendChild(thead);
+        thead.appendChild(document.createElement("th")).appendChild(document.createTextNode("#"));
+        thead.appendChild(document.createElement("th")).appendChild(document.createTextNode("Date"));
+        thead.appendChild(document.createElement("th")).appendChild(document.createTextNode("Time"));
+        thead.appendChild(document.createElement("th")).appendChild(document.createTextNode("Type"));
+        thead.appendChild(document.createElement("th")).appendChild(document.createTextNode("Name"));
+        thead.appendChild(document.createElement("th")).appendChild(document.createTextNode("Duration"));
+        thead.appendChild(document.createElement("th")).appendChild(document.createTextNode("Dist (mi)"));
+        thead.appendChild(document.createElement("th")).appendChild(document.createTextNode("Gear"));
+        $( "#progressActivities" ).hide();
+        // }
+    })
+    .fail(function(response) {
+        $( "#progressActivities" ).hide();
+        window.alert("SportTracks data request failed.");
+    });
+}
