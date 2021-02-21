@@ -176,6 +176,7 @@ function setStravaLink(id) {
 function getStravaInfo(){
   var epochT = Math.floor(new Date(stActivityUpdate.start_time)/1000 + stActivityUpdate.clock_duration/2); // go to mid point of activity
   // look for first activity before midpoint
+  $( "#getStravaInfo" ).blur(); // remove focus to avoid tooltip remaining
   $.get('https://www.strava.com/api/v3/athlete/activities?before=' + epochT + '&page=1&per_page=1&access_token=' + stravaAccessToken, function(data, status){
     //console.log(data);
     // get activity data
