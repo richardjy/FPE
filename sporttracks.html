@@ -263,6 +263,12 @@
     <div id="tab-activities">
       	<div >
           <button id="getActivities" onclick="getActivities()">Get Activities</button>&nbsp;&nbsp;
+          <select name="filter" id="filter">
+            <option value="All" selected>All</option>
+            <option value="Running">Running</option>
+            <option value="Rowing">Rowing</option>
+            <option value="Gym: Yoga">Gym: Yoga</option>
+          </select>
           <br><br>
       	</div>
         <div id="progressActivities"><div class="progress-label">Getting activities...</div></div>
@@ -471,6 +477,7 @@
               $.sparkline_display_visible();
             }
         });
+        $( "#filter" ).selectmenu({ width: 150 });
 
         $( "#cbWrap, #cbAllGear, #cbMetrics, #cbData, #cbSIunits, #cbGraphHR, #cbGraphP, #cbGraphBig" ).checkboxradio();
         // default is metrics checked - using HTML gives caret rather than checkmark

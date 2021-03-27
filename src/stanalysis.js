@@ -14,7 +14,7 @@ var gpsData = [];
 var csv ="\t";
 var lf = "\n";
 var maxGraphPts = 2400;  // 4x number of points in the graph - minimize missed info
-var ddPause = 0.2; // m/s when considered 'paused' 0.5m/s = 1.1 mph - look at average velocity over say 10s?
+var ddPause = 0.1; // m/s when considered 'paused' 0.5m/s = 1.1 mph - look at average velocity over say 10s?
 var stGPX = '';
 
 function maxData() {
@@ -191,7 +191,7 @@ function processData(stActivity) {
       if (sSWR == 1) {
         lp = 0;  // if stopped from watch then power = 0
       } else if (lp == 0) {
-         sSWR = 2;   // if power= 0 then 'paused' (add distance criteria?)
+         //sSWR = 2;   // if power= 0 then 'paused' (add distance criteria?)
       }
     }
 
@@ -225,8 +225,8 @@ function processData(stActivity) {
       }
       if (sSWR == 1) {
         lc = 0;  // if stopped from watch then cadence = 0
-      } else if (lc == 0) {
-        sSWR = 2;  // if cadence = 0 then pause (alternative to P=0) - don't change other value
+      //} else if (lc == 0) {
+      //  sSWR = 2;  // if cadence = 0 then pause (alternative to P=0) - don't change other value
       } else if ( (parseInt(lc)*2 <= walkCad) && sSWR == 4) {
          sSWR = 3;   // if below cadence threshold then walking (don't change if viewed as paused or already stopped)
       }

@@ -472,35 +472,55 @@ function getActivities( numAct = 15 ) {
         //console.log("data: ", data,  "\nStatus: " + status);
         $( "#tableActivities" ).html("");
         var table = document.querySelector("#tableActivities");
+        var filterObj = document.getElementById("filter");
+        var filterVal = filterObj.value;
         var i=1;
         for (var element of data.items) {
-          var row = table.insertRow();
-          var startT = new Date (element.start_time);
-          //var startDayT = startT.toDateString().substr(0,4) + startT.toLocaleString();
+          var actType = element.type;
+          var exists = false;
+          $('#filter option').each(function(){
+              if (this.value == actType) {
+                exists = true;
+                return false;
+              }
+          });
 
-          var button = document.createElement("button");
-          button.setAttribute("class","tableID");
-          button.innerHTML = i;
-          row.insertCell().appendChild(button);
-          row.insertCell().appendChild(document.createTextNode(startT.toDateString()));
-          row.insertCell().appendChild(document.createTextNode(startT.toLocaleTimeString()));
-          row.insertCell().appendChild(document.createTextNode(element.type));
-          row.insertCell().appendChild(document.createTextNode(element.name));
-          row.insertCell().appendChild(document.createTextNode(timeHMS(element.duration)));
-          row.insertCell().appendChild(document.createTextNode(distMiles(element.total_distance)));
 
-          var gearNum = -1;
-          if (stGearUpdate.length > 0) {
-            gearNum=0;
-            var actID = element.uri.substring(element.uri.lastIndexOf('/')+1);
-            for (j=0; j < stGearUpdate.length; j++ ) {
-              if ( stGearUpdate[j].activities.indexOf(parseInt(actID)) > -1 ) {
-                gearNum++;
+          if (exists == false ) {
+            var option = document.createElement("option");
+            option.text = actType;
+            filterObj.add(option);
+          }
+
+          if ( filterVal == "All" || actType.startsWith(filterVal) ) {
+            var row = table.insertRow();
+            var startT = new Date (element.start_time);
+            //var startDayT = startT.toDateString().substr(0,4) + startT.toLocaleString();
+
+            var button = document.createElement("button");
+            button.setAttribute("class","tableID");
+            button.innerHTML = i;
+            row.insertCell().appendChild(button);
+            row.insertCell().appendChild(document.createTextNode(startT.toDateString()));
+            row.insertCell().appendChild(document.createTextNode(startT.toLocaleTimeString()));
+            row.insertCell().appendChild(document.createTextNode(element.type));
+            row.insertCell().appendChild(document.createTextNode(element.name));
+            row.insertCell().appendChild(document.createTextNode(timeHMS(element.duration)));
+            row.insertCell().appendChild(document.createTextNode(distMiles(element.total_distance)));
+
+            var gearNum = -1;
+            if (stGearUpdate.length > 0) {
+              gearNum=0;
+              var actID = element.uri.substring(element.uri.lastIndexOf('/')+1);
+              for (j=0; j < stGearUpdate.length; j++ ) {
+                if ( stGearUpdate[j].activities.indexOf(parseInt(actID)) > -1 ) {
+                  gearNum++;
+                }
               }
             }
+            row.insertCell().appendChild(document.createTextNode( gearNum == -1 ? "-" : gearNum));
           }
-          row.insertCell().appendChild(document.createTextNode( gearNum == -1 ? "-" : gearNum));
-          i++
+          i++;
         }
 
         // header
