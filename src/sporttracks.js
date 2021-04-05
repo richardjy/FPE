@@ -54,6 +54,7 @@ var progGearCount = 0;
 var confirmUpload = false;
 var useLocalStorage = true;  // whether to store/read access tokens  - separate variable in FPE - need to rationalize
 var linkStrava = true;  // whether to link to Strava too
+var activityList;       // array of activities
 
 function sportTracksInfo() {
   if (useLocalStorage) {
@@ -470,11 +471,9 @@ function getActivities( numAct = 15 ) {
     })
     .done(function(data, status){
         //console.log("data: ", data,  "\nStatus: " + status);
-        $( "#tableActivities" ).html("");
-        var table = document.querySelector("#tableActivities");
+        // add new items to filter list
         var filterObj = document.getElementById("filter");
-        var filterVal = filterObj.value;
-        var i=1;
+        //var filterVal = filterObj.value;
         for (var element of data.items) {
           var actType = element.type;
           var exists = false;
@@ -485,56 +484,20 @@ function getActivities( numAct = 15 ) {
               }
           });
 
-
           if (exists == false ) {
             var option = document.createElement("option");
             option.text = actType;
             filterObj.add(option);
           }
-
-          if ( filterVal == "All" || actType.startsWith(filterVal) ) {
-            var row = table.insertRow();
-            var startT = new Date (element.start_time);
-            //var startDayT = startT.toDateString().substr(0,4) + startT.toLocaleString();
-
-            var button = document.createElement("button");
-            button.setAttribute("class","tableID");
-            button.innerHTML = i;
-            row.insertCell().appendChild(button);
-            row.insertCell().appendChild(document.createTextNode(startT.toDateString()));
-            row.insertCell().appendChild(document.createTextNode(startT.toLocaleTimeString()));
-            row.insertCell().appendChild(document.createTextNode(element.type));
-            row.insertCell().appendChild(document.createTextNode(element.name));
-            row.insertCell().appendChild(document.createTextNode(timeHMS(element.duration)));
-            row.insertCell().appendChild(document.createTextNode(distMiles(element.total_distance)));
-
-            var gearNum = -1;
-            if (stGearUpdate.length > 0) {
-              gearNum=0;
-              var actID = element.uri.substring(element.uri.lastIndexOf('/')+1);
-              for (j=0; j < stGearUpdate.length; j++ ) {
-                if ( stGearUpdate[j].activities.indexOf(parseInt(actID)) > -1 ) {
-                  gearNum++;
-                }
-              }
-            }
-            row.insertCell().appendChild(document.createTextNode( gearNum == -1 ? "-" : gearNum));
-          }
-          i++;
         }
-
-        // header
-        var thead = table.createTHead();
-        //var row = thead.insertRow();
-        table.appendChild(thead);
-        thead.appendChild(document.createElement("th")).appendChild(document.createTextNode("#"));
-        thead.appendChild(document.createElement("th")).appendChild(document.createTextNode("Date"));
-        thead.appendChild(document.createElement("th")).appendChild(document.createTextNode("Time"));
-        thead.appendChild(document.createElement("th")).appendChild(document.createTextNode("Type"));
-        thead.appendChild(document.createElement("th")).appendChild(document.createTextNode("Name"));
-        thead.appendChild(document.createElement("th")).appendChild(document.createTextNode("Duration"));
-        thead.appendChild(document.createElement("th")).appendChild(document.createTextNode("Dist (mi)"));
-        thead.appendChild(document.createElement("th")).appendChild(document.createTextNode("Gear"));
+        // sort list
+        var filterVal = filterObj.value;
+        $("#filter").html($("#filter option").sort(function (a, b) {
+            return a.text == b.text ? 0 : a.text < b.text ? -1 : 1
+        }))
+        filterObj.value = filterVal;
+        activityList = data;
+        showActivities(activityList);
         $( "#progressActivities" ).hide();
         // }
     })
@@ -542,4 +505,57 @@ function getActivities( numAct = 15 ) {
         $( "#progressActivities" ).hide();
         window.alert("SportTracks data request failed.");
     });
+}
+
+function showActivities(data) {
+  $( "#tableActivities" ).html("");
+  var table = document.querySelector("#tableActivities");
+  var filterObj = document.getElementById("filter");
+  var filterVal = filterObj.value;
+  var i=1;
+  for (var element of data.items) {
+    var actType = element.type;
+    if ( filterVal == "All" || actType.startsWith(filterVal) ) {
+      var row = table.insertRow();
+      var startT = new Date (element.start_time);
+      //var startDayT = startT.toDateString().substr(0,4) + startT.toLocaleString();
+
+      var button = document.createElement("button");
+      button.setAttribute("class","tableID");
+      button.innerHTML = i;
+      row.insertCell().appendChild(button);
+      row.insertCell().appendChild(document.createTextNode(startT.toDateString()));
+      row.insertCell().appendChild(document.createTextNode(startT.toLocaleTimeString()));
+      row.insertCell().appendChild(document.createTextNode(element.type));
+      row.insertCell().appendChild(document.createTextNode(element.name));
+      row.insertCell().appendChild(document.createTextNode(timeHMS(element.duration)));
+      row.insertCell().appendChild(document.createTextNode(distMiles(element.total_distance)));
+
+      var gearNum = -1;
+      if (stGearUpdate.length > 0) {
+        gearNum=0;
+        var actID = element.uri.substring(element.uri.lastIndexOf('/')+1);
+        for (j=0; j < stGearUpdate.length; j++ ) {
+          if ( stGearUpdate[j].activities.indexOf(parseInt(actID)) > -1 ) {
+            gearNum++;
+          }
+        }
+      }
+      row.insertCell().appendChild(document.createTextNode( gearNum == -1 ? "-" : gearNum));
+    }
+    i++;
+  }
+
+  // header
+  var thead = table.createTHead();
+  //var row = thead.insertRow();
+  table.appendChild(thead);
+  thead.appendChild(document.createElement("th")).appendChild(document.createTextNode("#"));
+  thead.appendChild(document.createElement("th")).appendChild(document.createTextNode("Date"));
+  thead.appendChild(document.createElement("th")).appendChild(document.createTextNode("Time"));
+  thead.appendChild(document.createElement("th")).appendChild(document.createTextNode("Type"));
+  thead.appendChild(document.createElement("th")).appendChild(document.createTextNode("Name"));
+  thead.appendChild(document.createElement("th")).appendChild(document.createTextNode("Duration"));
+  thead.appendChild(document.createElement("th")).appendChild(document.createTextNode("Dist (mi)"));
+  thead.appendChild(document.createElement("th")).appendChild(document.createTextNode("Gear"));
 }

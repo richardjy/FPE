@@ -477,7 +477,14 @@
               $.sparkline_display_visible();
             }
         });
-        $( "#filter" ).selectmenu({ width: 150 });
+        $( "#filter" ).selectmenu({
+            width: 170,
+            change: function( event, data ) {
+              if (activityList != "") {
+                showActivities(activityList);
+              }
+              $( "#filter" ).selectmenu( "close" );
+        }});
 
         $( "#cbWrap, #cbAllGear, #cbMetrics, #cbData, #cbSIunits, #cbGraphHR, #cbGraphP, #cbGraphBig" ).checkboxradio();
         // default is metrics checked - using HTML gives caret rather than checkmark
