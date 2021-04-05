@@ -54,7 +54,7 @@ var progGearCount = 0;
 var confirmUpload = false;
 var useLocalStorage = true;  // whether to store/read access tokens  - separate variable in FPE - need to rationalize
 var linkStrava = true;  // whether to link to Strava too
-var activityList;       // array of activities
+var activityList ="";       // array of activities
 
 function sportTracksInfo() {
   if (useLocalStorage) {
@@ -472,39 +472,47 @@ function getActivities( numAct = 15 ) {
     .done(function(data, status){
         //console.log("data: ", data,  "\nStatus: " + status);
         // add new items to filter list
-        var filterObj = document.getElementById("filter");
-        //var filterVal = filterObj.value;
         for (var element of data.items) {
-          var actType = element.type;
-          var exists = false;
-          $('#filter option').each(function(){
-              if (this.value == actType) {
-                exists = true;
-                return false;
-              }
-          });
-
-          if (exists == false ) {
-            var option = document.createElement("option");
-            option.text = actType;
-            filterObj.add(option);
-          }
+          addFilter (element.type)
         }
-        // sort list
-        var filterVal = filterObj.value;
-        $("#filter").html($("#filter option").sort(function (a, b) {
-            return a.text == b.text ? 0 : a.text < b.text ? -1 : 1
-        }))
-        filterObj.value = filterVal;
+        sortFilter();
         activityList = data;
         showActivities(activityList);
         $( "#progressActivities" ).hide();
-        // }
     })
     .fail(function(response) {
         $( "#progressActivities" ).hide();
         window.alert("SportTracks data request failed.");
     });
+}
+
+function addFilter (actType) {
+  var exists = false;
+  $('#filter option').each(function(){
+      if (this.value == actType) {
+        exists = true;
+        return false;
+      }
+  });
+
+  if (exists == false ) {
+    var option = document.createElement("option");
+    option.text = actType;
+    var filterObj = document.getElementById("filter");
+    filterObj.add(option);
+    // also add to saved list if one is created
+  }
+}
+
+function sortFilter() {
+  // sort list - assume All will be first on list
+  var filterObj = document.getElementById("filter");
+  var filterVal = filterObj.value;
+  $("#filter").html($("#filter option").sort(function (a, b) {
+      return a.text == b.text ? 0 : a.text < b.text ? -1 : 1
+  }))
+  filterObj.value = filterVal;
+  $("#filter").selectmenu("refresh");
 }
 
 function showActivities(data) {
