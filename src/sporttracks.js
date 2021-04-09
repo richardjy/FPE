@@ -450,8 +450,8 @@ function gup(url, name) {
         return results[1];
 }
 
-function getActivities( numAct = 15 ) {
-    // later add filters and limit - initially get 15 Activities
+function getActivities( numAct = 20 ) {
+    // later add filters and limit - initially get 20 Activities
     var startDate = new Date($( "#idDate" ).datepicker('getDate'));
     startDate.setDate(startDate.getDate() + 1); // go to next day so we include selected date in search
     $( "#progressActivities" ).progressbar("value", false);
@@ -473,7 +473,7 @@ function getActivities( numAct = 15 ) {
         //console.log("data: ", data,  "\nStatus: " + status);
         // add new items to filter list
         for (var element of data.items) {
-          addFilter (element.type)
+          addFilter(element.type)
         }
         sortFilter();
         activityList = data;
@@ -486,7 +486,7 @@ function getActivities( numAct = 15 ) {
     });
 }
 
-function addFilter (actType) {
+function addFilter(actType) {
   var exists = false;
   $('#filter option').each(function(){
       if (this.value == actType) {
@@ -504,8 +504,9 @@ function addFilter (actType) {
   }
 }
 
-function sortFilter() {
+function sortFilter(actType = "") {
   // sort list - assume All will be first on list
+  // sync this list with other select menu
   var filterObj = document.getElementById("filter");
   var filterVal = filterObj.value;
   $("#filter").html($("#filter option").sort(function (a, b) {
@@ -513,6 +514,19 @@ function sortFilter() {
   }))
   filterObj.value = filterVal;
   $("#filter").selectmenu("refresh");
+  if (actType == "") actType = $("#selectType").val();
+  var $options = $("#filter > option").clone();
+  $("#selectType").empty();
+  $("#selectType").append($options);
+  $("#selectType option[value='All']").remove();
+  $("#selectType").val(actType);
+  $("#selectType").selectmenu("refresh");
+}
+
+// select activity type - including add to list
+function selType(actType) {
+  addFilter(actType);
+  sortFilter(actType);
 }
 
 function showActivities(data) {
