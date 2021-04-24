@@ -100,6 +100,7 @@ function processData(stActivity) {
   var ld = -1, lh = -1, le = -1, lp = -1, lg = -1, lc = -1;  // last values (when data blank)
   var dd = 0; // delta distance
   var itIndex = 0, it0 = 0, it1 = 0, mt = 0; // stopped index values
+  var pauseCount = 0; // remove isolated pauses
 
   // get defaults from UI
   // value is in meters of travel - average over at least this amount
@@ -167,6 +168,17 @@ function processData(stActivity) {
         dd = 0;  // if stopped from watch then delta distance = 0
       } else if (dd <= ddPause) {
         sSWR = 2;  // paused - later test for walking?
+        // check for a single isolated pause
+        pauseCount++;
+      } else {
+          if (pauseCount == 1) {
+            //console.log("singlepause: " + i);
+            // remove pause from previous line - make it the same as one two back
+            if (i > 1) {
+              calcData[i-1][0] = calcData[i-2][0];
+            }
+          }
+          pauseCount = 0;
       }
     }
 
