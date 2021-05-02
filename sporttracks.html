@@ -22,6 +22,7 @@
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
         integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU="
         crossorigin="anonymous"></script>
+    <script src="./resources/jquery.ui.touch-punch.min.js"></script>  <!--jquery ui contraols on touch screen -->
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet-easybutton@2.0.0/src/easy-button.css"/>
   	<script src="https://unpkg.com/leaflet-easybutton@2.0.0/src/easy-button.js"></script>
@@ -113,7 +114,13 @@
     <div style="display: table;">
       <p>
     		<label id="labelSTtypedate" style="line-height:1.7;">Type:&nbsp;</label>
-    		 &nbsp;<span id="STtypedate" name="STtypedate"></span>
+        <select name="selectType" id="selectType">
+          <option value="Running">Running</option>
+          <option value="Rowing">Rowing</option>
+          <option value="Gym: Yoga">Gym: Yoga</option>
+        </select>
+         &nbsp;
+         <span id="STtypedate" name="STtypedate"></span>
     	</p>
       <p>
         <label id="labelSTactivity" style="line-height:1.7;">Links:&nbsp;</label>&nbsp;
@@ -263,6 +270,12 @@
     <div id="tab-activities">
       	<div >
           <button id="getActivities" onclick="getActivities()">Get Activities</button>&nbsp;&nbsp;
+          <select name="filter" id="filter">
+            <option value="All" selected>All</option>
+            <option value="Running">Running</option>
+            <option value="Rowing">Rowing</option>
+            <option value="Gym: Yoga">Gym: Yoga</option>
+          </select>
           <br><br>
       	</div>
         <div id="progressActivities"><div class="progress-label">Getting activities...</div></div>
@@ -471,6 +484,20 @@
               $.sparkline_display_visible();
             }
         });
+        $( "#filter" ).selectmenu({
+            width: 170,
+            change: function( event, data ) {
+              if (activityList != "") {
+                showActivities(activityList);
+              }
+        }});
+        $( "#selectType" ).selectmenu({
+            width: 170,
+            change: function( event, data ) {
+              $("#selectType").trigger('input');  // show there has been a change
+        }});
+
+
 
         $( "#cbWrap, #cbAllGear, #cbMetrics, #cbData, #cbSIunits, #cbGraphHR, #cbGraphP, #cbGraphBig" ).checkboxradio();
         // default is metrics checked - using HTML gives caret rather than checkmark
@@ -687,6 +714,7 @@
       function setSTdata() {
       	if (confirmUpload == false || confirm("Send data to SportTracks?") == true) {
           $( "#progressSTact" ).show();
+          stActivityUpdate.type = document.getElementById("selectType").value
           stActivityUpdate.name = document.getElementById("STname").value;
           stActivityUpdate.location_name = document.getElementById("STloc").value;
           stActivityUpdate.total_distance = document.getElementById("STdistance").value * MI2M;
@@ -794,7 +822,8 @@
           setStrydLink(0);
           strydData.length = 0; // discard Strd data
           var stDate = new Date (stActivity.start_time);
-          document.getElementById("STtypedate").innerHTML = stActivity.type + " (" + stDate.toDateString().substr(0,4) + stDate.toLocaleString() + ")";
+          selType(stActivity.type);
+          document.getElementById("STtypedate").innerHTML = stDate.toDateString().substr(0,4) + stDate.toLocaleString();
           // link to 'sorttracks.mobi' rather than 'api.sorttracks.mobi'
           var stmobiID = stActivity.activity.split("/").pop();
           //var actURL = STMOBIURL + stActivity.activity.split("/").pop();

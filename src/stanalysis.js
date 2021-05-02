@@ -14,7 +14,7 @@ var gpsData = [];
 var csv ="\t";
 var lf = "\n";
 var maxGraphPts = 2400;  // 4x number of points in the graph - minimize missed info
-var ddPause = 0.2; // m/s when considered 'paused' 0.5m/s = 1.1 mph - look at average velocity over say 10s?
+var ddPause = 0.1; // m/s when considered 'paused' 0.5m/s = 1.1 mph - look at average velocity over say 10s?
 var stGPX = '';
 
 function maxData() {
@@ -100,6 +100,7 @@ function processData(stActivity) {
   var ld = -1, lh = -1, le = -1, lp = -1, lg = -1, lc = -1;  // last values (when data blank)
   var dd = 0; // delta distance
   var itIndex = 0, it0 = 0, it1 = 0, mt = 0; // stopped index values
+  var pauseCount = 0; // remove isolated pauses
 
   // get defaults from UI
   // value is in meters of travel - average over at least this amount
@@ -167,6 +168,17 @@ function processData(stActivity) {
         dd = 0;  // if stopped from watch then delta distance = 0
       } else if (dd <= ddPause) {
         sSWR = 2;  // paused - later test for walking?
+        // check for a single isolated pause
+        pauseCount++;
+      } else {
+          if (pauseCount == 1) {
+            //console.log("singlepause: " + i);
+            // remove pause from previous line - make it the same as one two back
+            if (i > 1) {
+              calcData[i-1][0] = calcData[i-2][0];
+            }
+          }
+          pauseCount = 0;
       }
     }
 
@@ -191,7 +203,7 @@ function processData(stActivity) {
       if (sSWR == 1) {
         lp = 0;  // if stopped from watch then power = 0
       } else if (lp == 0) {
-         sSWR = 2;   // if power= 0 then 'paused' (add distance criteria?)
+         //sSWR = 2;   // if power= 0 then 'paused' (add distance criteria?)
       }
     }
 
@@ -225,8 +237,8 @@ function processData(stActivity) {
       }
       if (sSWR == 1) {
         lc = 0;  // if stopped from watch then cadence = 0
-      } else if (lc == 0) {
-        sSWR = 2;  // if cadence = 0 then pause (alternative to P=0) - don't change other value
+      //} else if (lc == 0) {
+      //  sSWR = 2;  // if cadence = 0 then pause (alternative to P=0) - don't change other value
       } else if ( (parseInt(lc)*2 <= walkCad) && sSWR == 4) {
          sSWR = 3;   // if below cadence threshold then walking (don't change if viewed as paused or already stopped)
       }
