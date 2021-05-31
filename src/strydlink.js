@@ -2,8 +2,9 @@ var strydReady = false;			// are Stryd Tokens etc set up?
 var strydActivityID = 0;			// current activityID
 var strydBearer = '';
 var strydUID = '';
+var strydActivity = '';
 
-function strydGetData(aid){
+function strydGetData(aid = strydActivityID){
   //test
   $.ajax({
       type: 'GET',
@@ -24,7 +25,7 @@ function strydGetData(aid){
   });
 }
 
-function strydGetUserData(uid){
+function strydGetUserData(uid = strydUID){
   // test
   $.ajax({
       type: 'GET',
@@ -45,6 +46,35 @@ function strydGetUserData(uid){
   });
 }
 
+//PUT  https://www.stryd.com/b/api/v1/activities/5862599790985216
+// request  name	"new name"
+
+function updateStrydData(aid = strydActivityID){
+    $.ajax({
+        type: 'PUT',
+        url: CORSURL + 'https://www.stryd.com/b/api/v1/activities/' + aid,
+        data:  JSON.stringify({'name' : document.getElementById("STname").value }),
+        dataType: "json",
+        headers: {
+          'Authorization' : 'Bearer ' + strydBearer,
+          'Content-Type' : "application/json; charset=utf-8",
+          'Accept' : 'application/json'
+        }
+    })
+    .done(function(response){
+        //console.log("response: ", response);
+        //window.alert("Upload successful.");
+        strydActivity = response;
+        $( "#updateStrydData" ).button()[0].title = "Name: " + "'" + strydActivity.name + "'";
+    })
+    .fail(function(response) {
+        //console.log("response: ", response);
+        window.alert("Stryd send request failed.");
+        //$( "#progressSTact" ).hide();
+        //stReady = false;
+    });
+}
+
 function strydLogin(email, pwd){
   //test
   $.ajax({
@@ -52,7 +82,8 @@ function strydLogin(email, pwd){
       url: CORSURL + 'https://www.stryd.com/b/email/signin',
       headers: {
       //   'Authorization' : 'Bearer ' + strydBearer,
-         'Accept' : 'application/json'
+         'Accept' : 'application/json',
+         'Content-Type' : 'application/json'  // fix for stryd issue
       },
       data: JSON.stringify({
         'email' : email,
@@ -124,8 +155,9 @@ function getStrydLink(stActivity) {
         //console.log("data: ", data,  "\nStatus: " + status);
         // check finish time is after STmodi midpoint i.e. activities overlap
         if ( data.activities != null && data.activities[0].start_time + data.activities[0].elapsed_time - calTo > 0 ) {
-          //console.log(data.activities[0].id);
-          setStrydLink(data.activities[0].id);
+          //console.log(data.activities[0]);
+          strydActivity = data.activities[0];
+          setStrydLink(strydActivity.id);
         } else {
           //window.alert("No Strava Activity at same time found.");
           //setStrydLink(0);
@@ -147,11 +179,15 @@ function setStrydLink(id) {
   if (id > 0) {
     document.getElementById("linkStrydURL").innerHTML = 'Stryd: link';
     document.getElementById("linkStrydURL").href = STRYDURL + 'runs/' + id;
-    $( "#getStrydInfo" ).button( "option", "disabled", false ); // button enabled
+    $( "#getStrydInfo" ).button( "option", "disabled", false ); // button enabled     strydActivity
+    $( "#updateStrydData" ).button( "option", "disabled", false ); // button enabled
+    $( "#updateStrydData" ).button()[0].title = "Name: " + "'" + strydActivity.name + "'";
   } else {
     document.getElementById("linkStrydURL").innerHTML = 'Stryd: default';
     document.getElementById("linkStrydURL").href = STRYDURL;
     $( "#getStrydInfo" ).button( "option", "disabled", strydReady ); // button enabled if login still needed
+    $( "#updateStrydData" ).button( "option", "disabled", true ); // button disables
+    $( "#updateStrydData" ).button()[0].title = "Name: N/A";
   }
 }
 

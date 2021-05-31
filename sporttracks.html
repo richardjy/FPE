@@ -159,7 +159,8 @@
         </label>&nbsp;&nbsp;&nbsp;
         <input type="button" id="getStravaInfo" onclick="getStravaInfo()" value="Get Strava"
             title="Get 'Title' and 'Description' from Strava">&nbsp;&nbsp;&nbsp;
-        <input type="button" id="getStrydInfo" onclick="getStrydInfo()" value="Get Stryd">
+        <input type="button" id="getStrydInfo" onclick="getStrydInfo()" value="Get Stryd">&nbsp;&nbsp;&nbsp;
+        <input type="button" id="updateStrydData" onclick="updateStrydData()" value="Update Stryd">
       </p>
     </div>
     <textarea rows = "10" cols = "70" id="STnotes" name="STnotes" ></textarea>
@@ -397,7 +398,7 @@
 
       $(function() {
         $( "#STgetButton, #getLocButton, #recalcButton, #STrevertButton, #STsendButton, #STgetGearButton," +
-            " #STgetHealthButton, #STsendHealthButton, #STmaxData, #getStravaInfo, #getStrydInfo, #getActivities" ).button(  );  // { disabled: true }
+            " #STgetHealthButton, #STsendHealthButton, #STmaxData, #getStravaInfo, #getStrydInfo, #updateStrydData, #getActivities" ).button(  );  // { disabled: true }
         $( document ).tooltip();
          $( document ).tooltip().click(function() {
             $('.ui-tooltip').hide();
