@@ -79,14 +79,16 @@ var stravaHeatmap = L.tileLayer('https://heatmap-external-{s}.strava.com/tiles-a
   attribution: '&copy; <a href="https://www.strava.com" target="_blank">Strava</a>'
 });
 
-stravaHeatmap.on('tileerror', function(error, tile) {
-  stravaHeatmap.remove();
-  if (window.confirm("Error loading Heatmap - likely need to login to Strata Heatmap from your account." +
-          "\nClick 'OK' to open 'https://www.strava.com/heatmap'.\nThen login.\nMay also need to change Browser cookie flag.")) {
-    window.open("https://www.strava.com/heatmap");
-  }
-  //may need to change browser settings: edge://flags/ #same-site-by-default-cookies
-});
+// switch off error tracking for now - issues in some areas, such as hamilton mtn
+// stravaHeatmap.on('tileerror', function(error, tile) {
+//   //console.log(error);
+//   //stravaHeatmap.remove();
+//   if (window.confirm("Error loading Heatmap - likely need to login to Strata Heatmap from your account." +
+//           "\nClick 'OK' to open 'https://www.strava.com/heatmap'.\nThen login.\nMay also need to change Browser cookie flag.")) {
+//     window.open("https://www.strava.com/heatmap");
+//   }
+//   //may need to change browser settings: edge://flags/ #same-site-by-default-cookies
+// });
 
 
 var WaymarkedTrails_hiking = L.tileLayer('https://tile.waymarkedtrails.org/hiking/{z}/{x}/{y}.png', {
