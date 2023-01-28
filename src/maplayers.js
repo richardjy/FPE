@@ -43,6 +43,11 @@ var CartoDB_DarkMatterNoLabels = L.tileLayer('https://{s}.basemaps.cartocdn.com/
 	maxZoom: 19
 });
 
+var USGS_USTopo = L.tileLayer('https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}', {
+	maxZoom: 20,
+	attribution: 'Tiles courtesy of the <a href="https://usgs.gov/">U.S. Geological Survey</a>'
+});
+
 // var Thunderforest_Outdoors = L.tileLayer('https://{s}.tile.thunderforest.com/outdoors/{z}/{x}/{y}.png?apikey={apikey}', {
 // 	attribution: '&copy; <a href="http://www.thunderforest.com/">Thunderforest</a>, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
 // 	apikey: '<your apikey>',
@@ -54,11 +59,11 @@ var CartoDB_DarkMatterNoLabels = L.tileLayer('https://{s}.basemaps.cartocdn.com/
 // 	apikey: '<your apikey>',
 // 	maxZoom: 22
 // });
-
-var HikeBike_HikeBike = L.tileLayer('https://tiles.wmflabs.org/hikebike/{z}/{x}/{y}.png', {
-	maxZoom: 19,
-	attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-});
+//
+// var HikeBike_HikeBike = L.tileLayer('https://tiles.wmflabs.org/hikebike/{z}/{x}/{y}.png', {
+// 	maxZoom: 19,
+// 	attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+// });
 
 //var = googleSat = L.tileLayer('http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',{
 //	maxZoom: 20,
@@ -73,7 +78,9 @@ var BlankMap = L.tileLayer('', {
 // Overlays
 
 // STRAVA: colors: hot, blue, redblue, purple,
-var stravaHeatmap = L.tileLayer('https://heatmap-external-{s}.strava.com/tiles-auth/running/purple/{z}/{x}/{y}.png', {
+// https://heatmap-external-{switch:a,b,c}.strava.com/tiles-auth/ride/hot/{zoom}/{x}/{y}.png?px=256
+// old https://heatmap-external-{switch:a,b,c}.strava.com/tiles-auth/run/purple/{z}/{x}/{y}.png
+var stravaHeatmap = L.tileLayer('https://heatmap-external-c.strava.com/tiles-auth/run/purple/{zoom}/{x}/{y}.png?px=256', {
   maxZoom: 20,
   maxNativeZoom: 15,
   attribution: '&copy; <a href="https://www.strava.com" target="_blank">Strava</a>'
@@ -101,7 +108,7 @@ var baseLayers = {
   "Mapbox Sat": MapboxSat,
   "Mapnik": OpenStreetMap_Mapnik,
   "Topo": OpenTopoMap,
-  "Hike Bike" : HikeBike_HikeBike,
+  "USGS US Topo" : USGS_USTopo,
   //"Positron": CartoDB_PositronNoLabels,
   "Dark Matter": CartoDB_DarkMatterNoLabels,
   "Blank": BlankMap
