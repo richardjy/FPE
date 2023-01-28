@@ -460,7 +460,11 @@ function displayMetrics(zoomOut = false) {
         dataCSV += i + csv + runData[i][0] + csv + runData[i][1] + csv + runData[i][2] + csv + runData[i][3] + csv + runData[i][4] + csv + runData[i][5] + csv;
         dataCSV += calcData[i][0] + csv + calcData[i][1] + csv + calcData[i][2] + csv + calcData[i][4] + csv + calcData[i][5] + csv;
         if (bStryd) {
-          dataCSV += "" + csv + strydData[i][0] + csv + strydData[i][1] + csv + strydData[i][2] + csv + strydData[i][3] + csv + strydData[i][4] +  csv + strydData[i][5] + csv + strydData[i][6] + csv;
+          if (i<strydData.length) {
+            dataCSV += "" + csv + strydData[i][0] + csv + strydData[i][1] + csv + strydData[i][2] + csv + strydData[i][3] + csv + strydData[i][4] +  csv + strydData[i][5] + csv + strydData[i][6] + csv;
+          } else  {
+            dataCSV += "" + csv + csv +  csv + csv  + csv +  csv + csv + csv;
+          }
         }
         dataCSV += "" + csv + rawData[i][0] + csv + rawData[i][1] + csv + rawData[i][2] + csv + rawData[i][3] + csv + rawData[i][4] + csv + rawData[i][5] + csv;
         dataCSV += lf;
@@ -472,10 +476,11 @@ function displayMetrics(zoomOut = false) {
 }
 
 function showSparkLine() {
-  var sparkArray = [[0,0],[0,0],[0,0],[0,0]];
+  var sparkArray = [[0,0],[0,0],[0,0],[0,0],[0,0]];  // add extra for Power2
   //sparkArray[0] = [0,0], sparkArray[1] = [0,0], sparkArray[2] = [0,0], sparkArray[3] = [0,0];
   var bShowHR = false;
   var bShowPower = false;
+  var bShowPower2 = false; maxP = 0; minP = 1000;
 
   if (calcData.length > 0) {
     sparkI=0;
@@ -496,10 +501,21 @@ function showSparkLine() {
       }
       if (runData[i][2] >= 0) {
           sparkArray[3][sparkI] = [i, runData[i][2]];
+          if (runData[i][2]>maxP) { maxP=runData[i][2]};
+          if (runData[i][2]<minP) { minP=runData[i][2]};
           bShowPower = true;
       } else {
           sparkArray[3][sparkI] = [i, null];
       }
+      if (i<strydData.length) {
+          sparkArray[4][sparkI] = [i, strydData[i][4]];
+          if (strydData[i][4]>maxP) { maxP=strydData[i][4]};
+          if (strydData[i][4]<minP) { minP=strydData[i][4]};
+          bShowPower2 = true;
+      } else {
+          sparkArray[4][sparkI] = [i, null];
+      }
+
       sparkI++;
     }
   } else {
@@ -535,7 +551,16 @@ function showSparkLine() {
     $('.elevSparkline').sparkline(sparkArray[3], { composite: true, lineWidth: 1,
       spotColor: false,
       fillColor: false, lineColor: 'orange',
-      tooltipFormat: 'Power {{y}} W'
+      chartRangeMin: minP, chartRangeMax: maxP,
+      tooltipFormat: 'Power1 {{y}} W'
+    });
+  }
+  if ($( "#cbGraphP" )[0].checked && bShowPower2) {
+    $('.elevSparkline').sparkline(sparkArray[4], { composite: true, lineWidth: 1,
+      spotColor: false,
+      fillColor: false, lineColor: 'yellow',
+      chartRangeMin: minP, chartRangeMax: maxP,
+      tooltipFormat: 'Power2 {{y}} W'
     });
   }
 }

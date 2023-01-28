@@ -53,7 +53,9 @@ function updateStrydData(aid = strydActivityID){
     $.ajax({
         type: 'PUT',
         url: CORSURL + 'https://www.stryd.com/b/api/v1/activities/' + aid,
-        data:  JSON.stringify({'name' : document.getElementById("STname").value }),
+        data:  JSON.stringify({
+            'name' : document.getElementById("STname").value,
+            'description' : document.getElementById("STnotes").value}),
         dataType: "json",
         headers: {
           'Authorization' : 'Bearer ' + strydBearer,
@@ -216,28 +218,57 @@ function getStrydInfo() {
           strydData.length = 0;
 
           // if no array of distance then set to zero   -    distance list is time then distance
+          var strydOffset = (new Date(stActivityUpdate.start_time)/1000) - strydActivity.start_time - 2; // offset by extra 2s
+          //console.log("stryd delay: ", strydOffset);
+          // if negative then add blank data to the start
+
           var iEnd = data.timestamp_list[data.timestamp_list.length -1] - data.start_time + 1;
+
           var it = -1; // index of times, assume same for all data types, just skip watch stops
           var distS = 0; // distance from speed (assume all data 1s apart - fix later if not)
+          var strydInt = 1; // count number of steps between data points
           for (i = 0; i < iEnd ; i++ ) {
             if (data.timestamp_list[it+1] - data.start_time == i) {
               it++;
-              var deltaS = data.speed_list[it];  //  assume 1 sec per data point
-              distS += deltaS;
+              var deltaS = data.speed_list[it];  //  don't assume 1 sec per data point (actually 2s seen in Jan 2023)
+              distS += strydInt*deltaS;
               var distW = data.distance_list[it];
-              var deltaW = i > 0 ? (distW - strydData[i-1][0]) : distW;
+              var deltaW = i > 0 ? (distW - strydData[i-strydInt][0])/strydInt : distW;
               // // avoid annoyingly large number of digits
               strydData[i] = [+distW.toFixed(2), +deltaW.toFixed(2), +distS.toFixed(2), +deltaS.toFixed(2),
                   data.total_power_list[it], data.ground_time_list[it], data.cadence_list[it]];
+              if (strydInt > 1) {
+                for (j = 1; j <= strydInt-1 ; j++ ) {
+                  strydData[i-j] = [+(strydData[i-strydInt][0]+deltaW*j).toFixed(2), +deltaW.toFixed(2),
+                      +(strydData[i-strydInt][2]+deltaS*j).toFixed(2), +deltaS.toFixed(2),
+                      data.total_power_list[it], data.ground_time_list[it],
+                      data.cadence_list[it]];
+                }
+                strydInt = 1;
+              }
             } else {
-              strydData[i] = [+distW.toFixed(2), 0, +distS.toFixed(2), 0, 0, 2000, 0];
+              strydInt++;
+              //strydData[i] = [+distW.toFixed(2), 0, +distS.toFixed(2), 0, 0, 2000, 0];
             }
           }
+
           // data has distance at time zero - zero out deltas for [0] and add to [1]
           strydData[1][1] = +(strydData[0][1] + strydData[1][1]).toFixed(2);
           strydData[0][1] = 0;
           strydData[1][3] = +(strydData[0][3] + strydData[1][3]).toFixed(2);
           strydData[0][3] = 0;
+
+          //now shift data by strydOffset
+          if (strydOffset>=0) {
+            for (i=0; i<strydData.length-strydOffset; i++)
+              {strydData[i] = strydData[i+strydOffset]}
+          } else {
+            for (i=0; i<-strydOffset; i++)
+              {strydData[i] = strydData[0]}
+            for (i= strydData.length-1; i>-strydOffset; i--)
+              {strydData[i] = strydData[i+strydOffset]}
+          }
+
           // display data as needed
           refreshData();
 
