@@ -18,10 +18,11 @@ var MI2M        =   1609.344; //miles to meters
 var M2FT        =   3.28084; //meters to feet
 var GRADE2FTPMI =   52.80;   // 1% grade in ft/mile
 
-if (location.host == 'localhost') {
-  var REDIRECT    = 'http://localhost/';
-  var CORSURL     = 'http://localhost:5000/';  // assumes cors server ('heroku local' is running (8080 if node server.js)
-  var FPEURL      = 'http://localhost/main?strava=';
+// was (location.host == 'localhost') change for v s code debugger and live server
+if (location.host == 'localhost:5500') {
+  var REDIRECT    = 'http://localhost:5500/';
+  var CORSURL     = 'http://localhost:5006/';  // assumes cors server ('heroku local' is running (8080 if node server.js)
+  var FPEURL      = 'http://localhost:5500/main?strava=';
 } else {
   var REDIRECT    = 'https://richardjy.github.io/FPE/main.html';
   var CORSURL     = 'https://fpe-cors.herokuapp.com/'; // whitelist set for 'https://richardjy.github.io' only
