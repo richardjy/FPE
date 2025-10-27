@@ -1,0 +1,103 @@
+body  { font-size: 100%; font-family: Arial,Helvetica,sans-serif; background-color: #7A90AB;}
+input, button, select, option, textarea { font-size: 100%; background-color: #d1dae5; }
+
+form  { display: table;      }
+p     { display: table-row;  }
+label { display: table-cell; vertical-align: text-bottom; text-align: right; font-size: 90%; font-style: italic;}
+input { display: table-cell; }
+
+
+.ui-widget { font-size: 90%; }
+.ui-state-default, .ui-widget-content { background-color: #d1dae5; }
+.ui-tabs, .ui-tabs-nav { background-color: #7A90AB; }
+.ui-tooltip, .leaflet-tooltip { white-space: pre-line; font-size: 80%; padding: 4px; }
+.ui-progressbar-value { background-color: #7A90AB; }
+.ui-progressbar { position: relative;  }
+.progress-label {
+    position: absolute;
+    left: 20%;
+    top: 4px;
+    font-weight: bold;
+    text-shadow: 1px 1px 0 #fff;
+    }
+
+fieldset { display:inline }
+pre { font-size: 100%; font-family: Arial,Helvetica,sans-serif; }
+textarea {
+    font-family: inherit; font-size: inherit;
+    -moz-tab-size : 18;
+    -o-tab-size : 18;
+    tab-size : 18;
+    white-space: pre;
+    overflow-x: auto;
+}
+td.healthdataexists a { background-color: #90EE90 !important; font-weight:bold !important; }
+.leaflet-control-layers label { text-align: left; font-style: normal; }
+.leaflet-control-attribution { font-size: 9px !important; }
+
+table, th, td {
+    border: 1px solid #dddddd;
+    background-color: #d1dae5;
+    border-collapse: collapse;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+tr:nth-child(odd) td { background-color: white; }
+td:nth-child(1)    { background-color: white; text-align: center; padding: 0px; }
+td:nth-child(3)    { text-align: right; }
+td:nth-child(n+6)  { text-align: center; }
+
+.centerIt {
+    text-align:center;
+} 
+
+.tableIt{
+    display: table;
+}
+
+.blockIt {
+    display: inline-block;
+}
+
+.vertIt {
+    vertical-align: top;
+}
+
+.wid600 {
+    width:600px;
+}
+
+.lineSpace {
+    line-height:1.7;
+}
+
+.padR5 {
+    padding-right:5px; text-align:right;
+}
+
+.padR30 {
+    padding-right:30px; text-align:right;
+}
+
+.padR33 {
+    padding-right:33px; text-align:right;
+}
+
+.padR36 {
+    padding-right:36px; text-align:right;
+}
+
+.marginL25 {
+    margin-left:-25px;
+}
+
+.marginL28 {
+    margin-left:-28px;
+}
+
+.marginL31 {
+    margin-left:-31px;
+}
+

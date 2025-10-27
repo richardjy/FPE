@@ -29,6 +29,7 @@
     <link href="./resources/fontawesome/css/all.min.css" rel="stylesheet"> <!--load all styles -->
   	<!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"/> -->
 
+    <link rel="stylesheet" href="./src/styles-sporttracks.css"/>
     <script src="./src/config.js"></script>
     <script src="./src/config_local.js"></script>
     <script src="./src/stravalink.js"></script>
@@ -39,7 +40,7 @@
     <script src='./src/maplayers.js'></script>
     <script src='./resources/textpath/leaflet.textpath.js'></script>
 
-    <style>
+<!--     <style>
         body  { font-size: 100%; font-family: Arial,Helvetica,sans-serif; background-color: #7A90AB;}
         input, button, select, option, textarea { font-size: 100%; background-color: #d1dae5; }
 
@@ -90,31 +91,31 @@
         td:nth-child(1)    { background-color: white; text-align: center; padding: 0px; }
         td:nth-child(3)    { text-align: right; }
         td:nth-child(n+6)  { text-align: center; }
-  	</style>
+  	</style> -->
 
 </head>
 <body>
 <h2>SportTracks - Edit workout data</h2>
-<div style="display: inline-block"><span id="infoText"> </span></div>
+<div class="blockIt"><span id="infoText"> </span></div>
 <br><br>
 <div>
   <fieldset  id="fieldSTindex">
     <legend>Activity Index</legend>
-    <input id="STindex" name="STindex" value="1" size="10" style="padding-right:5px; text-align:right;"
+    <input id="STindex" name="STindex" value="1" size="10" class="padR5"
     title="1 = latest activity, 2 = 2nd, etc&#013; (relative to date and earlier)&#013; or enter STmobi index number">&nbsp;
     <input type="submit" id="STgetButton" onclick="getSTdata()" value="Get from ST">&nbsp;
-    <input type="text" id="idDate" size="10" style="text-align:center;">&nbsp;&nbsp;
+    <input type="text" id="idDate" size="10" class="centerIt" title="End date">&nbsp;&nbsp;
     <button id="setUpDialog">Options</button>
   </fieldset>
 </div>
 <br>
-<div style="display: inline-block;">
+<div class="blockIt">
   <fieldset id="fieldSTdata">
     <legend>Activity Overview (Data from Garmin if you used a Garmin Device)</legend>
-    <div style="display: table;">
+    <div class="tableIt">
       <p>
-    		<label id="labelSTtypedate" style="line-height:1.7;">Type:&nbsp;</label>
-        <select name="selectType" id="selectType">
+    		<label id="labelSTtypedate" class="lineSpace">Type:&nbsp;</label>
+        <select name="selectType" id="selectType" title="Activity type">
           <option value="Running">Running</option>
           <option value="Rowing">Rowing</option>
           <option value="Gym: Yoga">Gym: Yoga</option>
@@ -123,11 +124,11 @@
          <span id="STtypedate" name="STtypedate"></span>
     	</p>
       <p>
-        <label id="labelSTactivity" style="line-height:1.7;">Links:&nbsp;</label>&nbsp;
-        <a href="#" target="_blank" rel="noopener noreferrer" id="linkSTmobiURL"></a>&nbsp;&nbsp;
-        <a href="#" target="_blank" rel="noopener noreferrer" id="linkStravaURL"></a>&nbsp;&nbsp;
-        <a href="#" target="_blank" rel="noopener noreferrer" id="linkFPEURL"></a>&nbsp;&nbsp;
-        <a href="#" target="_blank" rel="noopener noreferrer" id="linkStrydURL"></a>
+        <label id="labelSTactivity" class="lineSpace">Links:&nbsp;</label>&nbsp;
+        <a href="#" target="_blank" rel="noopener noreferrer" id="linkSTmobiURL" title="SportTracks link"></a>&nbsp;&nbsp;
+        <a href="#" target="_blank" rel="noopener noreferrer" id="linkStravaURL" title="Strava link"></a>&nbsp;&nbsp;
+        <a href="#" target="_blank" rel="noopener noreferrer" id="linkFPEURL" title="FPE link"></a>&nbsp;&nbsp;
+        <a href="#" target="_blank" rel="noopener noreferrer" id="linkStrydURL" title="Stryd link"></a>
       </p>
       <p>
         <label for="STname" id="labelSTname">Name:&nbsp;</label>
@@ -141,15 +142,15 @@
       </p>
     	<p>
         <label for="STdistance">Distance:&nbsp;</label>
-        <input type="text" id="STdistance" name="STdistance" size="4" style="padding-right:30px; text-align:right;"></input><span style="margin-left:-25px;">mi</span>&nbsp;&nbsp;
-        <input type="text" id="STactiveT" name="STactiveT" size="6" style="text-align:center;">&nbsp;&nbsp;
+        <input type="text" id="STdistance" name="STdistance" size="4" class="padR30"></input><span class="marginL25">mi</span>&nbsp;&nbsp;
+        <input type="text" id="STactiveT" name="STactiveT" size="6" class="centerIt" title="Activity time">&nbsp;&nbsp;
         <input type="button" id="recalcButton" onclick="calcGPS(stActivityUpdate.location)" value="Recalc"
             title="Recalculate distance based on simple addition of GPS points">&nbsp;
-        <input type="text" id="STactiveP" name="STactiveP" size="3" readonly style="padding-right:33px; text-align:right;"></input><span style="margin-left:-28px;">/mi</span>
+        <input type="text" id="STactiveP" name="STactiveP" size="3" readonly title="Activity pace" class="padR33"></input><span class="marginL28">/mi</span>
     	</p>
       <p>
         <label for="STelev">Elevation:&nbsp;</label>
-        <input type="text" id="STelev" name="STelev" size="18" readonly style="text-align:center;">
+        <input type="text" id="STelev" name="STelev" size="18" readonly class="centerIt">
       </p>
       <br>
       <p>
@@ -171,11 +172,11 @@
        <div id="progressSTact" style="float: right; width: 40%; right: 15%;"><div class="progress-label">Activity data...</div></div>
     </div>
     <br>
-    <div id="invisibleMap" style="display: inline-block; width: 300px; height: 200px;"></div>
+    <div id="invisibleMap" class="blockIt" style="width: 300px; height: 200px;"></div>
   </fieldset>
 </div>
 <!-- tabbed area -->
-<div id="tabs"  style="display: inline-block; vertical-align: top">
+<div id="tabs" class="blockIt vertIt">
 		<ul>
 			<li><a href="#tab-gear">Gear</a></li>
       <li><a href="#tab-data">Data</a></li>
@@ -196,30 +197,30 @@
       	<div id="fieldSTgear">  </div>
 		</div>
     <div id="tab-data">
-        <div style="display: inline-block; margin-right:20px;">
+        <div class="blockIt" style="margin-right:20px;">
           <p>
-            <label id="labelElevFilter">Elevation filter:&nbsp;</label>
-            <input type="text" id="elevFilter" name="textDataInput" size="3" style="padding-right:30px; text-align:right;"></input><span style="margin-left:-25px;">m</span>
+            <label for="elevFilter">Elevation filter:&nbsp;</label>
+            <input type="text" id="elevFilter" name="textDataInput" size="3" class="padR30"></input><span class="marginL25">m</span>
           </p>
           <p>
-            <label id="labelLevel">Level threshold:&nbsp;</label>
-            <input type="text" id="levelGrade" name="textDataInput" size="3" style="padding-right:30px; text-align:right;"></input><span style="margin-left:-25px;">%</span>
+            <label for="levelGrade">Level threshold:&nbsp;</label>
+            <input type="text" id="levelGrade" name="textDataInput" size="3" class="padR30"></input><span class="marginL25">%</span>
           </p>
           <p>
-            <label id="labelWalkGCT">GCT walk threshold:&nbsp;</label>
-            <input type="text" id="walkGCT" name="textDataInput" size="3" style="padding-right:30px; text-align:right;"></input><span style="margin-left:-25px;">ms</span>
+            <label for="walkGCT">GCT walk threshold:&nbsp;</label>
+            <input type="text" id="walkGCT" name="textDataInput" size="3" class="padR30"></input><span class="marginL25">ms</span>
           </p>
           <p>
-            <label id="labelWalkCad">Cadence walk threshold:&nbsp;</label>
-            <input type="text" id="walkCad" name="textDataInput" size="2.7" style="padding-right:36px; text-align:right;"></input><span style="margin-left:-31px;">spm</span>
+            <label for="walkCad">Cadence walk threshold:&nbsp;</label>
+            <input type="text" id="walkCad" name="textDataInput" size="2.7" class="padR36"></input><span class="marginL31">spm</span>
           </p>
         </div>
-        <div style="display: inline-block; vertical-align: top">
+        <div class="blockIt vertIt">
           <span class="elevSparkline"></span>
-          <div id="timeRange" style="width:600px;"></div>
-          <div style = "text-align: center; width:600px; padding-top:4px;">
-            <input type="text" id="minTime" name="minTime" size="6" readonly style="text-align:center;">&nbsp;&nbsp;&nbsp;to&nbsp;
-            <input type="text" id="maxTime" name="maxTime" size="6" readonly style="text-align:center;">
+          <div id="timeRange" class="wid600"></div>
+          <div class="centerIt" style = "width:600px; padding-top:4px;">
+            <input type="text" id="minTime" name="minTime" size="6" readonly title="Min time" class="centerIt">&nbsp;&nbsp;&nbsp;to&nbsp;
+            <input type="text" id="maxTime" name="maxTime" size="6" readonly title="Max time" class="centerIt">
           </div>
         </div>
 
@@ -244,24 +245,24 @@
           <input type="checkbox" name="cbGraph" id="cbGraphBig">
         </label>
         <br>
-        <textarea rows = "26" cols = "140" id="showData" name="showData"></textarea><br>
+        <textarea rows = "26" cols = "140" id="showData" name="showData" title="Data display"></textarea><br>
         <div id="dataDisplay">  </div>
     </div>
 		<div id="tab-health">
   			<div>
           <button id="STgetHealthButton" onclick="getSThealth()">Get Health</button>&nbsp;&nbsp;
-          <input type="text" id="healthDate" size="10" style="text-align:center;">
+          <input type="text" id="healthDate" size="10" title="Health date" class="centerIt">
           <br><br>
       	</div>
       	<div id="fieldSThealth" >
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<select id="healthSel" name="healthSel" style="text-align:center;"></select>
-          <p><label for="health1" id="lbl-health1" size="10"></label>&nbsp;<input type="text" id="health1" name="health1" size="8" style="text-align:center;"></p>
-          <p><label for="health2" id="lbl-health2" size="10"></label>&nbsp;<input type="text" id="health2" name="health2" size="8" style="text-align:center;"></p>
-          <p><label for="health3" id="lbl-health3" size="10"></label>&nbsp;<input type="text" id="health3" name="health3" size="8" style="text-align:center;"></p>
-          <p><label for="health4" id="lbl-health4" size="10"></label>&nbsp;<input type="text" id="health4" name="health4" size="8" style="text-align:center;"></p>
-          <p><label for="health5" id="lbl-health5" size="10"></label>&nbsp;<input type="text" id="health5" name="health5" size="8" style="text-align:center;"></p>
-          <p><label for="health6" id="lbl-health6" size="10"></label>&nbsp;<input type="text" id="health6" name="health6" size="8" style="text-align:center;"></p>
-          <p><label for="health7" id="lbl-health7" size="10"></label>&nbsp;<input type="text" id="health7" name="health7" size="8" style="text-align:center;"></p>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<select id="healthSel" name="healthSel" title="Attribute" class="centerIt"></select>
+          <p><label for="health1" id="lbl-health1" size="10"></label>&nbsp;<input type="text" id="health1" name="health1" size="8" title="Data" class="centerIt"></p>
+          <p><label for="health2" id="lbl-health2" size="10"></label>&nbsp;<input type="text" id="health2" name="health2" size="8" title="Data" class="centerIt"></p>
+          <p><label for="health3" id="lbl-health3" size="10"></label>&nbsp;<input type="text" id="health3" name="health3" size="8" title="Data" class="centerIt"></p>
+          <p><label for="health4" id="lbl-health4" size="10"></label>&nbsp;<input type="text" id="health4" name="health4" size="8" title="Data" class="centerIt"></p>
+          <p><label for="health5" id="lbl-health5" size="10"></label>&nbsp;<input type="text" id="health5" name="health5" size="8" title="Data" class="centerIt"></p>
+          <p><label for="health6" id="lbl-health6" size="10"></label>&nbsp;<input type="text" id="health6" name="health6" size="8" title="Data" class="centerIt"></p>
+          <p><label for="health7" id="lbl-health7" size="10"></label>&nbsp;<input type="text" id="health7" name="health7" size="8" title="Data" class="centerIt"></p>
           <br>
           <button id="STsendHealthButton" onclick="sendSThealth()">Upload Health</button>
         </div>
@@ -271,7 +272,7 @@
     <div id="tab-activities">
       	<div >
           <button id="getActivities" onclick="getActivities()">Get Activities</button>&nbsp;&nbsp;
-          <select name="filter" id="filter">
+          <select name="filter" id="filter" title="Activity type">
             <option value="All" selected>All</option>
             <option value="Running">Running</option>
             <option value="Rowing">Rowing</option>
@@ -288,8 +289,8 @@
 <br>
   <!-- stryd login dialog -->
   <div id="strydLogin" title="Enter Stryd Credentials">
-    Email:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" id="strydEmail" size="40" /><br>
-    Password: <input type="password" id="strydPwd" size="40" />
+    Email:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" id="strydEmail" size="40" title="Email" /><br>
+    Password: <input type="password" id="strydPwd" size="40" title="Password" />
   </div>
   <script>
       // setup SportTracksLink (if appropriate)
