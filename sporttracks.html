@@ -40,58 +40,6 @@
     <script src='./src/maplayers.js'></script>
     <script src='./resources/textpath/leaflet.textpath.js'></script>
 
-<!--     <style>
-        body  { font-size: 100%; font-family: Arial,Helvetica,sans-serif; background-color: #7A90AB;}
-        input, button, select, option, textarea { font-size: 100%; background-color: #d1dae5; }
-
-        form  { display: table;      }
-        p     { display: table-row;  }
-        label { display: table-cell; vertical-align: text-bottom; text-align: right; font-size: 90%; font-style: italic;}
-        input { display: table-cell; }
-
-
-        .ui-widget { font-size: 90%; }
-        .ui-state-default, .ui-widget-content { background-color: #d1dae5; }
-        .ui-tabs, .ui-tabs-nav { background-color: #7A90AB; }
-        .ui-tooltip, .leaflet-tooltip { white-space: pre-line; font-size: 80%; padding: 4px; }
-        .ui-progressbar-value { background-color: #7A90AB; }
-        .ui-progressbar { position: relative;  }
-        .progress-label {
-            position: absolute;
-            left: 20%;
-            top: 4px;
-            font-weight: bold;
-            text-shadow: 1px 1px 0 #fff;
-          }
-
-        fieldset { display:inline }
-        pre { font-size: 100%; font-family: Arial,Helvetica,sans-serif; }
-        textarea {
-          font-family: inherit; font-size: inherit;
-          -moz-tab-size : 18;
-          -o-tab-size : 18;
-          tab-size : 18;
-          white-space: pre;
-          overflow-x: auto;
-        }
-        td.healthdataexists a { background-color: #90EE90 !important; font-weight:bold !important; }
-        .leaflet-control-layers label { text-align: left; font-style: normal; }
-        .leaflet-control-attribution { font-size: 9px !important; }
-
-        table, th, td {
-            border: 1px solid #dddddd;
-            background-color: #d1dae5;
-            border-collapse: collapse;
-            padding-left: 10px;
-            padding-right: 10px;
-            padding-top: 5px;
-            padding-bottom: 5px;
-        }
-        tr:nth-child(odd) td { background-color: white; }
-        td:nth-child(1)    { background-color: white; text-align: center; padding: 0px; }
-        td:nth-child(3)    { text-align: right; }
-        td:nth-child(n+6)  { text-align: center; }
-  	</style> -->
 
 </head>
 <body>
@@ -503,7 +451,12 @@
 
         $( "#cbWrap, #cbAllGear, #cbMetrics, #cbData, #cbSIunits, #cbGraphHR, #cbGraphP, #cbGraphBig" ).checkboxradio();
         // default is metrics checked - using HTML gives caret rather than checkmark
+        // 1/2026 add wrapText as new default
         $( "#cbMetrics" ).prop('checked',true).checkboxradio('refresh');
+        // Wrap Text
+        $( "#cbWrap" ).prop('checked', localStorage.getItem('wrapText') === 'y').checkboxradio('refresh');
+        $( "#STnotes" ).css("white-space", $( "#cbWrap" )[0].checked ? "pre-wrap" : "pre" );
+        
         $( "[name='textDataInput']").on( "change", refreshData );
         $( "#STdistance").on( "change", function () {
             var checkDist = $( "#STdistance").val();
@@ -533,6 +486,8 @@
         });
         $( "#cbWrap").on( "change",  function () {
             $( "#STnotes" ).css("white-space", $( "#cbWrap" )[0].checked ? "pre-wrap" : "pre" );
+            //if (useLocalStorage) { } // could be used if only store settings if also storing other values
+            localStorage.setItem("wrapText", $( "#cbWrap" )[0].checked ? "y" : "n" );
           });
         $( "#timeRange" ).slider({
             range: true,
