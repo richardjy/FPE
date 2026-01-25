@@ -86,7 +86,7 @@
         <label for="STloc" id="labelSTloc">Location:&nbsp;</label>
         <input type="text" id="STloc" name="STloc" size="45">&nbsp;
         <input type="button" id="getLocButton" onclick="getLocation(stActivityUpdate.location)" value="Get Location"
-            title="Location uses: [name,] city, state/country &#013; (Search by LocationIQ.com)">
+            title="Location uses: [name/road,] city, state/country &#013; (Search by LocationIQ.com)">
       </p>
     	<p>
         <label for="STdistance">Distance:&nbsp;</label>
@@ -918,10 +918,10 @@
             })
             .done(function(data, status){
                 //console.log('data = ', data);
-                // US: [name,] city, state_code     (if country_code == 'us')
-                // non-US: [name,] city, country_code
+                // US: [name OR road] city, state_code     (if country_code == 'us')
+                // non-US: [name or road] city, country_code
                 var locData = JSON.stringify(data.address, null, 5);
-                var locAddress = typeof data.address.name === 'undefined' ? "" : data.address.name + ', ';
+                var locAddress = typeof data.address.name === 'undefined' ? typeof data.address.road === 'undefined' ? "" : data.address.road + ', ': data.address.name + ', ';
                 if (data.address.country_code == 'us') {
                   locAddress += data.address.city + ", " + data.address.state_code.toUpperCase();
                 } else {   // non-US
