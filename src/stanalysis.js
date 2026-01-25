@@ -10,6 +10,7 @@ var calcData = ([],[]);     //  [0]watchstop1/paused2/walking3/running4, [1]delt
                             //   [2]filtered elev, [3]delta elev, [4]grade, [5]down 1, level 2, up 3
 var sumData = ([],[],[]);   // see below for details
 var sumStryd = ([],[],[]);  // see below for details
+var lapData = ([],[]);         // lap data start, end times, [0] = all data
 var gpsData = [];
 var csv ="\t";
 var lf = "\n";

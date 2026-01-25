@@ -530,6 +530,49 @@ function selType(actType) {
   sortFilter(actType);
 }
 
+function addLaps(actLaps) {
+  $("#selLaps").empty();
+  var option = document.createElement("option");
+  option.text = "All";
+  option.value = 0;
+  var lapsObj = document.getElementById("selLaps");
+  lapsObj.appendChild(option);
+  lapData[0] = [0, 0];
+
+  var durLap = 0;
+  var i = 0;
+  actLaps.forEach((element) => {
+    i += 1;
+    const option = document.createElement("option");
+    option.text = element.number;
+    durLap += element.duration;
+    option.value = i;
+    lapsObj.appendChild(option);
+    lapData[i] = [lapData[i-1][1], durLap];   // start point is end of last segment
+    //console.log(i, element.duration);
+  })
+  lapData[0][1] = (durLap);
+  $("#selLaps").selectmenu("refresh");
+  //console.log(durLap);
+}
+
+function setLap(){
+  var lap = $( "#selLaps" ).val();
+  var lapIndex = $( "#selLaps option:selected" ).index();
+  var timeMin = lapData[lapIndex][0];
+  var timeMax = lapData[lapIndex][1];
+  //console.log("setlap", lap, lapIndex, timeMin, timeMax);
+
+  // based on maxData routine
+  //$( "#timeRange" ).slider( "option", "min", time);
+  //$( "#timeRange" ).slider( "option", "max", calcData.length - 1);
+  $( "#timeRange" ).slider( "option", "values", [ timeMin, timeMax ] );
+  $( "#minTime" ).val( timeHMS( $( "#timeRange" ).slider( "values", 0)) );
+  $( "#maxTime" ).val( timeHMS( $( "#timeRange" ).slider( "values", 1)) );
+  calcMetrics();
+  displayMetrics(true);
+}
+
 function showActivities(data) {
   $( "#tableActivities" ).html("");
   var table = document.querySelector("#tableActivities");

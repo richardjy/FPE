@@ -191,7 +191,11 @@
         </label>
         <label for="cbGraphBig">Enlarge
           <input type="checkbox" name="cbGraph" id="cbGraphBig">
-        </label>
+        </label>&nbsp;&nbsp;&nbsp;&nbsp;
+        <select name="selLaps" id="selLaps" title="Activity Laps">
+            <option value="All" selected>All</option>
+            <option value="1">1</option>
+          </select>
         <br>
         <textarea rows = "26" cols = "140" id="showData" name="showData" title="Data display"></textarea><br>
         <div id="dataDisplay">  </div>
@@ -446,8 +450,12 @@
             change: function( event, data ) {
               $("#selectType").trigger('input');  // show there has been a change
         }});
-
-
+        $( "#selLaps" ).selectmenu({
+            width: 70,
+            change: function( event, data ) {
+              setLap();
+              //$("#selLaps").trigger('input');  // show there has been a change
+        }});
 
         $( "#cbWrap, #cbAllGear, #cbMetrics, #cbData, #cbSIunits, #cbGraphHR, #cbGraphP, #cbGraphBig" ).checkboxradio();
         // default is metrics checked - using HTML gives caret rather than checkmark
@@ -510,6 +518,7 @@
         showSparkLine();
         $( "[name='cbMetrics']").on( "change", displayMetrics );
         $( "[name='cbGraph']").on( "change", showSparkLine );
+        //$( "[name='selLaps']").on( "change", setLap );
         // put this after all visible controls
         $( "#tabs" ).find("*").prop( "disabled", true );
         $( "#healthSel" ).selectmenu( {
@@ -780,6 +789,7 @@
           strydData.length = 0; // discard Strd data
           var stDate = new Date (stActivity.start_time);
           selType(stActivity.type);
+          addLaps(stActivity.laps);
           document.getElementById("STtypedate").innerHTML = stDate.toDateString().substr(0,4) + stDate.toLocaleString();
           // link to 'sorttracks.mobi' rather than 'api.sorttracks.mobi'
           var stmobiID = stActivity.activity.split("/").pop();
