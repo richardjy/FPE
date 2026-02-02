@@ -405,6 +405,22 @@ function displayMetrics(zoomOut = false) {
   var iEnd = $( "#timeRange" ).slider( "values", 1) + 1;
   if (sumData.length > 0 && runData.length > 0) {
     if ($( "#cbMetrics" )[0].checked) {
+      
+      // display hardcoded lap info - make editable later  (add max HR?)
+      // lap (time), tot distance, elev gain, HR, power, up power, (up time)
+      // copied here for reference:
+      // sumData    first (j)     total0/watchstop1/pause2/walk3/run4/moving5/watch6    [watch=total-watchstop]
+      //            second (k)    elev all0/down1/level2/up3
+      //            third         time0/dist1/elev2/avPow3/avHR4/avCadence5/avSpeed6/avGrade7
+      dataCSV += "lap" + csv + "time" + csv + "distance" + csv + "elev gain" + csv + "HR" + csv + "power" + csv + "up power" + csv + "up time" + lf;
+      dataCSV += "" + csv + "(h:m:s)" + csv + "(mi)" + csv + "(ft)" + csv + "(bpm)" + csv + "(W)" + csv + "(W)" + csv + "(h:m:s)" + lf;
+      dataCSV +=  $( "#selLaps" ).val() + csv + timeHMS(sumData[0][0][0]) + csv + distMiles(sumData[0][0][1]).toString().padStart(5," ") + csv + 
+      elevFeet(sumData[0][0][2]).toString().padStart(4, ' ' ) + csv +
+      (sumData[0][0][4]<0 ? '' : sumData[0][0][4].toString().padStart(3," ")) + csv +  //HR
+      (sumData[0][0][3]<0 ? '' : sumData[0][0][3].toString().padStart(3," ")) + csv +  //Power
+      (sumData[0][3][3]<0 ? '' : sumData[0][3][3].toString().padStart(3," ")) + csv +  // Up Power
+      timeHMS(sumData[0][3][0]) + lf + lf // Up time
+      
       dataCSV += "type" + csv + "time" + csv + "distance" + csv + "pace" + csv + "elev gain" + csv + "grade" + csv + "HR" + csv +
           "power" + csv + "cadence" + csv + (bStryd ? "dist watch" + csv + "dist stryd" + csv + "pace stryd" + csv + "power" + csv + "cadence" + csv : '') + lf;
       if ($( "#cbSIunits" )[0].checked) {

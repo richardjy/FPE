@@ -544,7 +544,7 @@ function addLaps(actLaps) {
   actLaps.forEach((element) => {
     i += 1;
     const option = document.createElement("option");
-    option.text = element.number;
+    option.text = element.number + " (" + timeHMS(element.duration) + ")";
     durLap += element.duration;
     option.value = i;
     lapsObj.appendChild(option);
